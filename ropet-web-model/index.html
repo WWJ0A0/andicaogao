@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ropet 生理状态 - 网页模型机</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部状态栏 -->
+    <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+            <i class="fas fa-signal"></i>
+            <i class="fas fa-wifi"></i>
+            <i class="fas fa-battery-three-quarters"></i>
+        </div>
+    </div>
+
+    <!-- 主容器 -->
+    <main class="app-container">
+        <!-- 用户信息区 -->
+        <header class="user-info">
+            <div class="username">KAMOMO</div>
+            <div class="user-avatar">
+                <div class="avatar-placeholder"></div>
+            </div>
+            <button class="dress-up-btn">
+                <i class="fas fa-tshirt"></i>
+                <span>换装</span>
+            </button>
+        </header>
+
+        <!-- 宠物主视觉区 -->
+        <section class="pet-visual">
+            <div class="pet-container">
+                <div class="pet-image" id="petImage">
+                    <!-- Ropet形象 -->
+                    <div class="pet-body">
+                        <div class="pet-face">
+                            <div class="eyes">
+                                <div class="eye left-eye"></div>
+                                <div class="eye right-eye"></div>
+                            </div>
+                            <div class="mouth"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-bubble" id="statusBubble">
+                    好饿哦！
+                </div>
+            </div>
+        </section>
+
+        <!-- 核心状态卡片区 -->
+        <section class="status-cards">
+            <div class="cards-container">
+                <!-- 已陪伴卡片 -->
+                <div class="status-card" data-type="accompaniment">
+                    <div class="card-label">已陪伴</div>
+                    <div class="card-value">
+                        <span class="value" id="accompanimentValue">360</span>
+                        <span class="unit">Days</span>
+                    </div>
+                </div>
+
+                <!-- 今日互动卡片 -->
+                <div class="status-card" data-type="interaction">
+                    <div class="card-label">今日互动</div>
+                    <div class="card-value">
+                        <span class="value" id="interactionValue">280</span>
+                        <span class="unit">次</span>
+                    </div>
+                </div>
+
+                <!-- 当前性格卡片 -->
+                <div class="status-card" data-type="personality">
+                    <div class="card-label">当前性格</div>
+                    <div class="card-value">
+                        <span class="value" id="personalityValue">乐天派</span>
+                    </div>
+                </div>
+
+                <!-- 成长阶段卡片 -->
+                <div class="status-card" data-type="growth">
+                    <div class="card-label">成长阶段</div>
+                    <div class="card-value">
+                        <span class="value" id="growthValue">认知形成期</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 功能入口卡片区 -->
+        <section class="feature-cards">
+            <div class="feature-card sketch-gallery">
+                <div class="feature-icon">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>拍拍画廊</h3>
+                    <p>Sketch Gallery</p>
+                </div>
+            </div>
+            <div class="feature-card painting-diary">
+                <div class="feature-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>画画日记</h3>
+                    <p>Painting diary</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 互动提示区 -->
+        <section class="interaction-prompt">
+            <button class="try-me-btn" id="tryMeBtn">
+                <span>点我试试</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </section>
+    </main>
+
+    <!-- 底部导航栏 -->
+    <nav class="bottom-nav">
+        <div class="nav-container">
+            <div class="nav-item active">
+                <i class="fas fa-home"></i>
+                <span>首页</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-coins"></i>
+                <span>积分</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-question-circle"></i>
+                <span>?</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-user"></i>
+                <span>我的</span>
+            </div>
+        </div>
+        <div class="home-indicator"></div>
+    </nav>
+
+    <!-- 食物选择面板（隐藏） -->
+    <div class="food-panel" id="foodPanel">
+        <div class="panel-header">
+            <h3>选择食物</h3>
+            <button class="close-panel" id="closeFoodPanel">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="panel-content">
+            <div class="food-categories">
+                <button class="category-btn active">全部</button>
+                <button class="category-btn">零食</button>
+                <button class="category-btn">主食</button>
+                <button class="category-btn">药品</button>
+            </div>
+            <div class="food-grid">
+                <!-- 食物卡片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 投喂确认弹窗（隐藏） -->
+    <div class="feeding-modal" id="feedingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>投喂确认</h3>
+                <button class="close-modal" id="closeFeedingModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="food-info" id="selectedFoodInfo">
+                    <!-- 动态填充 -->
+                </div>
+                <div class="quantity-selector">
+                    <button class="qty-btn minus" id="minusBtn">-</button>
+                    <input type="number" class="qty-input" id="qtyInput" value="1" min="1" max="10">
+                    <button class="qty-btn plus" id="plusBtn">+</button>
+                    <div class="stock-info">剩余: <span id="stockCount">5</span>个</div>
+                </div>
+                <div class="feeding-tips">
+                    <i class="fas fa-info-circle"></i>
+                    <span>投喂后饱腹度将提升</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn cancel" id="cancelFeeding">取消</button>
+                <button class="btn confirm" id="confirmFeeding">确认投喂</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 状态详情浮层（隐藏） -->
+    <div class="status-detail-overlay" id="statusDetail">
+        <div class="detail-content">
+            <div class="detail-header">
+                <h3 id="detailTitle">状态详情</h3>
+                <button class="close-detail" id="closeDetail">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="detail-body">
+                <div class="detail-value" id="detailValue">
+                    <!-- 动态填充 -->
+                </div>
+                <div class="trend-chart">
+                    <canvas id="trendCanvas" width="300" height="150"></canvas>
+                </div>
+                <div class="detail-description" id="detailDescription">
+                    <!-- 动态填充 -->
+                </div>
+                <div class="detail-suggestion" id="detailSuggestion">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 异常详情浮层（隐藏） -->
+    <div class="abnormal-detail-overlay" id="abnormalDetail">
+        <div class="abnormal-content">
+            <div class="abnormal-header">
+                <div class="abnormal-icon">
+                    <i class="fas fa-head-side-cough"></i>
+                </div>
+                <h3 id="abnormalTitle">感冒了</h3>
+                <button class="close-abnormal" id="closeAbnormal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="abnormal-body">
+                <div class="abnormal-description" id="abnormalDescription">
+                    <!-- 动态填充 -->
+                </div>
+                <div class="recommended-action">
+                    <h4>推荐解决方案</h4>
+                    <div class="medicine-suggestion" id="medicineSuggestion">
+                        <!-- 动态填充 -->
+                    </div>
+                </div>
+                <div class="abnormal-actions">
+                    <button class="btn cancel" id="knowAbnormal">知道了</button>
+                    <button class="btn confirm" id="goToMedicine">去喂药</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 投喂成功提示 -->
+    <div class="toast" id="successToast">
+        <div class="toast-content">
+            <i class="fas fa-check-circle"></i>
+            <span>投喂成功！饱腹度+10</span>
+        </div>
+    </div>
+
+    <!-- 解锁庆祝弹窗（隐藏） -->
+    <div class="unlock-celebration" id="unlockCelebration">
+        <div class="celebration-content">
+            <div class="confetti-container"></div>
+            <div class="celebration-icon">
+                <i class="fas fa-gift"></i>
+            </div>
+            <h3>解锁成功！</h3>
+            <p id="unlockItemName">新食物已解锁</p>
+            <div class="points-reward">
+                <i class="fas fa-coins"></i>
+                <span>+10 积分</span>
+            </div>
+            <button class="btn confirm" id="closeCelebration">立即尝试</button>
+        </div>
+    </div>
+
+    <!-- 食物分类过滤标签 -->
+    <div class="category-tags hidden" id="categoryTags">
+        <div class="tags-container">
+            <!-- 将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

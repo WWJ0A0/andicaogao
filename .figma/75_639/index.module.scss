@@ -1,0 +1,31 @@
+* {
+  box-sizing: border-box;
+}
+
+.frame {
+  position: relative;
+  width: 114px;
+  height: 115px;
+
+  .group {
+    position: absolute;
+    top: 13px;
+    left: 13px;
+    width: 89px;
+    height: 89px;
+  }
+
+  .text {
+    position: absolute;
+    top: 97px;
+    left: 45px;
+    width: 24px;
+    height: 18px;
+    line-height: 18px;
+    letter-spacing: -0.3px;
+    color: #785ae3;
+    font-family: Poppins, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}

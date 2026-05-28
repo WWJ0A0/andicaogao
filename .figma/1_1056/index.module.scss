@@ -1,0 +1,77 @@
+* {
+  box-sizing: border-box;
+}
+
+.frame2090054522 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 394px;
+  height: 108px;
+
+  .autoWrapper {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    justify-content: space-between;
+    padding-right: 41px;
+    padding-left: 0;
+
+    .frame {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #2222221a;
+      border-radius: 16px;
+      padding: 11px 44px;
+      width: 132px;
+      height: 54px;
+
+      .buyKeyPurchaseItemDe {
+        flex-shrink: 0;
+        line-height: 20px;
+        letter-spacing: 0;
+        color: #222222;
+        font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+      }
+    }
+
+    .frame2 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      background: #7c5ae0;
+      padding: 13px 46px;
+      width: 209px;
+      height: 54px;
+
+      .buyKeyPurchaseItemDe2 {
+        flex-shrink: 0;
+        line-height: 20px;
+        letter-spacing: 0;
+        color: var(---, #ffffff);
+        font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .homeIndicator2 {
+    display: flex;
+    align-items: flex-start;
+    align-self: stretch;
+    margin-top: 20px;
+    padding: 21px 131px 8px 129px;
+
+    .homeIndicator {
+      border-radius: 100px;
+      background: #222222;
+      width: 134px;
+      height: 5px;
+    }
+  }
+}

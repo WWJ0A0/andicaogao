@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ropet - 首页</title>
+    <link rel="stylesheet" href="style-figma.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 临时样式，用于开发 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, #F3EDFF 0%, #E0D4FF 100%);
+            min-height: 100vh;
+            max-width: 375px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .placeholder {
+            background: rgba(157, 124, 255, 0.1);
+            border: 1px dashed #9D7CFF;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: #7A5FFF;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 基于Figma设计稿的首页结构 -->
+    <!-- 设计稿名称: 首页-失落, 节点ID: 1:7901 -->
+    
+    <!-- 背景图片 -->
+    <div class="background-image" id="bgImage">
+        <!-- 图片将通过JavaScript设置 -->
+    </div>
+    
+    <!-- 主内容卡片 - Frame 2090054519 -->
+    <main class="main-card" id="mainCard">
+        <!-- 卡片内容 -->
+        <div class="card-content">
+            <!-- 状态栏区域 - Frame 2090054281 -->
+            <div class="status-bar-area" id="statusBarArea">
+                <!-- 状态栏组件: Bars / Status Bar / iPhone / Light -->
+                <div class="status-bar">
+                    <div class="time">9:41</div>
+                    <div class="status-icons">
+                        <div class="cellular-icon"></div>
+                        <div class="wifi-icon"></div>
+                        <div class="battery-icon"></div>
+                    </div>
+                </div>
+                <!-- Frame 480980910 (用户信息区域) -->
+                <div class="user-info-area">
+                    <div class="user-name">KAMOMO</div>
+                    <div class="user-avatar">
+                        <div class="avatar-img"></div>
+                    </div>
+                    <button class="dress-up-btn">
+                        <span>换装</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 宠物和状态气泡区域 - Group 2090053917 -->
+            <div class="pet-status-area" id="petStatusArea">
+                <div class="pet-avatar">
+                    <!-- Rectangle 34627200 - 宠物形象 -->
+                    <div class="pet-image" id="petImage">
+                        <div class="pet-face">
+                            <div class="pet-eyes">
+                                <div class="pet-eye"></div>
+                                <div class="pet-eye"></div>
+                            </div>
+                            <div class="pet-mouth"></div>
+                        </div>
+                        <div class="hunger-indicator">
+                            <div class="hunger-fill" id="hungerFill"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-bubble" id="statusBubble">
+                    好饿哦！
+                </div>
+            </div>
+            
+            <!-- 状态卡片区域 - Frame 2090053890 (位于Frame 2090054519内) -->
+            <div class="status-cards-area" id="statusCardsArea">
+                <div class="status-cards-container">
+                    <!-- 已陪伴卡片 -->
+                    <div class="status-card" data-type="accompaniment">
+                        <div class="card-label">已陪伴</div>
+                        <div class="card-value">
+                            <span class="value">360</span>
+                            <span class="unit">Days</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 今日互动卡片 -->
+                    <div class="status-card" data-type="interaction">
+                        <div class="card-label">今日互动</div>
+                        <div class="card-value">
+                            <span class="value">280</span>
+                            <span class="unit">次</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 当前性格卡片 -->
+                    <div class="status-card" data-type="personality">
+                        <div class="card-label">当前性格</div>
+                        <div class="card-value">
+                            <span class="value">乐天派</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 成长阶段卡片 -->
+                    <div class="status-card" data-type="growth">
+                        <div class="card-label">成长阶段</div>
+                        <div class="card-value">
+                            <span class="value">认知形成期</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 功能卡片区域 - Frame 2090054093 -->
+            <div class="feature-cards-area" id="featureCardsArea">
+                <!-- 拍拍画廊卡片 - Frame 2090053914 -->
+                <div class="feature-card sketch-gallery">
+                    <div class="feature-icon">
+                        <!-- Rectangle 34627076 图标 -->
+                    </div>
+                    <div class="feature-content">
+                        <h3>拍拍画廊</h3>
+                        <p>Sketch Gallery</p>
+                    </div>
+                </div>
+                
+                <!-- 画画日记卡片 - Frame 2090053915 -->
+                <div class="feature-card painting-diary">
+                    <div class="feature-icon">
+                        <!-- Rectangle 34627077 图标 -->
+                    </div>
+                    <div class="feature-content">
+                        <h3>画画日记</h3>
+                        <p>Painting diary</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 底部导航区域 - Frame 2090054296 -->
+    <nav class="bottom-nav-area" id="bottomNavArea">
+        <!-- Frame 411 (导航容器) -->
+        <div class="nav-container">
+            <!-- 首页导航项 -->
+            <div class="nav-item active">
+                <div class="nav-icon">
+                    <!-- Iconly/Bulk/Home 图标 -->
+                </div>
+                <span class="nav-label">首页</span>
+            </div>
+            
+            <!-- 积分导航项 -->
+            <div class="nav-item">
+                <div class="nav-icon">
+                    <!-- 积分 1 图标 -->
+                </div>
+                <span class="nav-label">积分</span>
+            </div>
+            
+            <!-- 问号导航项 -->
+            <div class="nav-item">
+                <div class="nav-icon">
+                    <!-- 问号图标 -->
+                </div>
+                <span class="nav-label">?</span>
+            </div>
+            
+            <!-- 我的导航项 -->
+            <div class="nav-item">
+                <div class="nav-icon">
+                    <!-- mingcute:user-2-line 图标 -->
+                </div>
+                <span class="nav-label">我的</span>
+            </div>
+        </div>
+        
+        <!-- Home Indicator -->
+        <div class="home-indicator"></div>
+    </nav>
+    
+    <!-- 互动按钮 - Frame 2090054518 -->
+    <div class="interaction-button-area" id="interactionButtonArea">
+        <button class="try-me-btn" id="tryMeBtn">
+            <div class="btn-icon">
+                <!-- icon/poke_18px 图标 -->
+            </div>
+            <span>点我试试</span>
+        </button>
+    </div>
+    
+    <!-- 弹窗区域 (初始隐藏) -->
+    <div class="modal-overlay hidden" id="modalOverlay">
+        <!-- 食物选择弹窗 -->
+        <div class="food-selection-modal" id="foodSelectionModal">
+            <div class="modal-header">
+                <h3>选择食物</h3>
+                <button class="close-modal" id="closeModal">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="food-options">
+                    <div class="food-option" data-food="orange">
+                        <div class="food-icon"></div>
+                        <span>橘子</span>
+                    </div>
+                    <div class="food-option" data-food="donut">
+                        <div class="food-icon"></div>
+                        <span>甜甜圈</span>
+                    </div>
+                    <div class="food-option" data-food="cake">
+                        <div class="food-icon"></div>
+                        <span>蛋糕</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script-figma.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+* {
+  box-sizing: border-box;
+}
+
+.inputField {
+  display: flex;
+  align-items: center;
+  width: 325px;
+  height: 50px;
+
+  .rectangle2410 {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 32px;
+    background: var(--Backgrounds-Base---Primary, #ffffff);
+    padding: 11px 17px 11px 24px;
+    width: 325px;
+    min-width: 325px;
+    height: 50px;
+
+    .message {
+      width: 125px;
+      height: 29px;
+      line-height: 22px;
+      letter-spacing: 0;
+      color: var(--Labels-Tertiary, #3c3c3c4d);
+      font-family: "SF Pro", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 17px;
+    }
+
+    .microphone01 {
+      width: 35px;
+      height: 26px;
+    }
+  }
+}

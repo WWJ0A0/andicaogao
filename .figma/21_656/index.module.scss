@@ -1,0 +1,295 @@
+* {
+  box-sizing: border-box;
+}
+
+.frame3 {
+  position: relative;
+  width: 393px;
+  height: 852px;
+  overflow: hidden;
+
+  .frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: #ffffff;
+    width: 393px;
+    height: 852px;
+    overflow: hidden;
+
+    .rectangle34627094 {
+      display: flex;
+      position: absolute;
+      top: -1px;
+      left: 0;
+      align-items: flex-start;
+      padding-top: 1px;
+      padding-bottom: 40px;
+      width: 393px;
+      height: 318px;
+      backdrop-filter: blur(1px);
+
+      .rectangle34627178 {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        align-items: flex-start;
+        background: #f0f0f099;
+        height: 277px;
+
+        .barsStatusBarIPhoneL {
+          display: flex;
+          align-items: flex-start;
+          align-self: stretch;
+          padding: 14px 14px 9px 21px;
+
+          .a941 {
+            width: 54px;
+            text-align: center;
+            letter-spacing: -0.3px;
+            color: #19181f;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+          }
+
+          .cellularConnection {
+            margin-top: 4px;
+            margin-left: 233px;
+            width: 18px;
+            height: 11px;
+          }
+
+          .wifi {
+            margin-top: 3px;
+            margin-left: 5px;
+            width: 16px;
+            height: 11px;
+          }
+
+          .battery {
+            margin-top: 3px;
+            margin-left: 7px;
+            width: 24px;
+            height: 11px;
+          }
+        }
+
+        .frame2090054159 {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          align-self: stretch;
+          margin: 59px 212px 0px 24px;
+          row-gap: 8px;
+
+          .image {
+            display: flex;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: center;
+            column-gap: 10px;
+            border-radius: 43px;
+            padding: 12px;
+            width: 86px;
+            height: 86px;
+          }
+
+          .frame2090054158 {
+            display: flex;
+            position: relative;
+            flex-direction: column;
+            flex-shrink: 0;
+            align-items: flex-start;
+            align-self: stretch;
+            row-gap: 4px;
+
+            .rihana {
+              flex-shrink: 0;
+              line-height: 40px;
+              letter-spacing: 0;
+              color: #19181f;
+              font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+              font-size: 32px;
+              font-weight: 600;
+            }
+
+            .frame2090053857 {
+              position: absolute;
+              top: 10px;
+              left: 113px;
+              flex-shrink: 0;
+              border-radius: 9px;
+              width: 24px;
+              height: 24px;
+              rotate: -180deg;
+            }
+          }
+        }
+
+        .line371 {
+          margin-top: 40px;
+          background: #19181f1a;
+          width: 393px;
+          height: 1px;
+        }
+      }
+    }
+
+    .frame2090054016 {
+      display: flex;
+      position: absolute;
+      top: 297px;
+      left: 0;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 393px;
+      height: 382px;
+      row-gap: 8px;
+
+      .text {
+        flex-shrink: 0;
+        line-height: 25px;
+        letter-spacing: -0.3px;
+        color: #19181f;
+        font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 18px;
+      }
+
+      .autoWrapper {
+        position: relative;
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+
+        .frame2090053858 {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 24px;
+          height: 24px;
+          rotate: -180deg;
+        }
+      }
+
+      .frame2090054017 {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        align-self: stretch;
+        justify-content: space-between;
+        padding: 16px 20px;
+      }
+
+      .frame2090054015 {
+        display: flex;
+        position: relative;
+        flex-shrink: 0;
+        align-items: center;
+        align-self: stretch;
+        justify-content: space-between;
+        padding: 16px 20px;
+
+        .ellipse15105 {
+          position: absolute;
+          top: 18px;
+          left: 94px;
+          flex-shrink: 0;
+          border-radius: 50%;
+          background: #ff5c64;
+          width: 6px;
+          height: 6px;
+        }
+      }
+    }
+  }
+
+  .frame2090054296 {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    flex-direction: column;
+    align-items: center;
+    width: 394px;
+    height: 86px;
+    background-image: linear-gradient(180deg, #ffffff00 0%, #ffffff 100%);
+    backdrop-filter: blur(18px);
+
+    .frame411 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      column-gap: 52px;
+      margin-top: -7px;
+      border-radius: 40px;
+      box-shadow: 0px 2px 4px 0px #0000000d;
+      background: #ffffffcf;
+      padding: 8px 50px 8px 45px;
+      width: 364px;
+      height: 54px;
+
+      .iconlyBulkHome {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+      }
+
+      .frame2 {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        overflow: hidden;
+      }
+
+      .mingcuteUser2Line {
+        display: flex;
+        flex-shrink: 0;
+        align-items: flex-start;
+        padding: 3px 1px 0px;
+        height: 32px;
+        overflow: hidden;
+
+        .group {
+          display: flex;
+          flex-grow: 1;
+          align-items: flex-start;
+          padding: 1px 1px 21px 20px;
+          background-image: url(../image/mo9s88nl-w450c9s.svg);
+          background-position: center;
+          background-size: cover;
+          background-repeat: no-repeat;
+
+          .frame2090054004 {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            background: #ff5c64;
+            padding-right: 2px;
+            padding-left: 2px;
+            width: 8px;
+            height: 8px;
+            row-gap: 6px;
+          }
+        }
+      }
+    }
+
+    .homeIndicator2 {
+      display: flex;
+      align-items: flex-start;
+      align-self: stretch;
+      margin-top: 5px;
+      padding: 21px 131px 8px 129px;
+
+      .homeIndicator {
+        border-radius: 100px;
+        background: #000000;
+        width: 134px;
+        height: 5px;
+      }
+    }
+  }
+}

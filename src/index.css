@@ -1,0 +1,59 @@
+/* 全局样式必须放在最顶部，优先级最高 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* 核心：禁止padding/border撑大元素宽高，解决横向滚动条 */
+}
+
+html,
+body,
+#root {
+  background-color: #d8deea !important;
+  width: 100% !important;
+  min-height: 100vh !important;
+  overflow-x: hidden !important; /* 核心：彻底禁止横向溢出，消除左右滚动条 */
+  overflow-y: auto; /* 纵向内容超出时正常滚动 */
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 滚动条隐藏，适配所有浏览器 */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* 全局隐藏滚动条，保留滚动功能 */
+html {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+.animate-double-bounce {
+  animation: double-bounce 0.5s ease-in-out;
+}
+
+@keyframes double-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25%, 75% {
+    transform: translateY(-8px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+}
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
