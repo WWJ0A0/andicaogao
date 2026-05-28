@@ -1,57 +1,77 @@
-# React + TypeScript + Vite
+# Ropet Web App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Ropet Web App 是一个面向智能宠物陪伴体验的前端项目。当前版本主要用于展示 Ropet 的首页、宠物互动、成长记录、画廊、日记、设置等核心页面，为后续功能开发和产品验证提供基础。
 
-Currently, two official plugins are available:
+## 当前版本
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**v0.1.0 初始版本**
 
-## Expanding the ESLint configuration
+这个版本完成了项目的基础页面搭建和本地运行配置，已接入 React、TypeScript、Vite、Tailwind CSS 等前端开发工具，并整理为可持续开发的 Git 项目。
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 已包含功能
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- 首页宠物状态展示
+- 宠物互动页面
+- 宠物小窝页面
+- 拍拍画廊
+- 画画日记
+- 互动历史
+- 宠物资料与基础设置
+- 性格、成长阶段、系统设置等子页面
+- 喝水提醒、眼睛切换、抽奖机等功能页面原型
+- Lottie 动画资源预览
+
+## 技术栈
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+- Zustand
+- Supabase SDK
+- Lottie React
+
+## 本地运行
+
+安装依赖：
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+启动开发服务：
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  extends: [
-    // other configs...
-    // Enable lint rules for React
-    reactX.configs['recommended-typescript'],
-    // Enable lint rules for React DOM
-    reactDom.configs.recommended,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+npm run dev
 ```
+
+构建生产版本：
+
+```bash
+npm run build
+```
+
+## 版本管理
+
+本项目已接入 Git，并推送到 GitHub：
+
+```text
+https://github.com/WWJ0A0/andicaogao
+```
+
+后续每次完成一个功能或重要调整，可以按下面流程保存版本：
+
+```bash
+git add .
+git commit -m "描述这次修改"
+git push
+```
+
+## 后续计划
+
+- 梳理页面跳转和核心用户路径
+- 优化移动端视觉细节
+- 接入真实数据和状态管理
+- 完善宠物互动逻辑
+- 增加版本更新记录
