@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Home from "@/pages/Home";
 import PetInteract from "@/pages/PetInteract";
 import Nest from "@/pages/Nest";
@@ -20,10 +21,27 @@ import HomeLost from "@/pages/HomeLost";
 import AssistantContentPage from "@/pages/AssistantContentPage";
 import DrinkWaterReminderPage from "@/pages/DrinkWaterReminderPage";
 import EyeChange from "@/pages/EyeChange";
+import SubscriptionPrototype from "@/pages/SubscriptionPrototype";
+import DialogueMode from "@/pages/DialogueMode";
+import SubscriptionFlow from "@/pages/SubscriptionFlow";
+import TrialExperience from "@/pages/TrialExperience";
+import VoiceConsent from "@/pages/VoiceConsent";
+import PolicyDocument from "@/pages/PolicyDocument";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 export default function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/pet-interact" element={<PetInteract />} />
@@ -49,6 +67,22 @@ export default function App() {
         <Route path="/assistant-content" element={<AssistantContentPage />} />
         <Route path="/drink-water-reminder" element={<DrinkWaterReminderPage />} />
         <Route path="/eye-change" element={<EyeChange />} />
+        <Route path="/dialogue-mode" element={<DialogueMode />} />
+        <Route path="/subscription" element={<SubscriptionFlow screen="plans" />} />
+        <Route path="/subscription/payment-method" element={<SubscriptionFlow screen="payment-method" />} />
+        <Route path="/subscription/alipay" element={<SubscriptionFlow screen="alipay" />} />
+        <Route path="/subscription/wechat" element={<SubscriptionFlow screen="wechat" />} />
+        <Route path="/subscription/opening" element={<SubscriptionFlow screen="opening" />} />
+        <Route path="/subscription/success" element={<SubscriptionFlow screen="success" />} />
+        <Route path="/subscription/failure" element={<SubscriptionFlow screen="failure" />} />
+        <Route path="/subscription/status" element={<SubscriptionFlow screen="status" />} />
+        <Route path="/subscription/manage" element={<SubscriptionFlow screen="status" />} />
+        <Route path="/subscription/trial" element={<TrialExperience />} />
+        <Route path="/subscription/voice-consent" element={<VoiceConsent />} />
+        <Route path="/policies/privacy" element={<PolicyDocument kind="privacy" />} />
+        <Route path="/policies/subscription" element={<PolicyDocument kind="subscription" />} />
+        <Route path="/subscription/invoice" element={<SubscriptionPrototype screen="invoice" />} />
+        <Route path="/subscription/repair" element={<SubscriptionPrototype screen="repair" />} />
         <Route path="/other" element={<div className="text-center text-xl mt-10">Other Page - Coming Soon</div>} />
       </Routes>
     </Router>

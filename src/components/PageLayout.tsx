@@ -19,8 +19,8 @@ const PageLayout: React.FC<PageLayoutProps> = ({ title, children, showBottomNav 
         {/* 顶部导航栏 */}
         <div className="flex items-center px-[21px] py-4 pt-12 relative z-50">
           <button 
-            onClick={() => navigate('/')} 
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-white/50 backdrop-blur-md shadow-sm cursor-pointer hover:bg-white/80 transition-colors"
+            onClick={() => navigate(-1)} 
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-white/50 backdrop-blur-md shadow-sm cursor-pointer hover:bg-white/80 active:scale-95 transition-all"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M15 18L9 12L15 6" stroke="#222222" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

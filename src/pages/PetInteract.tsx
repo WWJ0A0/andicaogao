@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import kaixinAnimation from '@/assets/animations/kaixin.json';
 import pingjingAnimation from '@/assets/animations/pingjing.json';
+import { useSubscriptionStore } from '@/store/useSubscriptionStore';
+import DialogueEntryButton from '@/components/DialogueEntryButton';
 
 const PetInteract: React.FC = () => {
   const navigate = useNavigate();
+  const { dialogueEnabled } = useSubscriptionStore();
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [showFeedDetailModal, setShowFeedDetailModal] = useState(false);
@@ -105,6 +108,11 @@ const PetInteract: React.FC = () => {
                      onClick={() => navigate('/')} 
                    />
                 </div>
+                <DialogueEntryButton
+                  enabled={dialogueEnabled}
+                  className="absolute right-5 top-14"
+                  onClick={() => navigate('/dialogue-mode')}
+                />
              </div>
           </div>
           

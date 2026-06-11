@@ -4,9 +4,12 @@ import BottomNav from '../components/BottomNav';
 import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import pingjingAnimation from '@/assets/animations/pingjing.json';
+import { useSubscriptionStore } from '@/store/useSubscriptionStore';
+import DialogueEntryButton from '@/components/DialogueEntryButton';
 
 const HomePage: React.FC = () => {
   const { pet, todaysInteractions, incrementInteraction } = usePetStore();
+  const { dialogueEnabled } = useSubscriptionStore();
   const navigate = useNavigate();
   const [showDiaryModal, setShowDiaryModal] = useState(false);
   const [isDiaryChecked, setIsDiaryChecked] = useState(false);
@@ -140,6 +143,12 @@ const HomePage: React.FC = () => {
                 className="absolute top-3 left-[140px] shrink-0 rounded-[12px] w-6 h-6 -rotate-90 cursor-pointer"
                 onClick={() => navigate('/settings')}
               />
+
+              <DialogueEntryButton
+                enabled={dialogueEnabled}
+                className="absolute left-[207px] top-[4px] z-10"
+                onClick={() => navigate('/dialogue-mode')}
+              />
               
               {/* 换眼睛按钮 */}
               <div 
@@ -188,7 +197,8 @@ const HomePage: React.FC = () => {
           <Lottie animationData={pingjingAnimation} loop autoplay className="w-full h-full" />
         </div>
 
-        {/* 统计数据卡片 */}
+        {/* 当前设备权益状态 */}
+        {/* 宠物状态气泡 */}
         <div className="absolute top-[410px] left-0 flex flex-col items-start rounded-[24px] bg-[#f8f8f8e5] pt-[69px] px-[21px] pl-5 w-[393px] h-[442px] gap-3">
           {/* 已陪伴和今日互动统计 */}
           <div 
@@ -335,14 +345,11 @@ const HomePage: React.FC = () => {
             onClick={() => navigate('/gallery')}
           >
             <div 
-              className="flex flex-grow items-start justify-between mr-[-4px] px-[17px] py-[9px] pr-[17px] pl-[23px] w-[177px] min-w-[177px] bg-cover bg-center bg-no-repeat"
+              className="flex flex-grow items-center justify-between mr-[-4px] px-[17px] py-[9px] pr-[17px] pl-[23px] w-[177px] min-w-[177px] bg-cover bg-center bg-no-repeat"
               style={{ backgroundImage: 'url(/images/mo0uw8aq-fw9wjm3.svg)' }}
               onClick={() => navigate('/gallery')}
             >
-              <div className="flex flex-col items-start self-stretch mt-[9px]">
-                <p className="leading-[22px] tracking-normal text-white text-[18px] font-semibold">拍拍画廊</p>
-                <p className="leading-[18px] tracking-normal text-[#ffffffcc] text-[11px]">Sketch Gallery</p>
-              </div>
+              <p className="leading-[22px] tracking-normal text-white text-[18px] font-semibold">拍拍画廊</p>
               <img 
                 src="/images/mo0uw8au-ky3ntp2.png" 
                 alt="拍拍画廊图标" 
@@ -357,14 +364,11 @@ const HomePage: React.FC = () => {
             onClick={() => navigate('/diary')}
           >
             <div 
-              className="flex flex-grow items-start justify-between mr-[-1px] ml-[-3px] px-[12px] py-[9px] pr-[12px] pl-[30px] w-[177px] min-w-[177px] bg-cover bg-center bg-no-repeat cursor-pointer"
+              className="flex flex-grow items-center justify-between mr-[-1px] ml-[-3px] px-[12px] py-[9px] pr-[12px] pl-[30px] w-[177px] min-w-[177px] bg-cover bg-center bg-no-repeat cursor-pointer"
               style={{ backgroundImage: 'url(/images/mo0uw8aq-olaklxt.svg)' }}
               onClick={() => navigate('/diary')}
             >
-              <div className="relative mt-[9px] w-[72px] h-[24px]">
-                <p className="absolute top-0 left-0 w-[72px] h-[24px] leading-[24px] tracking-normal text-[#222222] text-[18px] font-semibold">画画日记</p>
-                <p className="absolute bottom-[-16px] left-0 w-[71px] h-[18px] leading-[18px] tracking-normal text-[#22222299] text-[11px]">Painting diary</p>
-              </div>
+              <p className="leading-[24px] tracking-normal text-[#222222] text-[18px] font-semibold">画画日记</p>
               <img 
                 src="/images/mo0uw8au-j4envkv.png" 
                 alt="画画日记图标" 
@@ -423,7 +427,23 @@ const HomePage: React.FC = () => {
                   </div>
                   <p className="w-[235px] text-[12px] leading-[17px] text-[#000000]">
                     <span className="text-[#22222266]">我已阅读</span>
-                    <span className="text-[#7c5ae0] font-medium">《Ropet 隐私政策》</span>
+                    <span
+                      role="link"
+                      tabIndex={0}
+                      className="cursor-pointer font-medium text-[#7c5ae0]"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        navigate('/policies/privacy?returnTo=/');
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Enter' && event.key !== ' ') return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        navigate('/policies/privacy?returnTo=/');
+                      }}
+                    >
+                      《Ropet 隐私政策》
+                    </span>
                     <span className="text-[#22222266]">并同意协议内容。</span>
                   </p>
                 </div>

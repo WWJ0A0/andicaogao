@@ -20,7 +20,7 @@ const mockPet: Pet = {
   id: 'pet-1',
   user_id: 'user-1',
   name: 'KAMOMO',
-  personality: '乐天派',
+  personality: '暴躁狂',
   growth_stage: '认知形成期',
   companionship_days: 360,
   daily_interactions: 280,

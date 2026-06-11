@@ -1,12 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
+import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
-const menuItems = ['ropet 基础设置', '设置', '帮助中心', '售后服务', '关于我们'];
+const menuItems = ['订阅与订单', 'ropet 基础设置', '设置', '帮助中心', '售后服务', '关于我们'];
 
 const PetProfile: React.FC = () => {
   const navigate = useNavigate();
+  const entitlement = useSubscriptionStore((state) => state.entitlement);
   const menuPathMap: Record<string, string> = {
+    '订阅与订单': entitlement === 'none' ? '/subscription' : '/subscription/status',
     'ropet 基础设置': '/pet-basic-settings',
     '设置': '/settings',
     '帮助中心': '/help-center',
@@ -39,7 +42,7 @@ const PetProfile: React.FC = () => {
           </div>
         </div>
 
-        <div className="absolute top-[297px] left-0 flex flex-col items-start w-[393px] h-[382px] gap-2">
+        <div className="absolute top-[297px] left-0 flex flex-col items-start w-[393px] h-[500px] gap-1 overflow-y-auto scrollbar-hide pb-[96px]">
           {menuItems.map((item) => (
             <div
               key={item}
