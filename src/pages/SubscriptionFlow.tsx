@@ -24,6 +24,8 @@ import {
   SubscriptionPlanCard,
 } from '@/components/subscription/PrototypeUI';
 import {
+  formatSubscriptionDate,
+  isDateExpired,
   PaymentMethod,
   SubscriptionOrder,
   TrialCard,
@@ -53,6 +55,18 @@ type Props = {
 const planAmount = (plan: 'one-month' | 'auto-renew') => (
   plan === 'auto-renew' ? '69.90' : '79.90'
 );
+
+const projectedSubscriptionDate = (entitlement: string, expiryDate: string) => {
+  const hasActiveEntitlement = entitlement !== 'none'
+    && Boolean(expiryDate)
+    && !isDateExpired(expiryDate);
+  const [year, month, day] = expiryDate.split('.').map(Number);
+  const baseDate = hasActiveEntitlement && year && month && day
+    ? new Date(year, month - 1, day)
+    : new Date();
+  baseDate.setMonth(baseDate.getMonth() + 1);
+  return formatSubscriptionDate(baseDate);
+};
 
 const channelName = (method: PaymentMethod) => ({
   alipay: '支付宝',
@@ -161,6 +175,7 @@ const PlansScreen = () => {
   const [searchParams] = useSearchParams();
   const {
     entitlement,
+    expiryDate,
     selectedPlan,
     subscribedPlan,
     setSelectedPlan,
@@ -169,6 +184,7 @@ const PlansScreen = () => {
   const currentPlan = entitlement === 'subscription' ? subscribedPlan : null;
   const selectingCurrentPlan = currentPlan === selectedPlan;
   const returnTo = searchParams.get('returnTo') || '/dialogue-mode';
+  const projectedDate = projectedSubscriptionDate(entitlement, expiryDate);
 
   return (
     <PrototypePhone>
@@ -200,6 +216,17 @@ const PlansScreen = () => {
             statusLabel={currentPlan === 'auto-renew' ? '当前使用中' : undefined}
             onClick={() => setSelectedPlan('auto-renew')}
           />
+        </div>
+        <div className="mt-3 flex items-center justify-between rounded-[14px] bg-[#f7f4ff] px-4 py-2.5 text-[11px]">
+          <span className="text-[#817a8a]">预计权益到期</span>
+          <strong className="text-[#4d3c7b]">{projectedDate}</strong>
+          <span className="h-4 w-px bg-[#ddd5f3]" />
+          <span className="text-[#817a8a]">
+            {selectedPlan === 'auto-renew' ? '首次续费' : '到期后'}
+          </span>
+          <strong className="text-[#4d3c7b]">
+            {selectedPlan === 'auto-renew' ? projectedDate : '不自动续费'}
+          </strong>
         </div>
         <button
           type="button"
@@ -248,11 +275,17 @@ const PlansScreen = () => {
 
 const PaymentMethodScreen = () => {
   const navigate = useNavigate();
-  const { selectedPlan, setPaymentMethod } = useSubscriptionStore();
+  const {
+    entitlement,
+    expiryDate,
+    selectedPlan,
+    setPaymentMethod,
+  } = useSubscriptionStore();
   const [selectedMethod, setSelectedMethod] = useState<'alipay' | 'wechat' | null>(null);
   const [creatingOrder, setCreatingOrder] = useState(false);
   const recurring = selectedPlan === 'auto-renew';
   const amount = planAmount(selectedPlan);
+  const projectedDate = projectedSubscriptionDate(entitlement, expiryDate);
 
   useEffect(() => {
     if (!creatingOrder || !selectedMethod) return;
@@ -283,6 +316,14 @@ const PaymentMethodScreen = () => {
             {recurring
               ? '确认后由所选支付方式完成本次付款，并按月自动续费。'
               : '本次购买有效期为 1 个月，到期后不会自动续费。'}
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-y-2 rounded-[12px] bg-[#f7f5fa] px-3 py-3 text-[11px]">
+            <span className="text-[#96919c]">权益到期日</span>
+            <strong className="text-right text-[#4d4852]">{projectedDate}</strong>
+            <span className="text-[#96919c]">{recurring ? '首次续费日' : '续费方式'}</span>
+            <strong className="text-right text-[#4d4852]">
+              {recurring ? projectedDate : '到期后不续费'}
+            </strong>
           </div>
         </section>
 
@@ -742,12 +783,14 @@ const StatusScreen = () => {
         </div>
       )}
 
-      {!trial && (
-        <button type="button" onClick={() => navigate('/subscription/manage')} className="mt-4 w-full h-[56px] rounded-[20px] bg-[#f3efff] px-4 flex items-center justify-between text-[#6849cc] font-semibold">
-          查看历史订单
-          <ChevronRight size={20} />
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => navigate('/subscription/orders')}
+        className="mt-4 flex h-[56px] w-full items-center justify-between rounded-[20px] bg-[#f3efff] px-4 font-semibold text-[#6849cc]"
+      >
+        查看历史订单
+        <ChevronRight size={20} />
+      </button>
 
       <button
         type="button"
