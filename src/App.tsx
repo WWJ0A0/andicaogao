@@ -72,16 +72,20 @@ export default function App() {
         <Route path="/subscription/payment-method" element={<SubscriptionFlow screen="payment-method" />} />
         <Route path="/subscription/alipay" element={<SubscriptionFlow screen="alipay" />} />
         <Route path="/subscription/wechat" element={<SubscriptionFlow screen="wechat" />} />
+        <Route path="/subscription/alipay/result" element={<SubscriptionFlow screen="alipay-result" />} />
+        <Route path="/subscription/wechat/result" element={<SubscriptionFlow screen="wechat-result" />} />
         <Route path="/subscription/opening" element={<SubscriptionFlow screen="opening" />} />
         <Route path="/subscription/success" element={<SubscriptionFlow screen="success" />} />
         <Route path="/subscription/failure" element={<SubscriptionFlow screen="failure" />} />
         <Route path="/subscription/status" element={<SubscriptionFlow screen="status" />} />
-        <Route path="/subscription/manage" element={<SubscriptionFlow screen="status" />} />
+        <Route path="/subscription/manage" element={<SubscriptionFlow screen="account" />} />
+        <Route path="/subscription/orders" element={<SubscriptionFlow screen="orders" />} />
+        <Route path="/subscription/invoices" element={<SubscriptionFlow screen="invoices" />} />
         <Route path="/subscription/trial" element={<TrialExperience />} />
         <Route path="/subscription/voice-consent" element={<VoiceConsent />} />
         <Route path="/policies/privacy" element={<PolicyDocument kind="privacy" />} />
         <Route path="/policies/subscription" element={<PolicyDocument kind="subscription" />} />
-        <Route path="/subscription/invoice" element={<SubscriptionPrototype screen="invoice" />} />
+        <Route path="/subscription/invoice" element={<SubscriptionFlow screen="invoices" />} />
         <Route path="/subscription/repair" element={<SubscriptionPrototype screen="repair" />} />
         <Route path="/other" element={<div className="text-center text-xl mt-10">Other Page - Coming Soon</div>} />
       </Routes>

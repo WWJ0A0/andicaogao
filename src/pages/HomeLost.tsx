@@ -671,13 +671,6 @@ const HomeLost: React.FC = () => {
                       setCenterFamilyIndex(targetIndex);
                       setFamilyDotColor(getFamilyColorById(member.id));
                       applyFamilyReminderPreset(member.id);
-                      if (member.id === 'baba') {
-                        setFirstCustomCardColor('#bfa8ff');
-                      } else if (member.id === 'mama' || member.id === 'brother' || member.id === 'sister') {
-                        setFirstCustomCardColor(getFamilyColorById(member.id));
-                      } else if (member.id === 'grandma') {
-                        setFirstCustomCardColor('#ff4d4f');
-                      }
                       triggerCenterAvatarPop();
                     }}
                   >

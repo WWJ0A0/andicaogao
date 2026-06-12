@@ -21,7 +21,7 @@ const Settings: React.FC = () => {
               <span className="text-gray-400">❯</span>
             </div>
             <div className="flex items-center justify-between bg-[#eeeeee] p-4 rounded-xl border border-[#2222220d] cursor-pointer hover:bg-[#e0e0e0] transition-colors">
-              <span className="text-[#222222] font-medium">关于 KAMOMO</span>
+              <span className="text-[#222222] font-medium">关于 ropet</span>
               <span className="text-gray-400">❯</span>
             </div>
           </div>

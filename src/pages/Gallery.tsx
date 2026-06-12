@@ -77,7 +77,7 @@ const Gallery: React.FC = () => {
                     <div className="absolute top-[-5px] left-[-7px] rounded-[2px] shadow-[0_2px_3px_0_#0000001f] bg-white w-[128px] h-[160px]" />
                     <p className="absolute z-[2] top-[142px] left-[80px] w-[38px] h-[11px] leading-[11px] text-[#55555599] text-[9px]">2025.10.10</p>
                     <img src="/images/mo9q701z-5h3ua8r.png" className="absolute top-[18px] left-[2px] rounded-[3px] w-[114px] h-[114px]" alt="photo-a" />
-                    <p className="absolute z-[2] top-[130px] left-[84px] w-[34px] h-[11px] leading-[11px] text-[#555555] text-[11px]">KAMOMO</p>
+                    <p className="absolute z-[2] top-[130px] left-[84px] w-[34px] h-[11px] leading-[11px] text-[#555555] text-[11px]">ropet</p>
                   </div>
                   <div className="absolute top-[69px] left-[-14px] w-[38px] h-[38px] rotate-[-19deg]">
                     <div className="absolute top-[-1px] left-[1px] rounded-full bg-[#c4f53d] w-[38px] h-[38px]" />
@@ -89,7 +89,7 @@ const Gallery: React.FC = () => {
                 <div className="relative ml-[71px] w-[128px] h-[157px]">
                   <div className="absolute top-0 left-0 w-[128px] h-[157px] rotate-[3deg]">
                     <div className="absolute top-[-3px] left-[-4px] rounded-[2px] shadow-[0_2px_3px_0_#0000001f] bg-white w-[128px] h-[157px]" />
-                    <p className="absolute z-[2] top-[130px] left-[84px] w-[34px] h-[11px] leading-[11px] text-[#555555] text-[11px]">KAMOMO</p>
+                    <p className="absolute z-[2] top-[130px] left-[84px] w-[34px] h-[11px] leading-[11px] text-[#555555] text-[11px]">ropet</p>
                     <p className="absolute z-[2] top-[142px] left-[80px] w-[38px] h-[11px] leading-[11px] text-[#55555599] text-[9px]">2025.10.09</p>
                     <img src="/images/mo9q701z-mi7ihka.png" className="absolute top-[4px] left-[5px] rounded-[3px] w-[114px] h-[114px]" alt="photo-b" />
                   </div>
@@ -101,7 +101,7 @@ const Gallery: React.FC = () => {
                 <div className="relative mt-[19px] w-[128px] h-[157px]">
                   <div className="absolute top-0 left-0 rounded-[2px] shadow-[0_2px_3px_0_#0000001f] bg-white pt-[7px] pr-[7px] pb-[5px] pl-[7px] w-[128px] h-[157px]">
                     <img src="/images/mo9q701z-8rjv56t.png" className="rounded-[3px] w-[114px] h-[114px]" alt="photo-c" />
-                    <p className="absolute z-[2] top-[130px] left-[84px] w-[34px] h-[11px] leading-[11px] text-[#555555] text-[11px]">KAMOMO</p>
+                    <p className="absolute z-[2] top-[130px] left-[84px] w-[34px] h-[11px] leading-[11px] text-[#555555] text-[11px]">ropet</p>
                     <p className="absolute z-[2] top-[142px] left-[80px] w-[38px] h-[11px] leading-[11px] text-[#55555599] text-[9px]">2025.10.08</p>
                   </div>
                   <img src="/images/mo9q701s-wxc7fva.svg" className="absolute top-[-8px] left-[5px] w-[21px] h-[24px]" alt="clip-pink" />
@@ -109,7 +109,7 @@ const Gallery: React.FC = () => {
 
                 <div className="relative ml-[59px] w-[128px] h-[157px] rotate-[-6deg]">
                   <div className="absolute top-[-6px] left-[-8px] rounded-[2px] shadow-[0_2px_3px_0_#0000001f] bg-white w-[128px] h-[157px]" />
-                  <p className="absolute z-[2] top-[130px] left-[84px] w-[34px] h-[11px] leading-[11px] text-[#555555] text-[11px]">KAMOMO</p>
+                  <p className="absolute z-[2] top-[130px] left-[84px] w-[34px] h-[11px] leading-[11px] text-[#555555] text-[11px]">ropet</p>
                   <p className="absolute z-[2] top-[142px] left-[80px] w-[38px] h-[11px] leading-[11px] text-[#55555599] text-[9px]">2025.10.07</p>
                   <img src="/images/mo9q701z-wplss2w.png" className="absolute top-[16px] left-[1px] rounded-[3px] w-[114px] h-[114px]" alt="photo-d" />
                 </div>
@@ -121,7 +121,7 @@ const Gallery: React.FC = () => {
                     <div className="absolute top-[-5px] left-[-7px] rounded-[2px] shadow-[0_2px_3px_0_#0000001f] bg-white w-[128px] h-[160px]" />
                     <p className="absolute top-[138px] left-[90px] w-[37px] h-[11px] leading-[11px] text-[#55555599] text-[9px]">2025.10.10</p>
                     <img src="/images/mo9q701z-8auqqgs.png" className="absolute top-[18px] left-[2px] rounded-[3px] w-[114px] h-[114px]" alt="photo-e" />
-                    <p className="absolute top-[73px] left-[47px] w-[34px] h-[11px] leading-[11px] text-[#555555] text-[11px]">KAMOMO</p>
+                    <p className="absolute top-[73px] left-[47px] w-[34px] h-[11px] leading-[11px] text-[#555555] text-[11px]">ropet</p>
                   </div>
                   <div className="absolute top-[9px] right-[-9px] w-[38px] h-[38px] rotate-[-19deg]">
                     <div className="absolute top-[-1px] left-[1px] rounded-full bg-[#c4f53d] w-[38px] h-[38px]" />
@@ -132,7 +132,7 @@ const Gallery: React.FC = () => {
 
                 <div className="relative ml-[48px] w-[128px] h-[157px] rotate-[3deg]">
                   <div className="absolute top-[-3px] left-[-4px] rounded-[2px] shadow-[0_2px_3px_0_#0000001f] bg-white w-[128px] h-[157px]" />
-                  <p className="absolute top-[130px] left-[84px] w-[34px] h-[11px] leading-[11px] text-[#555555] text-[11px]">KAMOMO</p>
+                  <p className="absolute top-[130px] left-[84px] w-[34px] h-[11px] leading-[11px] text-[#555555] text-[11px]">ropet</p>
                   <p className="absolute top-[142px] left-[80px] w-[38px] h-[11px] leading-[11px] text-[#55555599] text-[9px]">2025.10.09</p>
                   <img src="/images/mo9q701z-mi7ihka.png" className="absolute top-[4px] left-[5px] rounded-[3px] w-[114px] h-[114px]" alt="photo-f" />
                 </div>

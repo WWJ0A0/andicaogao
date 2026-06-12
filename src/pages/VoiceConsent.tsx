@@ -16,6 +16,8 @@ const VoiceConsent: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const { setPaymentState, grantVoiceConsent } = useSubscriptionStore();
   const source = searchParams.get('source') === 'subscription' ? 'subscription' : 'trial';
+  const returnTo = searchParams.get('returnTo') || (source === 'trial' ? '/dialogue-mode' : '/subscription');
+  const consentPath = `/subscription/voice-consent?source=${source}&returnTo=${encodeURIComponent(returnTo)}`;
 
   const handleAgree = () => {
     if (!agreed || submitting) return;
@@ -30,11 +32,14 @@ const VoiceConsent: React.FC = () => {
   return (
     <PrototypePhone>
       <PrototypeStatusBar />
-      <PrototypeHeader close onBack={() => navigate(source === 'trial' ? '/subscription/trial' : '/subscription')} />
+      <PrototypeHeader
+        close
+        onBack={() => navigate(returnTo)}
+      />
       <div className="relative h-[360px] overflow-hidden">
         <img
           src="/images/personality/joybean.png"
-          alt="KAMOMO"
+          alt="ropet"
           className="absolute left-1/2 top-[-20px] w-[340px] -translate-x-1/2 opacity-25 blur-[3px]"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/55 to-white" />
@@ -42,7 +47,7 @@ const VoiceConsent: React.FC = () => {
       <div className="absolute left-0 top-[322px] w-full px-8">
         <h1 className="text-[21px] font-semibold leading-8 text-[#222127]">
           使用语音对话功能，<br />
-          让「KAMOMO」能与你流利对话。
+          让「ropet」能与你流利对话。
         </h1>
         <p className="mt-7 text-[13px] leading-6 text-[#66616c]">
           在使用前，需要先开启“语音服务”功能，该功能可在详情右上角进行关闭。<br />
@@ -63,13 +68,13 @@ const VoiceConsent: React.FC = () => {
               className="mx-1 cursor-pointer text-[#8b66ef]"
               onClick={(event) => {
                 event.stopPropagation();
-                navigate(`/policies/privacy?returnTo=${encodeURIComponent(`/subscription/voice-consent?source=${source}`)}`);
+                navigate(`/policies/privacy?returnTo=${encodeURIComponent(consentPath)}`);
               }}
               onKeyDown={(event) => {
                 if (event.key !== 'Enter' && event.key !== ' ') return;
                 event.preventDefault();
                 event.stopPropagation();
-                navigate(`/policies/privacy?returnTo=${encodeURIComponent(`/subscription/voice-consent?source=${source}`)}`);
+                navigate(`/policies/privacy?returnTo=${encodeURIComponent(consentPath)}`);
               }}
             >
               《Ropet 隐私政策》

@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { ChevronRight, Gem, Gift, HelpCircle } from 'lucide-react';
+import { AudioLines, ChevronRight, CircleHelp, Gem, Gift, WifiOff } from 'lucide-react';
+import Lottie from 'lottie-react';
 import { useNavigate } from 'react-router-dom';
+import pingjingAnimation from '@/assets/animations/pingjing.json';
 import {
   DialogueSwitch,
   ModalOverlay,
-  PlusBadge,
   PrototypeHeader,
   PrototypePhone,
   PrototypeStatusBar,
 } from '@/components/subscription/PrototypeUI';
+import { usePetStore } from '@/store/usePetStore';
 import { isDateExpired, useSubscriptionStore } from '@/store/useSubscriptionStore';
 
 const faqItems = [
@@ -23,6 +25,8 @@ const DialogueMode: React.FC = () => {
   const [showFaq, setShowFaq] = useState(false);
   const [showActivationChoice, setShowActivationChoice] = useState(false);
   const [updatingDialogue, setUpdatingDialogue] = useState(false);
+  const { pet, isOnline, setOnline } = usePetStore();
+  const deviceName = pet?.name || '肉派派';
   const {
     dialogueEnabled,
     entitlement,
@@ -34,14 +38,41 @@ const DialogueMode: React.FC = () => {
   const entitlementExpired = entitlement !== 'none'
     && !autoRenewEnabled
     && isDateExpired(expiryDate);
+  const membershipActivated = entitlement === 'subscription' && !entitlementExpired;
+  const trialActivated = entitlement === 'trial' && !entitlementExpired;
+  const entitlementActive = membershipActivated || trialActivated;
   const availableTrialCards = trialCards.filter((card) => card.status === 'available');
-  const activeTrialCard = trialCards.find((card) => card.status === 'active');
   const trialAvailable = availableTrialCards.length > 0;
-  const trialState = entitlement === 'trial'
-    ? 'active'
-    : trialAvailable
-      ? 'available'
-      : 'exhausted';
+  const membershipTitle = membershipActivated
+    ? 'ropet Plus'
+    : trialActivated
+      ? 'ropet 体验权益'
+      : '开通 Ropet Plus';
+  const membershipDescription = entitlementActive
+    ? `当前设备权益 · ${expiryDate} 到期`
+    : '为当前设备解锁完整语音对话能力';
+  const listening = isOnline && dialogueEnabled && entitlementActive;
+  const deviceStatus = !isOnline
+    ? {
+        label: '设备不在线',
+        icon: WifiOff,
+        className: 'border-[#e5e2e7] bg-[#f2f1f3]/95 text-[#8b8792]',
+        iconClassName: 'text-[#96919c]',
+      }
+    : listening
+      ? {
+          label: '我在听',
+          icon: AudioLines,
+          className: 'border-[#8b66ef] bg-[#8b66ef] text-white',
+          iconClassName: 'text-white',
+        }
+      : {
+          label: '我没在听',
+          icon: AudioLines,
+          className: 'border-[#e8e4ed] bg-white/95 text-[#4f4a54]',
+          iconClassName: 'text-[#96919c]',
+        };
+  const DeviceStatusIcon = deviceStatus.icon;
 
   const handleToggle = () => {
     if (entitlement === 'none' || entitlementExpired) {
@@ -60,88 +91,89 @@ const DialogueMode: React.FC = () => {
     <PrototypePhone>
       <PrototypeStatusBar />
       <PrototypeHeader
+        title="对话模式"
         onBack={() => navigate('/')}
-        action={(
-          <button type="button" onClick={() => navigate(entitlement === 'subscription' ? '/subscription/status' : '/subscription')}>
-            <PlusBadge />
-          </button>
-        )}
       />
-      <div className="px-5 pt-3">
-        <h2 className="text-[19px] font-semibold text-[#222127]">对话模式</h2>
-
+      <div className="px-5 pb-6 pt-2">
         <button
           type="button"
-          aria-label={
-            trialState === 'active'
-              ? '查看使用中的 7 天体验卡'
-              : trialState === 'available'
-                ? '查看可使用的 7 天体验卡'
-                : '7 天体验卡已用完'
-          }
-          disabled={trialState === 'exhausted'}
-          onClick={() => navigate('/subscription/trial')}
-          className={`mt-6 flex min-h-[68px] w-full items-center rounded-[16px] px-4 text-left transition-colors ${
-            trialState === 'active'
-              ? 'bg-[#eee8ff] ring-1 ring-[#b9a5f7]'
-              : trialState === 'available'
-                ? 'bg-[#fff09b] shadow-[0_3px_0_#e8c937]'
-                : 'cursor-not-allowed bg-[#e5e4e7] text-[#aaa6ae]'
+          aria-label={entitlementActive ? `查看${membershipTitle}` : '开通 Ropet Plus'}
+          onClick={() => navigate(entitlementActive ? '/subscription/status' : '/subscription')}
+          className={`flex min-h-[58px] w-full items-center rounded-[17px] border px-4 text-left ${
+            entitlementActive
+              ? 'border-[#ded5fa] bg-[#f7f4ff]'
+              : 'border-[#e7e3ec] bg-white'
           }`}
         >
-          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${
-            trialState === 'active'
-              ? 'bg-[#8b66ef] text-white'
-              : trialState === 'available'
-                ? 'bg-white/70 text-[#8b66ef]'
-                : 'bg-[#d4d2d7] text-[#aaa6ae]'
+          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] ${
+            entitlementActive ? 'bg-[#8b66ef] text-white' : 'bg-[#f0ebff] text-[#8b66ef]'
           }`}>
-            <Gift size={21} />
+            <Gem size={16} fill="currentColor" />
           </span>
           <span className="ml-3 min-w-0 flex-1">
-            <strong className={`block text-[15px] ${
-              trialState === 'active'
-                ? 'text-[#6543cb]'
-                : trialState === 'available'
-                  ? 'text-[#5f4914]'
-                  : 'text-[#96929a]'
-            }`}>
-              体验卡
-            </strong>
-            <span className={`mt-1 block text-[10px] ${
-              trialState === 'active'
-                ? 'text-[#8b75c7]'
-                : trialState === 'available'
-                  ? 'text-[#a88d44]'
-                  : 'text-[#aaa6ae]'
-            }`}>
-              {trialState === 'active'
-                ? `${activeTrialCard?.days ?? ''} 天卡使用中 · ${expiryDate || '体验期内'} 到期`
-                : trialState === 'available'
-                  ? `${availableTrialCards.length} 张可用 · 共 ${availableTrialCards.reduce((total, card) => total + card.days, 0)} 天`
-                  : '体验额度已使用完'}
+            <span className="flex items-center gap-2">
+              <strong className="truncate text-[13px] text-[#26232a]">{membershipTitle}</strong>
+              <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
+                entitlementActive
+                  ? 'bg-[#e6ddff] text-[#6d4bd0]'
+                  : 'bg-[#f0eff2] text-[#8f8a94]'
+              }`}>
+                {membershipActivated ? '已开通' : trialActivated ? '体验中' : '未开通'}
+              </span>
             </span>
+            <span className="mt-0.5 block truncate text-[9px] leading-4 text-[#8b8792]">{membershipDescription}</span>
           </span>
-          <span className={`ml-3 rounded-full px-3 py-1 text-[12px] font-semibold ${
-            trialState === 'active'
-              ? 'bg-[#8b66ef] text-white'
-              : trialState === 'available'
-                ? 'text-[#8b66ef]'
-                : 'bg-[#d4d2d7] text-[#99959e]'
-          }`}>
-            {trialState === 'active' ? '使用中' : trialState === 'available' ? '去使用 >' : '已用完'}
-          </span>
+          <ChevronRight size={17} className="ml-2 shrink-0 text-[#a49eaa]" />
         </button>
 
-        <section className="mt-5 overflow-hidden rounded-[19px] bg-[#8b66ef]">
-          <div className="rounded-[19px] border-[4px] border-[#8b66ef] bg-white px-4 py-4">
-            <h3 className="text-[18px] font-semibold text-[#222127]">说话能力</h3>
-            <p className="mt-2 text-[13px] leading-5 text-[#8c8791]">
-              打开语音服务开关才可以与ropet进行对话。（需开通Plus会员，会员到期或者免费时间到期无法唤醒对话能力）
+        <section className="relative min-h-[306px] overflow-hidden text-center">
+          <div className="relative z-10">
+            <p className="mt-5 text-[12px] leading-5 text-[#77727f]">
+              直接对{deviceName}说“你好肉派派”开启对话
             </p>
-            <div className="mt-3 flex justify-end">
-              <DialogueSwitch enabled={dialogueEnabled} loading={updatingDialogue} onClick={handleToggle} />
+          </div>
+
+          <div className="relative mx-auto flex h-[252px] items-center justify-center">
+            <div className="absolute bottom-[20px] h-[28px] w-[220px] rounded-[50%] bg-[#4a346f]/10 blur-[8px]" />
+            <div
+              role="img"
+              aria-label={`正在控制的设备 ${deviceName}`}
+              className="relative z-10 h-[244px] w-[278px]"
+            >
+              <Lottie animationData={pingjingAnimation} loop autoplay className="h-full w-full" />
             </div>
+            <span className={`absolute right-[18px] top-[26px] z-20 flex items-center rounded-full border px-2.5 py-1.5 text-[10px] font-medium shadow-[0_6px_18px_rgba(50,42,67,0.10)] ${deviceStatus.className}`}>
+              <DeviceStatusIcon size={12} className={`mr-1 ${deviceStatus.iconClassName}`} />
+              {deviceStatus.label}
+            </span>
+            <button
+              type="button"
+              aria-label={isOnline ? '演示设备不在线' : '恢复设备在线'}
+              onClick={() => setOnline(!isOnline)}
+              className="absolute bottom-[10px] right-[18px] z-20 rounded-full border border-[#e5e2e7] bg-white/90 px-2.5 py-1 text-[9px] font-medium text-[#8b8792] shadow-sm"
+            >
+              {isOnline ? '演示离线' : '恢复在线'}
+            </button>
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-[20px] border border-[#e8e5eb] bg-white">
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0 pr-4">
+                <h2 className="text-[15px] font-semibold text-[#222127]">对话总开关</h2>
+                <p className="mt-1 text-[10px] leading-4 text-[#8b8792]">
+                  手机端控制 ropet 的对话能力
+                </p>
+              </div>
+              <DialogueSwitch
+                compact
+                enabled={dialogueEnabled}
+                loading={updatingDialogue}
+                onClick={handleToggle}
+              />
+            </div>
+
             {updatingDialogue && (
               <p className="mt-2 text-right text-[10px] text-[#8b66ef]">正在同步设备状态…</p>
             )}
@@ -150,13 +182,13 @@ const DialogueMode: React.FC = () => {
             type="button"
             aria-label="查看对话疑问"
             onClick={() => setShowFaq(true)}
-            className="flex h-12 w-full items-center justify-center gap-2 text-[14px] font-medium text-white"
+            className="flex h-11 w-full items-center border-t border-[#efedf2] px-4 text-left text-[12px] text-[#77717e]"
           >
-            <HelpCircle size={17} />
-            你是否也对话有疑问?
+            <CircleHelp size={16} className="text-[#8b66ef]" />
+            <span className="ml-2 flex-1">对话功能使用帮助</span>
+            <ChevronRight size={16} className="text-[#b6b1ba]" />
           </button>
         </section>
-
       </div>
 
       {showFaq && (
@@ -197,7 +229,7 @@ const DialogueMode: React.FC = () => {
                 type="button"
                 disabled={!trialAvailable}
                 aria-label={trialAvailable ? `选择体验卡，共 ${availableTrialCards.length} 张可用` : '体验卡已用完'}
-                onClick={() => navigate('/subscription/trial')}
+                onClick={() => navigate(`/nest?item=trial-card&card=${encodeURIComponent(availableTrialCards[0]?.id ?? '')}`)}
                 className={`flex min-h-[72px] w-full items-center rounded-[18px] px-4 text-left ${
                   trialAvailable
                     ? 'bg-[#fff4b8] ring-1 ring-[#efd462]'

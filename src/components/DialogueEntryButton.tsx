@@ -14,7 +14,11 @@ const DialogueEntryButton: React.FC<DialogueEntryButtonProps> = ({
   <button
     type="button"
     aria-label={enabled ? '对话已开启' : '对话未开启'}
-    className={`flex h-10 w-[78px] items-center justify-center gap-[3px] rounded-[13px] border border-white/85 bg-white/75 px-[5px] shadow-[0_2px_8px_rgba(47,39,68,0.10)] backdrop-blur-[2px] ${className}`}
+    className={`flex h-10 w-[78px] items-center justify-center gap-[3px] rounded-[13px] border px-[5px] shadow-[0_2px_8px_rgba(47,39,68,0.10)] backdrop-blur-[2px] ${
+      enabled
+        ? 'border-[#d9ccff] bg-[#f8f5ff]/90'
+        : 'border-white/85 bg-white/75'
+    } ${className}`}
     onClick={onClick}
   >
     <span className="relative flex h-7 w-[31px] shrink-0 items-center justify-center">

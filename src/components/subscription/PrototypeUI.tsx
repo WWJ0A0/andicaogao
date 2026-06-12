@@ -56,13 +56,33 @@ export const PrototypeHeader: React.FC<{
   </div>
 );
 
-export const PlusBadge: React.FC<{ compact?: boolean }> = ({ compact = false }) => (
-  <div className={`flex overflow-hidden rounded-[4px] bg-[#eceaec] ${compact ? 'h-8' : 'h-9'}`}>
-    <span className="flex items-center gap-1 bg-[#8b66ef] px-3 font-semibold text-white">
-      <Gem size={15} fill="white" />
-      Plus
+export const PlusBadge: React.FC<{
+  activated?: boolean;
+  compact?: boolean;
+}> = ({ activated = false, compact = false }) => (
+  <div
+    className={`flex items-center rounded-full border font-medium transition-colors ${
+      compact ? 'h-8 px-2.5' : 'h-9 px-3'
+    } ${
+      activated
+        ? 'border-[#ded5fa] bg-[#f3efff] text-[#6543cb]'
+        : 'border-[#8b66ef] bg-white text-[#7653dc]'
+    }`}
+  >
+    <span className={`flex items-center gap-1.5 ${compact ? 'text-[12px]' : 'text-[13px]'}`}>
+      <span className={`flex items-center justify-center rounded-full ${
+        compact ? 'h-5 w-5' : 'h-[22px] w-[22px]'
+      } ${activated ? 'bg-[#8b66ef] text-white' : 'bg-[#f1edff] text-[#8b66ef]'}`}>
+        <Gem size={compact ? 11 : 12} fill="currentColor" />
+      </span>
+      {activated ? 'Plus 会员' : '开通 Plus'}
     </span>
-    <span className="flex items-center px-2 text-[12px] text-[#333137]">开通会员</span>
+    {activated && (
+      <>
+        <span className="mx-2 h-3 w-px bg-[#d4c9f5]" />
+        <span className="text-[11px] text-[#8675b9]">已开通</span>
+      </>
+    )}
   </div>
 );
 
@@ -70,22 +90,27 @@ export const DialogueSwitch: React.FC<{
   enabled: boolean;
   onClick: () => void;
   loading?: boolean;
-}> = ({ enabled, onClick, loading = false }) => (
+  compact?: boolean;
+}> = ({ enabled, onClick, loading = false, compact = false }) => (
   <button
     type="button"
     aria-label={loading ? '正在更新语音对话状态' : enabled ? '关闭语音对话' : '开启语音对话'}
     onClick={onClick}
     disabled={loading}
-    className={`relative h-9 w-[78px] rounded-full border shadow-inner transition-colors ${
+    className={`relative shrink-0 rounded-full border shadow-inner transition-colors ${
+      compact ? 'h-8 w-[54px]' : 'h-11 w-[96px]'
+    } ${
       enabled ? 'border-[#7550df] bg-[#8b66ef]' : 'border-[#d4d2d8] bg-[#e4e3e7]'
     }`}
   >
     {loading ? (
-      <LoaderCircle size={18} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin text-white" />
+      <LoaderCircle size={compact ? 15 : 18} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin text-white" />
+    ) : compact ? (
+      <span className={`absolute top-[2px] h-[26px] w-[26px] rounded-full bg-white shadow transition-all ${enabled ? 'right-[2px]' : 'left-[2px]'}`} />
     ) : (
       <>
-        <span className={`absolute top-[3px] h-7 w-7 rounded-full bg-white shadow transition-all ${enabled ? 'right-[3px]' : 'left-[3px]'}`} />
-        <span className={`absolute top-[8px] text-[12px] font-semibold ${enabled ? 'left-[11px] text-white' : 'right-[8px] text-[#77727f]'}`}>
+        <span className={`absolute top-[3px] h-9 w-9 rounded-full bg-white shadow transition-all ${enabled ? 'right-[3px]' : 'left-[3px]'}`} />
+        <span className={`absolute top-[12px] text-[12px] font-semibold ${enabled ? 'left-[13px] text-white' : 'right-[11px] text-[#77727f]'}`}>
           {enabled ? 'ON' : 'OFF'}
         </span>
       </>
@@ -188,7 +213,7 @@ export const SubscriptionPlanCard: React.FC<{
       <span>
         <span className={`block text-[16px] ${disabled ? 'text-[#99959e]' : 'text-[#222222]'}`}>{recurring ? '连续包月' : '1个月'}</span>
         {statusLabel && (
-          <span className="mt-1 inline-flex rounded-full bg-[#f2e8e8] px-2 py-0.5 text-[9px] font-semibold text-[#b05a5a]">
+          <span className="mt-1 inline-flex rounded-full bg-[#e4def5] px-2 py-0.5 text-[9px] font-semibold text-[#7257be]">
             {statusLabel}
           </span>
         )}

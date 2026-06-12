@@ -134,7 +134,9 @@ const HomePage: React.FC = () => {
 
             {/* 导航栏 */}
             <div className="relative flex items-center self-stretch gap-[101px] px-5 py-2 shrink-0">
-              <p className="shrink-0 leading-[32px] tracking-normal text-[#222222] text-[24px] font-medium">KAMOMO</p>
+              <p className="max-w-[118px] shrink-0 truncate text-[24px] font-medium leading-[32px] tracking-normal text-[#222222]">
+                {pet.name}
+              </p>
               
               {/* 设置图标 */}
               <img 
@@ -191,7 +193,7 @@ const HomePage: React.FC = () => {
         <div
           className="absolute top-[109px] left-[29px] w-[334px] h-[294px] z-20 cursor-pointer hover:scale-105 transition-transform"
           onClick={handlePetClick}
-          aria-label="KAMOMO宠物"
+          aria-label={`${pet.name}设备`}
           role="button"
         >
           <Lottie animationData={pingjingAnimation} loop autoplay className="w-full h-full" />
@@ -409,7 +411,7 @@ const HomePage: React.FC = () => {
                 <div className="flex flex-col items-center gap-[12px] w-full">
                   <p className="w-full text-center text-[#222222] font-medium text-[16px] leading-[24px]">
                     开启派派日记功能，<br />
-                    让「KAMOMO」记下此刻。
+                    让「ropet」记下此刻。
                   </p>
                   <p className="w-full text-center text-[#555555] text-[14px] leading-[24px]">
                     需要先开启“派派日记”功能，（该功能可在详情右上角进行关闭），日记功能开启即代表你同意 ropet 将内容上传并进行AI处理和训练。

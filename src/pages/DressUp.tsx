@@ -9,7 +9,7 @@ const DressUp: React.FC = () => {
           <div className="relative w-[200px] h-[200px] mx-auto mb-6 bg-gradient-to-b from-[#e2e7f1] to-white rounded-full shadow-inner border border-gray-100 flex items-center justify-center">
             <img 
               src="/images/mo0uw8au-tlddmuo.png" 
-              alt="KAMOMO宠物" 
+              alt="ropet宠物"
               className="w-32 h-32 object-contain z-20"
             />
             <div className="absolute bottom-4 w-24 h-4 bg-gradient-to-r from-[#a68db6] to-[#c8b4d3] blur-md rounded-full opacity-50"></div>

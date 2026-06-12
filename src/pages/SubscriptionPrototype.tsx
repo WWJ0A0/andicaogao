@@ -9,6 +9,7 @@ import {
   HeartHandshake,
   MessageCircle,
   ReceiptText,
+  RotateCcw,
   ShieldCheck,
   Sparkles,
   Wrench,
@@ -112,7 +113,7 @@ const StatusScreen = () => {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-[14px] text-white/75">当前设备权益</div>
-              <h1 className="mt-2 text-[27px] leading-[34px] font-bold">KAMOMO Plus</h1>
+              <h1 className="mt-2 text-[27px] leading-[34px] font-bold">ropet Plus</h1>
               <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-white/18 px-3 py-1 text-[13px] font-semibold">
                 <Check size={15} />
                 已生效
@@ -138,7 +139,7 @@ const StatusScreen = () => {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-[18px] font-bold text-[#19181f]">对话能力已解锁</div>
-              <div className="mt-1 text-[13px] text-[#8b8792]">权益跟随 KAMOMO 设备</div>
+              <div className="mt-1 text-[13px] text-[#8b8792]">权益跟随 ropet 设备</div>
             </div>
             <ShieldCheck size={26} color={purple} />
           </div>
@@ -198,7 +199,7 @@ const PlansScreen = () => {
             <span className="text-[22px] font-semibold text-[#19181f]">￥69.9/月</span>
           </button>
           <div className="mt-3 rounded-[18px] bg-[#f7f4ff] px-4 py-3 text-[13px] leading-[20px] text-[#6f56d9]">
-            订阅权益开通给当前设备 KAMOMO，重新绑定账号后权益仍跟随设备。
+            订阅权益开通给当前设备 ropet，重新绑定账号后权益仍跟随设备。
           </div>
         </div>
 
@@ -226,7 +227,7 @@ const PaymentScreen = () => {
       <div className="px-5 pt-4">
         <Card className="p-5">
           <div className="text-[15px] text-[#8b8792]">当前设备</div>
-          <div className="mt-1 text-[24px] font-bold text-[#19181f]">KAMOMO</div>
+          <div className="mt-1 text-[24px] font-bold text-[#19181f]">ropet</div>
           <div className="mt-4 rounded-[20px] bg-[#f6f3ff] p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -274,7 +275,7 @@ const SuccessScreen = () => {
         <div className="mx-auto w-[92px] h-[92px] rounded-full bg-[#dcfae6] text-[#027a48] flex items-center justify-center">
           <Check size={48} />
         </div>
-        <h1 className="mt-8 text-[30px] font-bold text-[#19181f]">KAMOMO 已开通</h1>
+        <h1 className="mt-8 text-[30px] font-bold text-[#19181f]">ropet 已开通</h1>
         <p className="mt-2 text-[16px] text-[#8b8792]">Ropet Plus 对话权益已生效</p>
 
         <Card className="mt-8 p-5 text-left">
@@ -288,7 +289,7 @@ const SuccessScreen = () => {
           </div>
           <div className="flex justify-between py-3">
             <span className="text-[#8b8792]">权益归属</span>
-            <span className="font-semibold">KAMOMO</span>
+            <span className="font-semibold">ropet</span>
           </div>
         </Card>
       </div>
@@ -313,7 +314,7 @@ const TrialScreen = () => {
             <Gift size={48} />
           </div>
           <div className="mt-6 rounded-[18px] bg-white/18 px-4 py-3 text-[13px] leading-[20px]">
-            使用后给当前设备 KAMOMO 增加 7 天对话权益。体验卡权益跟随设备，不跟随账号。
+            使用后给当前设备 ropet 增加 7 天对话权益。体验卡权益跟随设备，不跟随账号。
           </div>
         </Card>
 
@@ -339,7 +340,7 @@ const ManageScreen = () => {
     ['当前套餐', 'Ropet Plus 月订阅'],
     ['有效期', '2026.07.04'],
     ['自动续费', 'Apple 订阅 · 已开启'],
-    ['权益归属', 'KAMOMO 设备'],
+    ['权益归属', 'ropet 设备'],
   ];
   return (
     <PhoneFrame title="订阅与订单" backTo="/pet-profile">
@@ -350,7 +351,7 @@ const ManageScreen = () => {
               <Sparkles size={24} />
             </div>
             <div>
-              <div className="text-[20px] font-bold text-[#19181f]">KAMOMO Plus</div>
+              <div className="text-[20px] font-bold text-[#19181f]">ropet Plus</div>
               <div className="text-[13px] text-[#8b8792]">个人中心内的账户资产管理</div>
             </div>
           </div>

@@ -1,8 +1,80 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, LoaderCircle, X } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import TrialCardArtwork from '@/components/subscription/TrialCardArtwork';
+import { usePetStore } from '@/store/usePetStore';
+import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
 const Nest: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { pet } = usePetStore();
+  const deviceName = pet?.name || '肉派派';
+  const {
+    trialCards,
+    expiryDate,
+    voiceConsentGranted,
+    selectTrialCard,
+    setPaymentState,
+  } = useSubscriptionStore();
+  const orderedTrialCards = useMemo(() => trialCards
+    .filter((card) => card.status !== 'used')
+    .sort((a, b) => {
+    const order = { active: 0, available: 1 };
+    return order[a.status] - order[b.status];
+  }), [trialCards]);
+  const availableTrialCards = trialCards.filter((card) => card.status === 'available');
+  const activeTrialCards = trialCards.filter((card) => card.status === 'active');
+  const initialTrialCardId = searchParams.get('card')
+    || activeTrialCards[0]?.id
+    || availableTrialCards[0]?.id
+    || orderedTrialCards[0]?.id
+    || '';
+  const [selectedTrialCardId, setSelectedTrialCardId] = useState(initialTrialCardId);
+  const [usingTrialCard, setUsingTrialCard] = useState(false);
+  const trialDetailOpen = searchParams.get('item') === 'trial-card';
+  const selectedTrialCard = orderedTrialCards.find((card) => card.id === selectedTrialCardId)
+    || orderedTrialCards[0];
+  const selectedTrialCardIndex = selectedTrialCard
+    ? orderedTrialCards.findIndex((card) => card.id === selectedTrialCard.id)
+    : -1;
+  const trialCardStatus = activeTrialCards.length
+    ? '使用中'
+    : availableTrialCards.length
+      ? `拥有 ${availableTrialCards.length} 张`
+      : '已全部使用';
+
+  const openTrialCardDetail = (cardId = initialTrialCardId) => {
+    setSelectedTrialCardId(cardId);
+    setSearchParams({ item: 'trial-card', card: cardId });
+  };
+
+  const closeTrialCardDetail = () => {
+    setSearchParams({});
+  };
+
+  const moveTrialCard = (direction: -1 | 1) => {
+    if (!orderedTrialCards.length) return;
+    const nextIndex = (selectedTrialCardIndex + direction + orderedTrialCards.length) % orderedTrialCards.length;
+    const nextCard = orderedTrialCards[nextIndex];
+    setSelectedTrialCardId(nextCard.id);
+    setSearchParams({ item: 'trial-card', card: nextCard.id }, { replace: true });
+  };
+
+  const useTrialCard = () => {
+    if (!selectedTrialCard || selectedTrialCard.status !== 'available' || usingTrialCard) return;
+    selectTrialCard(selectedTrialCard.id);
+    if (!voiceConsentGranted) {
+      navigate(`/subscription/voice-consent?source=trial&returnTo=${encodeURIComponent(`/nest?item=trial-card&card=${selectedTrialCard.id}`)}`);
+      return;
+    }
+
+    setUsingTrialCard(true);
+    setPaymentState('opening');
+    window.setTimeout(() => {
+      navigate('/subscription/opening?source=trial');
+    }, 700);
+  };
 
   return (
     <div className="relative w-full min-h-screen flex justify-center bg-[#d8deea] overflow-hidden py-4">
@@ -175,6 +247,30 @@ const Nest: React.FC = () => {
                     <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">改名卡</span>
                     <span className="mt-[3px] text-[11px] text-[#22222266] tracking-[0.11px] leading-[15px]">拥有 999 张</span>
                   </div>
+
+                  {/* Card 3: 体验卡 */}
+                  <button
+                    type="button"
+                    onClick={() => openTrialCardDetail()}
+                    className={`flex flex-col items-center rounded-[8px] bg-[#22222208] pt-[11px] px-[13px] pb-[8px] pl-[12px] shrink-0 ${
+                      activeTrialCards.length
+                        ? 'border-[1.5px] border-[#7c5ae0] shadow-[0_0_8px_rgba(124,90,224,0.15)]'
+                        : 'border border-[#2222220d]'
+                    }`}
+                  >
+                    <span className="flex h-[59px] w-[58px] items-center justify-center">
+                      <TrialCardArtwork
+                        days={selectedTrialCard?.days ?? availableTrialCards[0]?.days ?? 7}
+                        status={selectedTrialCard?.status ?? 'available'}
+                      />
+                    </span>
+                    <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">体验卡</span>
+                    <span className={`mt-[3px] text-[11px] tracking-[0.11px] leading-[15px] ${
+                      activeTrialCards.length ? 'font-medium text-[#7c5ae0]' : 'text-[#22222266]'
+                    }`}>
+                      {trialCardStatus}
+                    </span>
+                  </button>
                 </div>
               </div>
               
@@ -188,6 +284,116 @@ const Nest: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {trialDetailOpen && selectedTrialCard && (
+          <div
+            className="absolute inset-0 z-[90] flex items-end bg-black/55"
+            onClick={closeTrialCardDetail}
+          >
+            <section
+              className="relative w-full rounded-t-[28px] bg-[#fafafa] px-5 pb-8 pt-5 shadow-[0_-14px_40px_rgba(0,0,0,0.16)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                aria-label="关闭体验卡详情"
+                onClick={closeTrialCardDetail}
+                className="absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#eeeeef] text-[#5f5b64]"
+              >
+                <X size={19} />
+              </button>
+
+              <div className="flex h-[315px] items-center justify-center">
+                <button
+                  type="button"
+                  aria-label="上一张体验卡"
+                  onClick={() => moveTrialCard(-1)}
+                  className="mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#77727f] shadow-sm"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <TrialCardArtwork
+                  days={selectedTrialCard.days}
+                  status={selectedTrialCard.status}
+                  size="hero"
+                  className="-rotate-[3deg]"
+                />
+                <button
+                  type="button"
+                  aria-label="下一张体验卡"
+                  onClick={() => moveTrialCard(1)}
+                  className="ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#77727f] shadow-sm"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+
+              <div className="flex justify-center gap-1.5">
+                {orderedTrialCards.map((card) => (
+                  <button
+                    type="button"
+                    key={card.id}
+                    aria-label={`查看 ${card.days} 天体验卡`}
+                    onClick={() => {
+                      setSelectedTrialCardId(card.id);
+                      setSearchParams({ item: 'trial-card', card: card.id }, { replace: true });
+                    }}
+                    className={`h-1.5 rounded-full transition-all ${
+                      card.id === selectedTrialCard.id ? 'w-5 bg-[#222127]' : 'w-1.5 bg-[#d6d3d9]'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <div className="mt-5 flex items-start justify-between">
+                <div>
+                  <h2 className="text-[22px] font-semibold text-[#222127]">{selectedTrialCard.days} 天体验卡</h2>
+                  <p className="mt-2 text-[12px] text-[#8b8792]">权益设备：{deviceName}</p>
+                  {selectedTrialCard.status === 'active' && expiryDate && (
+                    <p className="mt-1 text-[12px] text-[#8b8792]">{expiryDate} 到期</p>
+                  )}
+                </div>
+                <span className={`rounded-full px-3 py-1.5 text-[11px] font-semibold ${
+                  selectedTrialCard.status === 'active'
+                    ? 'bg-[#eee8ff] text-[#704bd4]'
+                    : selectedTrialCard.status === 'used'
+                      ? 'bg-[#eeeeef] text-[#96919b]'
+                      : 'bg-[#e8f7ef] text-[#31845c]'
+                }`}>
+                  {selectedTrialCard.status === 'active'
+                    ? '使用中'
+                    : selectedTrialCard.status === 'used'
+                      ? '已使用'
+                      : '可使用'}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                disabled={selectedTrialCard.status !== 'available' || usingTrialCard}
+                onClick={useTrialCard}
+                className={`mt-6 flex h-[54px] w-full items-center justify-center rounded-[18px] text-[16px] font-semibold ${
+                  selectedTrialCard.status === 'available'
+                    ? 'bg-[#8b66ef] text-white shadow-[0_10px_24px_rgba(115,78,218,0.24)]'
+                    : 'cursor-not-allowed bg-[#dedce1] text-white'
+                }`}
+              >
+                {usingTrialCard ? (
+                  <>
+                    <LoaderCircle size={18} className="mr-2 animate-spin" />
+                    正在使用
+                  </>
+                ) : selectedTrialCard.status === 'active' ? (
+                  '使用中'
+                ) : selectedTrialCard.status === 'used' ? (
+                  '已使用'
+                ) : (
+                  '使用体验卡'
+                )}
+              </button>
+            </section>
+          </div>
+        )}
 
         {/* System Home Indicator */}
         <div className="absolute bottom-0 left-[1px] flex items-start pt-[21px] px-[129px] pb-[8px] w-[394px] h-[34px] z-50 pointer-events-none">
