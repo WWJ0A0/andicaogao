@@ -42,6 +42,14 @@ const getNextUtcRefreshText = () => {
   return `${dateLabel} ${refreshTimeText} 刷新`;
 };
 
+const FREE_QUOTA_SECONDS = 5 * 60;
+
+const formatQuotaTime = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const restSeconds = seconds % 60;
+  return `${minutes}:${String(restSeconds).padStart(2, '0')}`;
+};
+
 const DialogueMode: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -61,6 +69,8 @@ const DialogueMode: React.FC = () => {
   const freeQuotaExhausted = searchParams.get('quota') === 'empty';
   const needsDialogueCard = freeQuotaExhausted;
   const nextRefreshText = getNextUtcRefreshText();
+  const freeQuotaRemaining = freeQuotaExhausted ? 0 : FREE_QUOTA_SECONDS;
+  const freeQuotaProgress = (freeQuotaRemaining / FREE_QUOTA_SECONDS) * 100;
   const policyReturnTo = encodeURIComponent('/dialogue-mode');
   const showEyeGlow = isOnline && dialogueEnabled && !needsDialogueCard;
   const ropetSpeech = !isOnline
@@ -180,6 +190,39 @@ const DialogueMode: React.FC = () => {
             ) : (
               statusHint
             )}
+          </div>
+
+          <div className={`mx-auto mt-4 max-w-[300px] rounded-[18px] border px-4 py-3 text-left ${
+            freeQuotaExhausted
+              ? 'border-[#f1ddd8] bg-[#fff8f6]'
+              : 'border-[#efe8ff] bg-[#fbf9ff]'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[13px] font-semibold text-[#26232a]">今日免费聊天</p>
+                <p className="mt-0.5 text-[10px] leading-4 text-[#8b8792]">只有真正说悄悄话时才消耗</p>
+              </div>
+              <div className={`rounded-full px-3 py-1 text-[12px] font-semibold ${
+                freeQuotaExhausted ? 'bg-[#f7e7e2] text-[#9b5a4f]' : 'bg-[#efe8ff] text-[#7c5ae0]'
+              }`}>
+                {formatQuotaTime(freeQuotaRemaining)} / {formatQuotaTime(FREE_QUOTA_SECONDS)}
+              </div>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#ebe7ef]">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  freeQuotaExhausted
+                    ? 'bg-[#c78b80]'
+                    : 'bg-gradient-to-r from-[#a98dff] to-[#7c5ae0]'
+                }`}
+                style={{ width: `${freeQuotaProgress}%` }}
+              />
+            </div>
+            <p className={`mt-2 text-[10px] leading-4 ${
+              freeQuotaExhausted ? 'text-[#9b5a4f]' : 'text-[#8b8792]'
+            }`}>
+              {freeQuotaExhausted ? `今日额度已用完 · ${nextRefreshText}` : '开关开启、等待唤醒时不扣时长'}
+            </p>
           </div>
 
           {activeDialogueCard && !freeQuotaExhausted && (
