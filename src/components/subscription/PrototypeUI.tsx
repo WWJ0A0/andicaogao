@@ -94,7 +94,7 @@ export const DialogueSwitch: React.FC<{
 }> = ({ enabled, onClick, loading = false, compact = false }) => (
   <button
     type="button"
-    aria-label={loading ? '正在更新语音对话状态' : enabled ? '关闭语音对话' : '开启语音对话'}
+    aria-label={loading ? '正在更新悄悄话状态' : enabled ? '关闭悄悄话' : '开启悄悄话'}
     onClick={onClick}
     disabled={loading}
     className={`relative shrink-0 rounded-full border shadow-inner transition-colors ${
@@ -142,9 +142,18 @@ export const AgreementCheck: React.FC<{
 
 export const ModalOverlay: React.FC<{
   children: React.ReactNode;
-}> = ({ children }) => (
-  <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 px-[30px]">
-    {children}
+  align?: 'center' | 'end';
+  onClose?: () => void;
+}> = ({ children, align = 'center', onClose }) => (
+  <div
+    className={`absolute inset-0 z-50 flex bg-black/75 px-[30px] ${
+      align === 'end' ? 'items-end justify-center px-0' : 'items-center justify-center'
+    }`}
+    onClick={onClose}
+  >
+    <div className={align === 'end' ? 'w-full' : ''} onClick={(event) => event.stopPropagation()}>
+      {children}
+    </div>
   </div>
 );
 
@@ -161,7 +170,7 @@ export const HiMark = () => (
 );
 
 const benefitRows = [
-  '无限时长对话能力',
+  '无限时长悄悄话',
   '长期记忆能力（能记住你说的每一句话）',
   '更高的智慧（情绪感知能力）',
   '深度交流能力',
@@ -172,7 +181,7 @@ const benefitRows = [
 export const BenefitsTable = () => (
   <section className="overflow-hidden rounded-[18px] border border-[#eeebf2] bg-white shadow-[0_5px_18px_rgba(49,42,68,0.06)]">
     <div className="grid h-12 grid-cols-[1fr_58px_58px] bg-gradient-to-r from-[#9c83de] to-[#f6f4fb]">
-      <strong className="flex items-center px-4 text-[15px] text-white">对话权益</strong>
+      <strong className="flex items-center px-4 text-[15px] text-white">悄悄话权益</strong>
       <span className="flex items-center justify-center text-[12px] text-[#68636e]">免费版</span>
       <span className="flex items-center justify-center text-[12px] font-medium text-[#8b66ef]">Plus</span>
     </div>

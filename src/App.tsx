@@ -7,7 +7,6 @@ import Gallery from "@/pages/Gallery";
 import Diary from "@/pages/Diary";
 import PetProfile from "@/pages/PetProfile";
 import DressUp from "@/pages/DressUp";
-import InteractionHistory from "@/pages/InteractionHistory";
 import Personality from "@/pages/Personality";
 import Growth from "@/pages/Growth";
 import Settings from "@/pages/Settings";
@@ -17,6 +16,7 @@ import DiaryRules from "@/pages/DiaryRules";
 import PaintingDiary from "@/pages/PaintingDiary";
 import LottiePreview from "@/pages/LottiePreview";
 import LuckyDrawMachine from "@/pages/LuckyDrawMachine";
+import InteractionHistory from "@/pages/InteractionHistory";
 import HomeLost from "@/pages/HomeLost";
 import AssistantContentPage from "@/pages/AssistantContentPage";
 import DrinkWaterReminderPage from "@/pages/DrinkWaterReminderPage";
@@ -27,6 +27,9 @@ import SubscriptionFlow from "@/pages/SubscriptionFlow";
 import TrialExperience from "@/pages/TrialExperience";
 import VoiceConsent from "@/pages/VoiceConsent";
 import PolicyDocument from "@/pages/PolicyDocument";
+import DialogueShop from "@/pages/DialogueShop";
+import PointsStore from "@/pages/PointsStore";
+import PointsOrders from "@/pages/PointsOrders";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -52,7 +55,8 @@ export default function App() {
         <Route path="/painting-diary" element={<PaintingDiary />} />
         <Route path="/pet-profile" element={<PetProfile />} />
         <Route path="/dress-up" element={<DressUp />} />
-        <Route path="/interaction-history" element={<InteractionHistory />} />
+        <Route path="/interaction-history" element={<LuckyDrawMachine />} />
+        <Route path="/interaction-score" element={<InteractionHistory />} />
         <Route path="/lucky-draw-2" element={<LuckyDrawMachine />} />
         <Route path="/personality" element={<Personality />} />
         <Route path="/growth" element={<Growth />} />
@@ -68,6 +72,9 @@ export default function App() {
         <Route path="/drink-water-reminder" element={<DrinkWaterReminderPage />} />
         <Route path="/eye-change" element={<EyeChange />} />
         <Route path="/dialogue-mode" element={<DialogueMode />} />
+        <Route path="/dialogue-shop" element={<DialogueShop />} />
+        <Route path="/points-store" element={<PointsStore />} />
+        <Route path="/points-orders" element={<PointsOrders />} />
         <Route path="/subscription" element={<SubscriptionFlow screen="plans" />} />
         <Route path="/subscription/payment-method" element={<SubscriptionFlow screen="payment-method" />} />
         <Route path="/subscription/alipay" element={<SubscriptionFlow screen="alipay" />} />

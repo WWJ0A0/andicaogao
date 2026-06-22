@@ -5,8 +5,15 @@ export type SubscriptionPlan = 'one-month' | 'auto-renew';
 export type EntitlementType = 'none' | 'trial' | 'subscription';
 export type PaymentMethod = 'alipay' | 'wechat' | 'apple' | 'google' | 'stripe' | 'paypal';
 export type PaymentState = 'idle' | 'signing' | 'paying' | 'confirming' | 'opening' | 'success' | 'failed';
-export type TrialCardStatus = 'available' | 'active' | 'used';
-export type OrderStatus = 'paid' | 'refunding' | 'refunded';
+export type TrialCardStatus = 'available' | 'used';
+export type OrderStatus =
+  | 'creating'
+  | 'unpaid'
+  | 'cancelled'
+  | 'paid'
+  | 'refund-reviewing'
+  | 'refunding'
+  | 'refunded';
 
 export interface TrialCard {
   id: string;
@@ -24,7 +31,8 @@ export interface SubscriptionOrder {
   plan: SubscriptionPlan;
   deviceName: string;
   paymentMethod: PaymentMethod;
-  paidAt: string;
+  createdAt: string;
+  paidAt?: string;
   amount: number;
   status: OrderStatus;
 }
@@ -46,12 +54,20 @@ interface SubscriptionStore {
   nextChargeDate: string;
   setSelectedPlan: (plan: SubscriptionPlan) => void;
   setPaymentMethod: (method: PaymentMethod) => void;
+  createSubscriptionOrder: (method: PaymentMethod) => void;
+  markLatestOrderUnpaid: () => void;
+  markLatestOrderPaid: () => void;
+  cancelLatestOrder: () => void;
+  requestRefund: (orderId: string) => void;
+  approveRefund: (orderId: string) => void;
+  completeRefund: (orderId: string) => void;
   setDialogueEnabled: (enabled: boolean) => void;
-  selectTrialCard: (cardId: string) => void;
+  redeemTrialCard: (cardId: string) => void;
   setPaymentState: (state: PaymentState) => void;
   grantVoiceConsent: () => void;
   activateTrial: () => void;
   activateSubscription: () => void;
+  setSubscriptionExpiredForDemo: (expired: boolean) => void;
   resetPrototype: () => void;
 }
 
@@ -100,7 +116,7 @@ const addOneMonth = (date: Date) => {
 };
 
 const initialState = {
-  selectedPlan: 'one-month' as SubscriptionPlan,
+  selectedPlan: 'auto-renew' as SubscriptionPlan,
   subscribedPlan: null as SubscriptionPlan | null,
   paymentMethod: 'alipay' as PaymentMethod,
   entitlement: 'none' as EntitlementType,
@@ -122,20 +138,111 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
       ...initialState,
       setSelectedPlan: (selectedPlan) => set({ selectedPlan }),
       setPaymentMethod: (paymentMethod) => set({ paymentMethod }),
-      selectTrialCard: (selectedTrialCardId) => set({ selectedTrialCardId }),
-      setDialogueEnabled: (dialogueEnabled) => {
+      createSubscriptionOrder: (paymentMethod) => {
         const state = get();
-        if (state.entitlement === 'none' || (!state.autoRenewEnabled && isDateExpired(state.expiryDate))) return;
+        const now = new Date();
+        const plan = state.selectedPlan;
+        const amount = plan === 'auto-renew' ? 69.9 : 79.9;
+        set({
+          paymentMethod,
+          paymentState: 'confirming',
+          orders: [
+            {
+              id: `order-${now.getTime()}`,
+              orderNo: `RP${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getTime()).slice(-6)}`,
+              plan,
+              deviceName: '肉派派',
+              paymentMethod,
+              createdAt: formatPaymentTime(now),
+              amount,
+              status: 'creating',
+            },
+            ...state.orders,
+          ],
+        });
+      },
+      markLatestOrderUnpaid: () => set((state) => ({
+        paymentState: 'idle',
+        orders: state.orders.map((order, index) => (
+          index === 0 && order.status === 'creating'
+            ? { ...order, status: 'unpaid' as OrderStatus }
+            : order
+        )),
+      })),
+      markLatestOrderPaid: () => {
+        const now = new Date();
+        set((state) => ({
+          paymentState: 'success',
+          orders: state.orders.map((order, index) => (
+            index === 0 && (order.status === 'creating' || order.status === 'unpaid')
+              ? { ...order, status: 'paid' as OrderStatus, paidAt: formatPaymentTime(now) }
+              : order
+          )),
+        }));
+      },
+      cancelLatestOrder: () => set((state) => ({
+        paymentState: 'failed',
+        orders: state.orders.map((order, index) => (
+          index === 0 && (order.status === 'creating' || order.status === 'unpaid')
+            ? { ...order, status: 'cancelled' as OrderStatus }
+            : order
+        )),
+      })),
+      requestRefund: (orderId) => set((state) => ({
+        orders: state.orders.map((order) => (
+          order.id === orderId && order.status === 'paid'
+            ? { ...order, status: 'refund-reviewing' as OrderStatus }
+            : order
+        )),
+      })),
+      approveRefund: (orderId) => set((state) => ({
+        orders: state.orders.map((order) => (
+          order.id === orderId && order.status === 'refund-reviewing'
+            ? { ...order, status: 'refunding' as OrderStatus }
+            : order
+        )),
+      })),
+      completeRefund: (orderId) => set((state) => ({
+        entitlement: 'none',
+        subscribedPlan: null,
+        autoRenewEnabled: false,
+        dialogueEnabled: false,
+        expiryDate: '',
+        nextChargeDate: '',
+        orders: state.orders.map((order) => (
+          order.id === orderId && order.status === 'refunding'
+            ? { ...order, status: 'refunded' as OrderStatus }
+            : order
+        )),
+      })),
+      redeemTrialCard: (selectedTrialCardId) => {
+        const state = get();
+        const now = new Date();
+        set({
+          selectedTrialCardId,
+          activeTrialCardId: selectedTrialCardId,
+          trialCards: state.trialCards.map((card) => (
+            card.id === selectedTrialCardId && card.status === 'available'
+              ? {
+                  ...card,
+                  status: 'used' as TrialCardStatus,
+                  orderNo: card.orderNo ?? `TC${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getTime()).slice(-4)}`,
+                  usedAt: formatPaymentTime(now),
+                }
+              : card
+          )),
+        });
+      },
+      setDialogueEnabled: (dialogueEnabled) => {
         set({ dialogueEnabled });
       },
       setPaymentState: (paymentState) => set({ paymentState }),
       grantVoiceConsent: () => set({ voiceConsentGranted: true }),
       activateTrial: () => {
         const state = get();
-        const now = new Date();
         const selectedCard = state.trialCards.find(
-          (card) => card.id === state.selectedTrialCardId && card.status === 'available',
-        ) ?? state.trialCards.find((card) => card.status === 'available');
+          (card) => card.id === state.selectedTrialCardId && card.status === 'used',
+        );
         if (!selectedCard) return;
 
         const hasValidEntitlement = state.entitlement !== 'none'
@@ -149,18 +256,8 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
         set({
           entitlement: state.entitlement === 'subscription' ? 'subscription' : 'trial',
           dialogueEnabled: true,
-          trialCards: state.trialCards.map((card) => (
-            card.id === selectedCard.id
-              ? {
-                  ...card,
-                  status: 'active' as TrialCardStatus,
-                  orderNo: card.orderNo ?? `TC${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getTime()).slice(-4)}`,
-                  usedAt: formatPaymentTime(now),
-                }
-              : card
-          )),
           selectedTrialCardId: '',
-          activeTrialCardId: [state.activeTrialCardId, selectedCard.id].filter(Boolean).join(','),
+          activeTrialCardId: selectedCard.id,
           paymentState: 'success',
           expiryDate,
           nextChargeDate,
@@ -177,33 +274,73 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
         const entitlementExpiry = hasValidEntitlement ? parseDate(state.expiryDate) : null;
         const expiry = addOneMonth(entitlementExpiry ?? now);
         const amount = plan === 'auto-renew' ? 69.9 : 79.9;
-        const id = `order-${now.getTime()}`;
+        const latestOrder = state.orders[0];
+        const hasPaidOrder = latestOrder?.status === 'paid'
+          && latestOrder.plan === plan
+          && latestOrder.paymentMethod === state.paymentMethod;
 
         set({
           entitlement: 'subscription',
-          dialogueEnabled: true,
+          dialogueEnabled: false,
           subscribedPlan: plan,
           autoRenewEnabled,
           paymentState: 'success',
           expiryDate: formatSubscriptionDate(expiry),
           nextChargeDate: autoRenewEnabled ? formatSubscriptionDate(expiry) : '',
-          orders: [
-            {
-              id,
-              orderNo: `RP${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getTime()).slice(-6)}`,
-              plan,
-              deviceName: '肉派派',
-              paymentMethod: state.paymentMethod,
-              paidAt: formatPaymentTime(now),
-              amount,
-              status: 'paid',
-            },
-            ...state.orders,
-          ],
+          orders: hasPaidOrder
+            ? state.orders
+            : [
+                {
+                  id: `order-${now.getTime()}`,
+                  orderNo: `RP${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getTime()).slice(-6)}`,
+                  plan,
+                  deviceName: '肉派派',
+                  paymentMethod: state.paymentMethod,
+                  createdAt: formatPaymentTime(now),
+                  paidAt: formatPaymentTime(now),
+                  amount,
+                  status: 'paid',
+                },
+                ...state.orders,
+              ],
+        });
+      },
+      setSubscriptionExpiredForDemo: (expired) => {
+        const date = new Date();
+        date.setDate(date.getDate() + (expired ? -1 : 30));
+        const entitlementDate = formatSubscriptionDate(date);
+        set({
+          entitlement: 'subscription',
+          selectedPlan: 'auto-renew',
+          subscribedPlan: 'auto-renew',
+          autoRenewEnabled: !expired,
+          dialogueEnabled: !expired,
+          expiryDate: entitlementDate,
+          nextChargeDate: expired ? '' : entitlementDate,
         });
       },
       resetPrototype: () => set(initialState),
     }),
-    { name: 'ropet-subscription-prototype' },
+    {
+      name: 'ropet-subscription-prototype',
+      version: 3,
+      migrate: (persistedState) => {
+        const state = persistedState as Partial<SubscriptionStore>;
+        return {
+          ...state,
+          selectedPlan: state.entitlement === 'subscription'
+            ? state.selectedPlan ?? state.subscribedPlan ?? 'auto-renew'
+            : 'auto-renew',
+          trialCards: (state.trialCards ?? initialTrialCards).map((card) => ({
+            ...card,
+            status: (card.status as string) === 'active' ? 'used' : card.status,
+          })),
+          orders: (state.orders ?? []).map((order) => ({
+            ...order,
+            createdAt: order.createdAt ?? order.paidAt ?? '',
+          })),
+        };
+      },
+    },
   ),
 );

@@ -48,7 +48,7 @@ const TrialCardArtwork: React.FC<TrialCardArtworkProps> = ({
             </span>
           </div>
           <span className={`${hero ? 'mt-4 text-[17px]' : 'mt-1 text-[8px]'} font-medium tracking-normal text-white/90`}>
-            语音对话体验卡
+            悄悄话体验卡
           </span>
         </div>
 

@@ -78,10 +78,24 @@ const channelName = (method: PaymentMethod) => ({
 }[method]);
 
 const orderStatusLabel = (status: SubscriptionOrder['status']) => ({
+  creating: '创建中',
+  unpaid: '未付款',
+  cancelled: '取消付款',
   paid: '支付成功',
+  'refund-reviewing': '退款审核中',
   refunding: '退款中',
   refunded: '已退款',
-}[status] ?? '支付成功');
+}[status] ?? '未付款');
+
+const orderStatusClassName = (status: SubscriptionOrder['status']) => ({
+  creating: 'bg-[#f2edff] text-[#7652df]',
+  unpaid: 'bg-[#fff4df] text-[#a66a16]',
+  cancelled: 'bg-[#eeeeef] text-[#77727f]',
+  paid: 'bg-[#ecf8f1] text-[#23835a]',
+  'refund-reviewing': 'bg-[#f2edff] text-[#7652df]',
+  refunding: 'bg-[#fff4df] text-[#a66a16]',
+  refunded: 'bg-[#eeeeef] text-[#77727f]',
+}[status] ?? 'bg-[#eeeeef] text-[#77727f]');
 
 const formatOrderAmount = (amount: SubscriptionOrder['amount'] | string | undefined) => {
   const value = typeof amount === 'number' ? amount : Number.parseFloat(amount ?? '0');
@@ -181,7 +195,9 @@ const PlansScreen = () => {
     setSelectedPlan,
   } = useSubscriptionStore();
   const [agreementChecked, setAgreementChecked] = useState(true);
-  const currentPlan = entitlement === 'subscription' ? subscribedPlan : null;
+  const currentPlan = entitlement === 'subscription' && !isDateExpired(expiryDate)
+    ? subscribedPlan
+    : null;
   const selectingCurrentPlan = currentPlan === selectedPlan;
   const returnTo = searchParams.get('returnTo') || '/dialogue-mode';
   const projectedDate = projectedSubscriptionDate(entitlement, expiryDate);
@@ -195,7 +211,7 @@ const PlansScreen = () => {
         <div className="relative">
           <HiMark />
           <h1 className="mt-2 text-[24px] font-semibold text-[#222127]">获取 Ropet Plus</h1>
-          <p className="mt-1 text-[13px] text-[#a09ba5]">解锁完整对话能力</p>
+          <p className="mt-1 text-[13px] text-[#a09ba5]">解锁完整悄悄话能力</p>
         </div>
       </div>
 
@@ -231,13 +247,13 @@ const PlansScreen = () => {
         <button
           type="button"
           disabled={!agreementChecked || selectingCurrentPlan}
-          aria-label="立即订阅"
+          aria-label={selectingCurrentPlan ? '当前套餐使用中' : currentPlan ? '续费' : '立即订阅'}
           onClick={() => navigate('/subscription/payment-method')}
           className={`mt-5 h-[52px] w-full rounded-[22px] text-[16px] font-medium text-white ${
-            agreementChecked && !selectingCurrentPlan ? 'bg-[#8b66ef]' : 'bg-[#c9c5d4]'
+            agreementChecked && !selectingCurrentPlan ? 'bg-[#8b66ef]' : 'cursor-not-allowed bg-[#c9c5d4]'
           }`}
         >
-          {currentPlan ? (selectingCurrentPlan ? '请选择其他套餐' : '确认更换套餐') : '立即订阅'}
+          {selectingCurrentPlan ? '当前套餐使用中' : currentPlan ? '续费' : '立即订阅'}
         </button>
 
         <div className="mt-3 pl-7">
@@ -279,7 +295,8 @@ const PaymentMethodScreen = () => {
     entitlement,
     expiryDate,
     selectedPlan,
-    setPaymentMethod,
+    createSubscriptionOrder,
+    markLatestOrderUnpaid,
   } = useSubscriptionStore();
   const [selectedMethod, setSelectedMethod] = useState<'alipay' | 'wechat' | null>(null);
   const [creatingOrder, setCreatingOrder] = useState(false);
@@ -289,9 +306,12 @@ const PaymentMethodScreen = () => {
 
   useEffect(() => {
     if (!creatingOrder || !selectedMethod) return;
-    const timer = window.setTimeout(() => navigate(`/subscription/${selectedMethod}`), 1000);
+    const timer = window.setTimeout(() => {
+      markLatestOrderUnpaid();
+      navigate(`/subscription/${selectedMethod}`);
+    }, 1000);
     return () => window.clearTimeout(timer);
-  }, [creatingOrder, navigate, selectedMethod]);
+  }, [creatingOrder, markLatestOrderUnpaid, navigate, selectedMethod]);
 
   return (
     <PrototypePhone className="bg-[#f7f7f8]">
@@ -385,7 +405,7 @@ const PaymentMethodScreen = () => {
         disabled={!selectedMethod || creatingOrder}
         onClick={() => {
           if (!selectedMethod || creatingOrder) return;
-          setPaymentMethod(selectedMethod);
+          createSubscriptionOrder(selectedMethod);
           setCreatingOrder(true);
         }}
         className={`absolute bottom-[30px] left-5 right-5 h-[56px] rounded-[24px] text-[17px] font-semibold text-white ${
@@ -417,7 +437,7 @@ const PaymentMethodScreen = () => {
 
 const PaymentPasswordScreen: React.FC<{ channel: 'alipay' | 'wechat' }> = ({ channel }) => {
   const navigate = useNavigate();
-  const { selectedPlan, setPaymentState } = useSubscriptionStore();
+  const { selectedPlan, setPaymentState, cancelLatestOrder } = useSubscriptionStore();
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const recurring = selectedPlan === 'auto-renew';
@@ -455,7 +475,13 @@ const PaymentPasswordScreen: React.FC<{ channel: 'alipay' | 'wechat' }> = ({ cha
   return (
     <PrototypePhone className="bg-[#f5f5f5]">
       <PrototypeStatusBar />
-      <PrototypeHeader title={isAlipay ? '支付宝付款' : '微信支付'} onBack={() => navigate('/subscription/payment-method')} />
+      <PrototypeHeader
+        title={isAlipay ? '支付宝付款' : '微信支付'}
+        onBack={() => {
+          cancelLatestOrder();
+          navigate('/subscription/payment-method');
+        }}
+      />
 
       <div className="px-5 pt-3 text-center">
         <div
@@ -524,10 +550,14 @@ const PaymentPasswordScreen: React.FC<{ channel: 'alipay' | 'wechat' }> = ({ cha
 
 const ChannelPaymentResultScreen: React.FC<{ channel: 'alipay' | 'wechat' }> = ({ channel }) => {
   const navigate = useNavigate();
-  const { selectedPlan, voiceConsentGranted } = useSubscriptionStore();
+  const { selectedPlan, markLatestOrderPaid } = useSubscriptionStore();
   const isAlipay = channel === 'alipay';
   const color = isAlipay ? '#1677ff' : '#07c160';
   const amount = planAmount(selectedPlan);
+
+  useEffect(() => {
+    markLatestOrderPaid();
+  }, [markLatestOrderPaid]);
 
   return (
     <PrototypePhone className="bg-[#f5f5f5]">
@@ -558,11 +588,7 @@ const ChannelPaymentResultScreen: React.FC<{ channel: 'alipay' | 'wechat' }> = (
 
       <button
         type="button"
-        onClick={() => navigate(
-          voiceConsentGranted
-            ? '/subscription/opening?source=subscription'
-            : '/subscription/voice-consent?source=subscription',
-        )}
+        onClick={() => navigate('/subscription/opening?source=subscription')}
         className="absolute bottom-[34px] left-5 right-5 h-[56px] rounded-[24px] text-[17px] font-semibold text-white"
         style={{ backgroundColor: color }}
       >
@@ -580,7 +606,7 @@ const OpeningScreen = () => {
   const source = searchParams.get('source') === 'trial' ? 'trial' : 'subscription';
   const { activateTrial, activateSubscription, setPaymentState, trialCards, selectedTrialCardId } = useSubscriptionStore();
   const selectedTrialCard = trialCards.find((card) => card.id === selectedTrialCardId)
-    ?? trialCards.find((card) => card.status === 'available');
+    ?? trialCards.find((card) => card.status === 'used');
 
   useEffect(() => {
     setPaymentState('opening');
@@ -598,8 +624,12 @@ const OpeningScreen = () => {
         <div className="mx-auto w-20 h-20 rounded-full bg-[#f0ebff] flex items-center justify-center">
           <RefreshCw className="w-10 h-10 animate-spin text-[#8b66ef]" />
         </div>
-        <h2 className="mt-7 text-[24px] font-bold">{source === 'trial' ? `正在启用 ${selectedTrialCard?.days ?? ''} 天体验` : '已支付，正在开通对话'}</h2>
-        <p className="mx-auto mt-3 max-w-[300px] text-[14px] leading-6 text-[#8b8792]">服务端正在为设备 {deviceName} 开启订阅对话，请勿再次付款。</p>
+        <h2 className="mt-7 text-[24px] font-bold">{source === 'trial' ? `正在启用 ${selectedTrialCard?.days ?? ''} 天体验` : '已支付，正在开通会员'}</h2>
+        <p className="mx-auto mt-3 max-w-[300px] text-[14px] leading-6 text-[#8b8792]">
+          {source === 'trial'
+            ? `正在为设备 ${deviceName} 开启体验权益。`
+            : `正在为设备 ${deviceName} 开通 Ropet Plus，请勿再次付款。`}
+        </p>
       </div>
     </PhoneShell>
   );
@@ -621,7 +651,11 @@ const SuccessScreen = () => {
           <Check size={46} strokeWidth={2.5} />
         </div>
         <h2 className="mt-6 text-[27px] font-bold">{trial ? `${activeTrialCard?.days ?? ''} 天体验已开启` : 'Ropet Plus 已开通'}</h2>
-        <p className="mt-2 text-[14px] text-[#8b8792]">设备 {deviceName} 现在可以使用语音对话</p>
+        <p className="mt-2 text-[14px] text-[#8b8792]">
+          {trial
+            ? `设备 ${deviceName} 现在可以使用悄悄话`
+            : `设备 ${deviceName} 的会员权益已生效`}
+        </p>
       </div>
 
       <div className="mt-8 rounded-[22px] border border-[#ece9f1] px-5">
@@ -635,8 +669,15 @@ const SuccessScreen = () => {
         )}
       </div>
 
-      <PrimaryButton onClick={() => navigate('/dialogue-mode')} sub="首页对话按钮已同步开启">
-        开始对话
+      <PrimaryButton
+        onClick={() => navigate(
+          trial
+            ? '/dialogue-mode'
+            : `/subscription/voice-consent?source=subscription&activated=1&returnTo=${encodeURIComponent('/subscription/success?source=subscription')}`,
+        )}
+        sub={trial ? '首页悄悄话入口已同步开启' : '完成语音权限授权后开启悄悄话'}
+      >
+        {trial ? '开始悄悄话' : '同意协议并开启悄悄话'}
       </PrimaryButton>
     </PhoneShell>
   );
@@ -658,7 +699,7 @@ const FailureScreen = () => {
         </div>
         <h2 className="mt-6 text-[24px] font-bold">{title}</h2>
         <p className="mx-auto mt-3 max-w-[300px] text-[14px] leading-6 text-[#8b8792]">
-          {signFailure ? '本次尚未创建支付宝支付单，也不会产生扣款。' : '未确认扣款成功，不会开通对话权益。'}
+          {signFailure ? '本次尚未创建支付宝支付单，也不会产生扣款。' : '未确认扣款成功，不会开通悄悄话权益。'}
         </p>
       </div>
 
@@ -677,6 +718,7 @@ const FailureScreen = () => {
 const StatusScreen = () => {
   const navigate = useNavigate();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showRenewalGuide, setShowRenewalGuide] = useState(false);
   const { pet } = usePetStore();
   const deviceName = pet?.name || '肉派派';
   const {
@@ -690,9 +732,10 @@ const StatusScreen = () => {
     resetPrototype,
   } = useSubscriptionStore();
   const trial = entitlement === 'trial';
+  const expired = entitlement !== 'none' && isDateExpired(expiryDate);
   const currentPlan = subscribedPlan ?? selectedPlan;
   const benefits = [
-    '不限时长语音对话',
+    '不限时长悄悄话',
     '长期记忆能力',
     '更高的情绪感知能力',
     '深度交流能力',
@@ -714,6 +757,7 @@ const StatusScreen = () => {
             </div>
             <p className="mt-1 text-[13px] font-medium text-[#7652df]">
               {trial ? 'Ropet Plus 体验权益' : 'Ropet Plus 会员'}
+              {expired && <span className="ml-2 text-[#b46464]">已过期</span>}
             </p>
             <p className="mt-1 text-[11px] text-[#96919c]">会员权益仅绑定此设备，不跟随用户账号转移</p>
           </div>
@@ -727,9 +771,11 @@ const StatusScreen = () => {
       <section className="mt-5 rounded-[20px] border border-[#ece9f1] bg-white px-4 py-4">
         <div className="flex items-center justify-between">
           <h2 className="text-[16px] font-semibold text-[#29262e]">当前可用权益</h2>
-          <span className="text-[10px] font-medium text-[#8b66ef]">已全部生效</span>
+          <span className={`text-[10px] font-medium ${expired ? 'text-[#a39ea8]' : 'text-[#8b66ef]'}`}>
+            {expired ? '权益已失效' : '已全部生效'}
+          </span>
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className={`mt-3 grid grid-cols-2 gap-2 ${expired ? 'opacity-45' : ''}`}>
           {benefits.map((benefit) => (
             <div key={benefit} className="flex min-h-[46px] items-center rounded-[12px] bg-[#f6f3ff] px-3">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#8b66ef] text-white">
@@ -741,7 +787,11 @@ const StatusScreen = () => {
         </div>
       </section>
 
-      {trial ? (
+      <section className="mt-4 rounded-[18px] bg-[#f7f4ff] px-4 py-3 text-[11px] leading-5 text-[#75679a]">
+        当前权益展示的是这台设备的状态；历史订单只展示当前账号自己的支付订单。若权益由其他账号开通，订单详情仅购买账号可见。
+      </section>
+
+      {trial && !expired ? (
         <section className="mt-5 rounded-[20px] border border-[#ded5fa] bg-[#f7f4ff] p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -783,6 +833,26 @@ const StatusScreen = () => {
         </div>
       )}
 
+      {expired && (
+        <button
+          type="button"
+          onClick={() => navigate('/subscription?returnTo=/subscription/status')}
+          className="mt-4 flex h-[52px] w-full items-center justify-center rounded-[18px] bg-[#8b66ef] text-[14px] font-semibold text-white"
+        >
+          续费 Ropet Plus
+        </button>
+      )}
+
+      {!trial && !expired && autoRenewEnabled && (
+        <button
+          type="button"
+          onClick={() => setShowRenewalGuide(true)}
+          className="mt-4 flex h-[48px] w-full items-center justify-center rounded-[18px] border border-[#ded9e5] bg-white text-[13px] font-medium text-[#6f6975]"
+        >
+          取消自动续费
+        </button>
+      )}
+
       <button
         type="button"
         onClick={() => navigate('/subscription/orders')}
@@ -802,6 +872,34 @@ const StatusScreen = () => {
       </button>
       <p className="mt-1.5 text-center text-[9px] text-[#aaa5ae]">仅用于原型演示</p>
 
+      {showRenewalGuide && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/35 px-8">
+          <div className="w-full rounded-[24px] bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)]">
+            <h2 className="text-center text-[19px] font-bold">取消自动续费</h2>
+            <p className="mt-2 text-center text-[12px] leading-5 text-[#8b8792]">
+              自动续费由{paymentMethod === 'wechat' ? '微信支付' : '支付宝'}管理，请前往支付渠道关闭。
+            </p>
+            <div className="mt-5 rounded-[16px] bg-[#f7f5fa] px-4 py-4 text-[12px] leading-6 text-[#5f5a64]">
+              {paymentMethod === 'wechat' ? (
+                <p>微信：我 → 服务 → 钱包 → 支付设置 → 自动续费 → Ropet Plus → 关闭扣费服务</p>
+              ) : (
+                <p>支付宝：我的 → 设置 → 支付设置 → 免密支付/自动扣款 → Ropet Plus → 关闭服务</p>
+              )}
+            </div>
+            <p className="mt-4 text-center text-[11px] leading-5 text-[#99949e]">
+              关闭后当前权益仍可使用至 {expiryDate}。
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowRenewalGuide(false)}
+              className="mt-5 h-12 w-full rounded-[20px] bg-[#8b66ef] text-[14px] font-semibold text-white"
+            >
+              我知道了
+            </button>
+          </div>
+        </div>
+      )}
+
       {showResetConfirm && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/35 px-8">
           <div className="w-full rounded-[24px] bg-white px-6 py-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.18)]">
@@ -810,7 +908,7 @@ const StatusScreen = () => {
             </div>
             <h2 className="mt-4 text-[20px] font-bold text-[#222127]">恢复为未订阅状态？</h2>
             <p className="mt-2 text-[13px] leading-6 text-[#8b8792]">
-              会员、体验卡和对话授权状态将全部恢复，可重新体验完整流程。
+              会员、体验卡和悄悄话授权状态将全部恢复，可重新体验完整流程。
             </p>
             <button
               type="button"
@@ -839,17 +937,30 @@ const StatusScreen = () => {
 const ChannelAction: React.FC<{
   order: SubscriptionOrder;
   onInvoice: (order: SubscriptionOrder) => void;
-}> = ({ order, onInvoice }) => {
+  onRefund: (order: SubscriptionOrder) => void;
+}> = ({ order, onInvoice, onRefund }) => {
   if (order.paymentMethod === 'alipay' || order.paymentMethod === 'wechat') {
     return (
-      <button
-        type="button"
-        onClick={() => onInvoice(order)}
-        className="mt-3 flex items-center gap-1 text-[11px] font-medium text-[#8b66ef]"
-      >
-        查看发票说明
-        <ChevronRight size={13} />
-      </button>
+      <div className="mt-3 flex items-center gap-5">
+        {order.status === 'paid' && (
+          <button
+            type="button"
+            onClick={() => onInvoice(order)}
+            className="flex items-center gap-1 text-[11px] font-medium text-[#8b66ef]"
+          >
+            查看发票说明
+            <ChevronRight size={13} />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => onRefund(order)}
+          className="flex items-center gap-1 text-[11px] font-medium text-[#77727f]"
+        >
+          {order.status === 'paid' ? '退款与售后' : '查看退款进度'}
+          <ChevronRight size={13} />
+        </button>
+      </div>
     );
   }
 
@@ -878,7 +989,10 @@ const ChannelAction: React.FC<{
 const OrderCard: React.FC<{
   order: SubscriptionOrder;
   onInvoice: (order: SubscriptionOrder) => void;
-}> = ({ order, onInvoice }) => (
+  onRefund: (order: SubscriptionOrder) => void;
+}> = ({ order, onInvoice, onRefund }) => {
+  const hasPaymentTime = ['paid', 'refund-reviewing', 'refunding', 'refunded'].includes(order.status);
+  return (
   <section className="rounded-[20px] border border-[#ece9f1] bg-white p-4">
     <div className="flex items-start justify-between">
       <div>
@@ -889,19 +1003,23 @@ const OrderCard: React.FC<{
           <CopyOrderNumber orderNo={order.orderNo} />
         </div>
       </div>
-      <span className="rounded-full bg-[#ecf8f1] px-2.5 py-1 text-[10px] font-semibold text-[#23835a]">
+      <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${orderStatusClassName(order.status)}`}>
         {orderStatusLabel(order.status)}
       </span>
     </div>
     <div className="mt-4 grid grid-cols-2 gap-y-3 text-[12px]">
       <span className="text-[#96919c]">权益设备</span><strong className="text-right">{order.deviceName === 'KAMOMO' || order.deviceName === 'ropet' ? '肉派派' : order.deviceName || '肉派派'}</strong>
       <span className="text-[#96919c]">支付渠道</span><strong className="text-right">{channelName(order.paymentMethod) || '支付宝'}</strong>
-      <span className="text-[#96919c]">支付时间</span><strong className="text-right">{order.paidAt || '—'}</strong>
+      <span className="text-[#96919c]">{hasPaymentTime ? '支付时间' : '创建时间'}</span>
+      <strong className="text-right">{hasPaymentTime ? order.paidAt || '—' : order.createdAt || '—'}</strong>
       <span className="text-[#96919c]">实付金额</span><strong className="text-right">￥{formatOrderAmount(order.amount)}</strong>
     </div>
-    <ChannelAction order={order} onInvoice={onInvoice} />
+    {hasPaymentTime && (
+      <ChannelAction order={order} onInvoice={onInvoice} onRefund={onRefund} />
+    )}
   </section>
-);
+  );
+};
 
 const TrialUsageCard: React.FC<{
   card: TrialCard;
@@ -925,18 +1043,14 @@ const TrialUsageCard: React.FC<{
           </div>
         </div>
       </div>
-      <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-        card.status === 'active'
-          ? 'bg-[#eee8ff] text-[#704bd4]'
-          : 'bg-[#eeeeef] text-[#77727f]'
-      }`}>
-        {card.status === 'active' ? '使用中' : '已使用'}
+      <span className="rounded-full bg-[#eeeeef] px-2.5 py-1 text-[10px] font-semibold text-[#77727f]">
+        已使用
       </span>
     </div>
     <div className="mt-4 grid grid-cols-2 gap-y-2 border-t border-[#efedf2] pt-3 text-[12px]">
       <span className="text-[#96919c]">权益设备</span>
       <strong className="text-right text-[#4d4852]">{deviceName}</strong>
-      <span className="text-[#96919c]">使用时间</span>
+      <span className="text-[#96919c]">兑换时间</span>
       <strong className="text-right text-[#4d4852]">{card.usedAt || '—'}</strong>
     </div>
   </section>
@@ -951,68 +1065,90 @@ const OrderHistoryScreen: React.FC<{
   const [searchParams] = useSearchParams();
   const { pet } = usePetStore();
   const deviceName = pet?.name || '肉派派';
-  const { orders, trialCards, resetPrototype } = useSubscriptionStore();
+  const {
+    orders,
+    trialCards,
+    approveRefund,
+    completeRefund,
+    requestRefund,
+    resetPrototype,
+  } = useSubscriptionStore();
   const selectedOrderId = searchParams.get('orderId');
   const selectedTrialCardId = searchParams.get('trialCardId');
-  const trialCardOrders = trialCards.filter((card) => card.status === 'active' || card.status === 'used');
-  const hasRecords = orders.length > 0 || trialCardOrders.length > 0;
+  const trialCardOrders = trialCards.filter((card) => card.status === 'used');
+  const [activeTab, setActiveTab] = useState<'subscription' | 'trial'>(
+    selectedTrialCardId ? 'trial' : 'subscription',
+  );
+  const activeRecords = activeTab === 'subscription' ? orders : trialCardOrders;
   const [invoiceOrder, setInvoiceOrder] = useState<SubscriptionOrder | null>(
     orders.find((order) => order.id === selectedOrderId) ?? null,
   );
+  const [refundOrderId, setRefundOrderId] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const refundOrder = orders.find((order) => order.id === refundOrderId) ?? null;
 
   return (
     <PhoneShell title={title} backTo={backTo}>
-      {hasRecords ? (
-        <div className="space-y-6">
-          {orders.length > 0 && (
-            <section>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-[15px] font-semibold text-[#29262e]">支付订单</h2>
-                <span className="text-[10px] text-[#aaa6ae]">{orders.length} 笔</span>
-              </div>
-              <div className="space-y-3">
-                {orders.map((order) => (
-                  <OrderCard
-                    key={order.id}
-                    order={order}
-                    onInvoice={setInvoiceOrder}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+      <div className="mb-5 grid grid-cols-2 rounded-[15px] bg-[#f0eef3] p-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab('subscription')}
+          className={`h-10 rounded-[12px] text-[13px] font-semibold transition-colors ${
+            activeTab === 'subscription'
+              ? 'bg-white text-[#29262e] shadow-sm'
+              : 'text-[#8b8792]'
+          }`}
+        >
+          订阅订单 {orders.length > 0 && <span className="ml-1 text-[10px]">({orders.length})</span>}
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('trial')}
+          className={`h-10 rounded-[12px] text-[13px] font-semibold transition-colors ${
+            activeTab === 'trial'
+              ? 'bg-white text-[#29262e] shadow-sm'
+              : 'text-[#8b8792]'
+          }`}
+        >
+          体验卡 {trialCardOrders.length > 0 && <span className="ml-1 text-[10px]">({trialCardOrders.length})</span>}
+        </button>
+      </div>
 
-          {trialCardOrders.length > 0 && (
-            <section>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-[15px] font-semibold text-[#29262e]">体验卡订单</h2>
-                <span className="text-[10px] text-[#aaa6ae]">{trialCardOrders.length} 笔</span>
-              </div>
-              <div className="space-y-3">
-                {trialCardOrders.map((card) => (
-                  <TrialUsageCard
-                    key={card.id}
-                    card={card}
-                    deviceName={deviceName}
-                    highlighted={card.id === selectedTrialCardId}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+      {activeRecords.length > 0 ? (
+        <div className="space-y-3">
+          {activeTab === 'subscription'
+            ? orders.map((order) => (
+                <OrderCard
+                  key={order.id}
+                  order={order}
+                  onInvoice={setInvoiceOrder}
+                  onRefund={(selectedOrder) => setRefundOrderId(selectedOrder.id)}
+                />
+              ))
+            : trialCardOrders.map((card) => (
+                <TrialUsageCard
+                  key={card.id}
+                  card={card}
+                  deviceName={deviceName}
+                  highlighted={card.id === selectedTrialCardId}
+                />
+              ))}
         </div>
       ) : (
-        <div className="pt-28 text-center">
+        <div className="pt-24 text-center">
           <ReceiptText size={44} className="mx-auto text-[#d7d3dc]" />
-          <h2 className="mt-4 text-[18px] font-semibold">暂无订单记录</h2>
-          <p className="mt-2 text-[12px] text-[#96919c]">订阅订单和体验卡订单会展示在这里。</p>
+          <h2 className="mt-4 text-[18px] font-semibold">
+            {activeTab === 'subscription' ? '暂无订阅订单' : '暂无体验卡记录'}
+          </h2>
+          <p className="mt-2 text-[12px] text-[#96919c]">
+            {activeTab === 'subscription' ? '购买套餐后，订单会展示在这里。' : '使用体验卡后，兑换记录会展示在这里。'}
+          </p>
           <button
             type="button"
-            onClick={() => navigate('/subscription')}
+            onClick={() => navigate(activeTab === 'subscription' ? '/subscription' : '/subscription/trial')}
             className="mt-5 h-10 rounded-full bg-[#8b66ef] px-5 text-[13px] font-semibold text-white"
           >
-            查看套餐
+            {activeTab === 'subscription' ? '查看套餐' : '查看体验卡'}
           </button>
         </div>
       )}
@@ -1035,23 +1171,18 @@ const OrderHistoryScreen: React.FC<{
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/35 px-8">
           <div className="w-full rounded-[24px] bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)]">
             <h2 className="text-center text-[19px] font-bold">
-              {invoiceOrder.paymentMethod === 'wechat' ? '微信支付开票教程' : '支付宝开票教程'}
+              Ropet 开票指引
             </h2>
             <p className="mt-2 text-center text-[12px] leading-5 text-[#8b8792]">
               订单 {invoiceOrder.orderNo} · ￥{formatOrderAmount(invoiceOrder.amount)}
             </p>
             <div className="mt-5 space-y-3 rounded-[16px] bg-[#f7f5fa] px-4 py-4 text-[12px] leading-5 text-[#5f5a64]">
-              {(invoiceOrder.paymentMethod === 'wechat'
-                ? [
-                    '打开微信，进入“我 → 服务 → 钱包”。',
-                    '点击“账单”，找到这笔 Ropet Plus 订单。',
-                    '进入订单详情，按页面提示申请发票或联系商户。',
-                  ]
-                : [
-                    '打开支付宝，进入“我的 → 账单”。',
-                    '找到这笔 Ropet Plus 订单并进入详情。',
-                    '点击“开发票”或“申请发票”，按页面提示填写抬头。',
-                  ]).map((step, index) => (
+              {[
+                '发送邮件至 customerservice@ropetai.com，并说明需要为 Ropet Plus 订单开具发票。',
+                `在邮件中提供订单号 ${invoiceOrder.orderNo}，方便核对付款记录。`,
+                '提供发票抬头、纳税人识别号、接收邮箱和联系人信息。',
+                '信息确认后，电子发票将发送至你提供的邮箱。',
+              ].map((step, index) => (
                     <div key={step} className="flex items-start">
                       <span className="mr-3 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#8b66ef] text-[10px] font-semibold text-white">
                         {index + 1}
@@ -1061,7 +1192,7 @@ const OrderHistoryScreen: React.FC<{
                   ))}
             </div>
             <p className="mt-4 text-center text-[11px] leading-5 text-[#99949e]">
-              实际入口以支付渠道当前页面为准。
+              开票咨询邮箱：customerservice@ropetai.com
             </p>
             <button
               type="button"
@@ -1069,6 +1200,111 @@ const OrderHistoryScreen: React.FC<{
               className="mt-5 h-12 w-full rounded-[20px] bg-[#8b66ef] text-[14px] font-semibold text-white"
             >
               我知道了
+            </button>
+          </div>
+        </div>
+      )}
+
+      {refundOrder && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/35 px-8">
+          <div className="w-full rounded-[24px] bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)]">
+            <h2 className="text-center text-[19px] font-bold">
+              {refundOrder.status === 'paid' && '申请退款'}
+              {refundOrder.status === 'refund-reviewing' && '人工审核中'}
+              {refundOrder.status === 'refunding' && '支付宝退款中'}
+              {refundOrder.status === 'refunded' && '退款成功'}
+            </h2>
+            <p className="mt-2 text-center text-[12px] leading-5 text-[#8b8792]">
+              订单 {refundOrder.orderNo} · ￥{formatOrderAmount(refundOrder.amount)}
+            </p>
+
+            {refundOrder.status === 'paid' && (
+              <>
+                <div className="mt-5 space-y-3 rounded-[16px] bg-[#f7f5fa] px-4 py-4 text-[12px] leading-5 text-[#5f5a64]">
+                  {[
+                    '发送邮件至 customerservice@ropetai.com，说明退款原因。',
+                    `在邮件中提供订单号 ${refundOrder.orderNo} 和付款账号信息。`,
+                    '工作人员将人工判断订单是否符合退款条件。',
+                    '审核通过后，由后端发起支付宝原路退款。',
+                    '退款成功后，当前设备的会员权益将关闭。',
+                  ].map((step, index) => (
+                    <div key={step} className="flex items-start">
+                      <span className="mr-3 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#8b66ef] text-[10px] font-semibold text-white">
+                        {index + 1}
+                      </span>
+                      <span>{step}</span>
+                    </div>
+                  ))}
+                </div>
+                <a
+                  href={`mailto:customerservice@ropetai.com?subject=${encodeURIComponent(`Ropet Plus 退款申请 ${refundOrder.orderNo}`)}`}
+                  className="mt-4 flex h-11 w-full items-center justify-center rounded-[18px] border border-[#ded8e8] text-[13px] font-semibold text-[#6849cc]"
+                >
+                  发送退款申请邮件
+                </a>
+                <button
+                  type="button"
+                  onClick={() => requestRefund(refundOrder.id)}
+                  className="mt-3 h-12 w-full rounded-[20px] bg-[#8b66ef] text-[14px] font-semibold text-white"
+                >
+                  演示：已提交申请
+                </button>
+              </>
+            )}
+
+            {refundOrder.status === 'refund-reviewing' && (
+              <>
+                <div className="mt-5 rounded-[16px] bg-[#f3efff] px-4 py-5 text-center">
+                  <p className="text-[14px] font-semibold text-[#6043bd]">退款申请已收到</p>
+                  <p className="mt-2 text-[11px] leading-5 text-[#817593]">
+                    工作人员正在人工审核，审核结果将通过邮件通知。
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => approveRefund(refundOrder.id)}
+                  className="mt-5 h-12 w-full rounded-[20px] bg-[#8b66ef] text-[14px] font-semibold text-white"
+                >
+                  演示：审核通过
+                </button>
+              </>
+            )}
+
+            {refundOrder.status === 'refunding' && (
+              <>
+                <div className="mt-5 rounded-[16px] bg-[#fff6e7] px-4 py-5 text-center">
+                  <LoaderCircle size={28} className="mx-auto animate-spin text-[#b87a20]" />
+                  <p className="mt-3 text-[14px] font-semibold text-[#8e641f]">正在原路退回支付宝</p>
+                  <p className="mt-2 text-[11px] leading-5 text-[#9d8154]">
+                    后端已发起退款，到账时间以支付宝处理进度为准。
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => completeRefund(refundOrder.id)}
+                  className="mt-5 h-12 w-full rounded-[20px] bg-[#8b66ef] text-[14px] font-semibold text-white"
+                >
+                  演示：退款成功
+                </button>
+              </>
+            )}
+
+            {refundOrder.status === 'refunded' && (
+              <div className="mt-5 rounded-[16px] bg-[#ecf8f1] px-4 py-5 text-center">
+                <Check size={30} className="mx-auto text-[#23835a]" />
+                <p className="mt-3 text-[14px] font-semibold text-[#23835a]">款项已原路退回</p>
+                <p className="mt-2 text-[11px] leading-5 text-[#5c8774]">
+                  Ropet Plus 权益和设备悄悄话能力已同步关闭。
+                </p>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setRefundOrderId(null)}
+              className="mt-3 h-11 w-full text-[13px] text-[#77727f]"
+            >
+              关闭
             </button>
           </div>
         </div>

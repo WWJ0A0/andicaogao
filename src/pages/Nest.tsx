@@ -1,9 +1,40 @@
-import React, { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, LoaderCircle, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { HelpCircle, LoaderCircle, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import TrialCardArtwork from '@/components/subscription/TrialCardArtwork';
+import BottomNav from '@/components/BottomNav';
+import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
-import { useSubscriptionStore } from '@/store/useSubscriptionStore';
+
+const WHISPER_CARD_PRODUCTS = [
+  { days: 1, cost: 1000 },
+  { days: 7, cost: 6000 },
+  { days: 30, cost: 24000 },
+];
+
+const DialogueCardVisual: React.FC<{
+  days: number;
+  size?: 'mini' | 'tile' | 'hero';
+  muted?: boolean;
+}> = ({ days, size = 'tile', muted = false }) => {
+  const hero = size === 'hero';
+  const mini = size === 'mini';
+  return (
+    <div
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-[8px] bg-gradient-to-br from-[#aa8cff] via-[#8a66ef] to-[#6f4bd6] text-white ${
+        hero ? 'h-[190px] w-[170px]' : mini ? 'h-[26px] w-[22px]' : 'h-[58px] w-[58px]'
+      } ${muted ? 'grayscale opacity-40' : ''}`}
+    >
+      <div className={`absolute rounded-full bg-white/10 ${hero ? '-right-8 -top-8 h-24 w-24' : '-right-4 -top-4 h-12 w-12'}`} />
+      <div className={`absolute rounded-full border border-white/12 ${hero ? '-bottom-8 -left-8 h-24 w-24' : '-bottom-5 -left-5 h-12 w-12'}`} />
+      <div className="relative flex items-end justify-center">
+        <strong className={`${hero ? 'text-[76px] leading-[76px]' : mini ? 'text-[13px] leading-[14px]' : 'text-[30px] leading-[31px]'} font-bold tracking-normal`}>
+          {days}
+        </strong>
+        <span className={`${hero ? 'mb-3 ml-2 text-[19px]' : mini ? 'mb-0 ml-[1px] text-[5px]' : 'mb-[4px] ml-1 text-[9px]'} font-semibold`}>天</span>
+      </div>
+    </div>
+  );
+};
 
 const Nest: React.FC = () => {
   const navigate = useNavigate();
@@ -11,69 +42,86 @@ const Nest: React.FC = () => {
   const { pet } = usePetStore();
   const deviceName = pet?.name || '肉派派';
   const {
-    trialCards,
-    expiryDate,
-    voiceConsentGranted,
-    selectTrialCard,
-    setPaymentState,
-  } = useSubscriptionStore();
-  const orderedTrialCards = useMemo(() => trialCards
-    .filter((card) => card.status !== 'used')
-    .sort((a, b) => {
-    const order = { active: 0, available: 1 };
-    return order[a.status] - order[b.status];
-  }), [trialCards]);
-  const availableTrialCards = trialCards.filter((card) => card.status === 'available');
-  const activeTrialCards = trialCards.filter((card) => card.status === 'active');
-  const initialTrialCardId = searchParams.get('card')
-    || activeTrialCards[0]?.id
-    || availableTrialCards[0]?.id
-    || orderedTrialCards[0]?.id
-    || '';
-  const [selectedTrialCardId, setSelectedTrialCardId] = useState(initialTrialCardId);
-  const [usingTrialCard, setUsingTrialCard] = useState(false);
-  const trialDetailOpen = searchParams.get('item') === 'trial-card';
-  const selectedTrialCard = orderedTrialCards.find((card) => card.id === selectedTrialCardId)
-    || orderedTrialCards[0];
-  const selectedTrialCardIndex = selectedTrialCard
-    ? orderedTrialCards.findIndex((card) => card.id === selectedTrialCard.id)
-    : -1;
-  const trialCardStatus = activeTrialCards.length
-    ? '使用中'
-    : availableTrialCards.length
-      ? `拥有 ${availableTrialCards.length} 张`
-      : '已全部使用';
+    points,
+    activeDialogueCard,
+    dialogueCards,
+    dialogueCardInventory,
+    exchangeDialogueCard,
+    useDialogueCard: applyDialogueCard,
+  } = useDialogueStore();
+  const initialCardDays = Number(searchParams.get('card')) || WHISPER_CARD_PRODUCTS[0].days;
+  const [selectedCardDays, setSelectedCardDays] = useState(initialCardDays);
+  const [exchangingCard, setExchangingCard] = useState(false);
+  const [usingCard, setUsingCard] = useState(false);
+  const [confirmingUse, setConfirmingUse] = useState(false);
+  const [confirmingExchange, setConfirmingExchange] = useState(false);
+  const [exchangeCount, setExchangeCount] = useState(1);
+  const [showUseSuccess, setShowUseSuccess] = useState(false);
+  const [showInsufficientPoints, setShowInsufficientPoints] = useState(false);
+  const [toast, setToast] = useState('');
+  const cardDetailOpen = searchParams.get('item') === 'dialogue-card' || searchParams.get('item') === 'trial-card';
+  const selectedCard = WHISPER_CARD_PRODUCTS.find((card) => card.days === selectedCardDays)
+    || WHISPER_CARD_PRODUCTS[0];
+  const getOwnedCount = (days: number) => {
+    const inventoryCount = dialogueCardInventory?.[String(days)] ?? 0;
+    return days === 1 ? Math.max(inventoryCount, dialogueCards) : inventoryCount;
+  };
+  const selectedOwnedCount = getOwnedCount(selectedCard.days);
 
-  const openTrialCardDetail = (cardId = initialTrialCardId) => {
-    setSelectedTrialCardId(cardId);
-    setSearchParams({ item: 'trial-card', card: cardId });
+  const openWhisperCardDetail = (days: number) => {
+    setSelectedCardDays(days);
+    setSearchParams({ item: 'dialogue-card', card: String(days) });
   };
 
   const closeTrialCardDetail = () => {
     setSearchParams({});
   };
 
-  const moveTrialCard = (direction: -1 | 1) => {
-    if (!orderedTrialCards.length) return;
-    const nextIndex = (selectedTrialCardIndex + direction + orderedTrialCards.length) % orderedTrialCards.length;
-    const nextCard = orderedTrialCards[nextIndex];
-    setSelectedTrialCardId(nextCard.id);
-    setSearchParams({ item: 'trial-card', card: nextCard.id }, { replace: true });
+  const exchangeSelectedCard = () => {
+    if (exchangingCard) return;
+    setExchangeCount(1);
+    setConfirmingExchange(true);
   };
 
-  const useTrialCard = () => {
-    if (!selectedTrialCard || selectedTrialCard.status !== 'available' || usingTrialCard) return;
-    selectTrialCard(selectedTrialCard.id);
-    if (!voiceConsentGranted) {
-      navigate(`/subscription/voice-consent?source=trial&returnTo=${encodeURIComponent(`/nest?item=trial-card&card=${selectedTrialCard.id}`)}`);
+  const updateExchangeCount = (value: string) => {
+    const nextCount = Number(value.replace(/[^\d]/g, ''));
+    setExchangeCount(Math.max(1, Math.min(99, Number.isNaN(nextCount) ? 1 : nextCount)));
+  };
+
+  const confirmExchangeSelectedCard = () => {
+    if (exchangingCard) return;
+    const totalCost = selectedCard.cost * exchangeCount;
+    if (points < totalCost) {
+      setConfirmingExchange(false);
+      setShowInsufficientPoints(true);
       return;
     }
 
-    setUsingTrialCard(true);
-    setPaymentState('opening');
+    setExchangingCard(true);
     window.setTimeout(() => {
-      navigate('/subscription/opening?source=trial');
-    }, 700);
+      exchangeDialogueCard(selectedCard.days, selectedCard.cost, exchangeCount);
+      setExchangingCard(false);
+      setConfirmingExchange(false);
+      setToast('兑换成功，已放入小窝');
+      window.setTimeout(() => setToast(''), 1600);
+    }, 500);
+  };
+
+  const useSelectedCard = () => {
+    if (!selectedOwnedCount || usingCard) return;
+    setConfirmingUse(true);
+  };
+
+  const confirmUseSelectedCard = () => {
+    if (!selectedOwnedCount || usingCard) return;
+    setUsingCard(true);
+    setConfirmingUse(false);
+    window.setTimeout(() => {
+      applyDialogueCard(selectedCard.days);
+      setUsingCard(false);
+      setSearchParams({});
+      setShowUseSuccess(true);
+    }, 500);
   };
 
   return (
@@ -195,7 +243,34 @@ const Nest: React.FC = () => {
               {/* Vector 1 Separator */}
               <img src="/images/mo1cw4a9-og2pxnl.svg" alt="Section Separator" className="w-[305px] h-[1px] mt-[14px]" />
 
-              {/* Section 2: 画框皮肤 */}
+              {/* Section 2: 悄悄话 */}
+              <div className="w-full flex flex-col mt-[14px]">
+                <div className="flex items-center gap-[8px] relative">
+                  <h3 className="text-[16px] text-[#000000] font-medium tracking-[0.16px] leading-[22px]">悄悄话</h3>
+                  <HelpCircle size={15} className="text-[#7c5ae0]" />
+                </div>
+
+                <div className="flex items-center gap-[10px] mt-[11px] overflow-x-auto scrollbar-hide">
+                  {WHISPER_CARD_PRODUCTS.map((card) => (
+                    <button
+                      type="button"
+                      key={card.days}
+                      onClick={() => openWhisperCardDetail(card.days)}
+                      className="flex shrink-0 flex-col items-center rounded-[8px] border border-[#2222220d] bg-[#22222208] px-[14px] pb-[12px] pt-[12px]"
+                    >
+                      <DialogueCardVisual days={card.days} />
+                      <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">
+                        {card.days}天卡
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Vector 1 Separator */}
+              <img src="/images/mo1cw4a9-og2pxnl.svg" alt="Section Separator" className="w-[305px] h-[1px] mt-[14px]" />
+
+              {/* Section 3: 画框皮肤 */}
               <div className="w-full flex flex-col mt-[14px]">
                 <div className="flex items-center gap-[10px] relative">
                   <h3 className="text-[16px] text-[#000000] font-medium tracking-[0.16px] leading-[22px]">画框皮肤</h3>
@@ -223,7 +298,7 @@ const Nest: React.FC = () => {
               {/* Vector 1 Separator */}
               <img src="/images/mo1cw4a9-og2pxnl.svg" alt="Section Separator" className="w-[305px] h-[1px] mt-[14px]" />
 
-              {/* Section 3: 日用品 */}
+              {/* Section 4: 日用品 */}
               <div className="w-[305px] flex flex-col mt-[14px]">
                 <div className="flex items-center gap-[10px] relative">
                   <h3 className="text-[16px] text-[#000000] font-medium tracking-[0.16px] leading-[22px]">日用品</h3>
@@ -247,30 +322,6 @@ const Nest: React.FC = () => {
                     <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">改名卡</span>
                     <span className="mt-[3px] text-[11px] text-[#22222266] tracking-[0.11px] leading-[15px]">拥有 999 张</span>
                   </div>
-
-                  {/* Card 3: 体验卡 */}
-                  <button
-                    type="button"
-                    onClick={() => openTrialCardDetail()}
-                    className={`flex flex-col items-center rounded-[8px] bg-[#22222208] pt-[11px] px-[13px] pb-[8px] pl-[12px] shrink-0 ${
-                      activeTrialCards.length
-                        ? 'border-[1.5px] border-[#7c5ae0] shadow-[0_0_8px_rgba(124,90,224,0.15)]'
-                        : 'border border-[#2222220d]'
-                    }`}
-                  >
-                    <span className="flex h-[59px] w-[58px] items-center justify-center">
-                      <TrialCardArtwork
-                        days={selectedTrialCard?.days ?? availableTrialCards[0]?.days ?? 7}
-                        status={selectedTrialCard?.status ?? 'available'}
-                      />
-                    </span>
-                    <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">体验卡</span>
-                    <span className={`mt-[3px] text-[11px] tracking-[0.11px] leading-[15px] ${
-                      activeTrialCards.length ? 'font-medium text-[#7c5ae0]' : 'text-[#22222266]'
-                    }`}>
-                      {trialCardStatus}
-                    </span>
-                  </button>
                 </div>
               </div>
               
@@ -285,120 +336,228 @@ const Nest: React.FC = () => {
           </div>
         </div>
 
-        {trialDetailOpen && selectedTrialCard && (
+        {toast && (
+          <div className="absolute left-1/2 top-[104px] z-[120] -translate-x-1/2 rounded-full bg-[#25212b] px-4 py-2 text-[12px] font-semibold text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
+            {toast}
+          </div>
+        )}
+
+        {cardDetailOpen && selectedCard && (
           <div
             className="absolute inset-0 z-[90] flex items-end bg-black/55"
             onClick={closeTrialCardDetail}
           >
+            <div className="absolute left-1/2 top-[146px] z-[95] flex h-10 -translate-x-1/2 items-center rounded-full border border-black/20 bg-[#f1f1f3] px-4 shadow-[0_8px_18px_rgba(0,0,0,0.18)]">
+              <span className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#ffe49a] text-[12px] shadow-inner">
+                ◉
+              </span>
+              <span className="text-[18px] font-medium tracking-normal text-[#222127]">{points}</span>
+            </div>
             <section
               className="relative w-full rounded-t-[28px] bg-[#fafafa] px-5 pb-8 pt-5 shadow-[0_-14px_40px_rgba(0,0,0,0.16)]"
               onClick={(event) => event.stopPropagation()}
             >
               <button
                 type="button"
-                aria-label="关闭体验卡详情"
+                aria-label="关闭悄悄话卡详情"
                 onClick={closeTrialCardDetail}
                 className="absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#eeeeef] text-[#5f5b64]"
               >
                 <X size={19} />
               </button>
 
-              <div className="flex h-[315px] items-center justify-center">
-                <button
-                  type="button"
-                  aria-label="上一张体验卡"
-                  onClick={() => moveTrialCard(-1)}
-                  className="mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#77727f] shadow-sm"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <TrialCardArtwork
-                  days={selectedTrialCard.days}
-                  status={selectedTrialCard.status}
-                  size="hero"
-                  className="-rotate-[3deg]"
-                />
-                <button
-                  type="button"
-                  aria-label="下一张体验卡"
-                  onClick={() => moveTrialCard(1)}
-                  className="ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#77727f] shadow-sm"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-
-              <div className="flex justify-center gap-1.5">
-                {orderedTrialCards.map((card) => (
-                  <button
-                    type="button"
-                    key={card.id}
-                    aria-label={`查看 ${card.days} 天体验卡`}
-                    onClick={() => {
-                      setSelectedTrialCardId(card.id);
-                      setSearchParams({ item: 'trial-card', card: card.id }, { replace: true });
-                    }}
-                    className={`h-1.5 rounded-full transition-all ${
-                      card.id === selectedTrialCard.id ? 'w-5 bg-[#222127]' : 'w-1.5 bg-[#d6d3d9]'
-                    }`}
-                  />
-                ))}
+              <div className="flex h-[245px] items-center justify-center">
+                <DialogueCardVisual days={selectedCard.days} size="hero" />
               </div>
 
               <div className="mt-5 flex items-start justify-between">
                 <div>
-                  <h2 className="text-[22px] font-semibold text-[#222127]">{selectedTrialCard.days} 天体验卡</h2>
-                  <p className="mt-2 text-[12px] text-[#8b8792]">权益设备：{deviceName}</p>
-                  {selectedTrialCard.status === 'active' && expiryDate && (
-                    <p className="mt-1 text-[12px] text-[#8b8792]">{expiryDate} 到期</p>
-                  )}
+                  <h2 className="text-[22px] font-semibold text-[#222127]">悄悄话卡</h2>
+                  <p className="mt-2 max-w-[245px] text-[12px] leading-5 text-[#8b8792]">
+                    每日免费聊天结束后，悄悄话卡会自动接上，继续陪你和 {deviceName} 说话。
+                  </p>
                 </div>
-                <span className={`rounded-full px-3 py-1.5 text-[11px] font-semibold ${
-                  selectedTrialCard.status === 'active'
-                    ? 'bg-[#eee8ff] text-[#704bd4]'
-                    : selectedTrialCard.status === 'used'
-                      ? 'bg-[#eeeeef] text-[#96919b]'
-                      : 'bg-[#e8f7ef] text-[#31845c]'
-                }`}>
-                  {selectedTrialCard.status === 'active'
-                    ? '使用中'
-                    : selectedTrialCard.status === 'used'
-                      ? '已使用'
-                      : '可使用'}
+                <span className="rounded-full bg-[#f3f0fb] px-3 py-1.5 text-[11px] font-semibold text-[#7c5ae0]">
+                  拥有 {selectedOwnedCount}
                 </span>
               </div>
 
+              <div className="mt-3 flex items-center gap-2 text-[#222127]">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#ffe49a] text-[12px]">◉</span>
+                <strong className="text-[28px] leading-8">{selectedCard.cost}</strong>
+              </div>
+
+              <div className={`mt-6 grid gap-3 ${selectedOwnedCount ? 'grid-cols-[0.92fr_1.08fr]' : 'grid-cols-1'}`}>
+                <button
+                  type="button"
+                  onClick={exchangeSelectedCard}
+                  className={`${selectedOwnedCount ? 'border border-[#e5dcff] bg-white text-[#7c5ae0]' : points >= selectedCard.cost ? 'bg-[#7c5ae0] text-white' : 'bg-[#f2effa] text-[#7c5ae0]'} flex h-[54px] items-center justify-center rounded-[18px] text-[16px] font-semibold shadow-[0_10px_24px_rgba(115,78,218,0.18)]`}
+                >
+                  {exchangingCard ? (
+                    <>
+                      <LoaderCircle size={18} className="mr-2 animate-spin" />
+                      正在兑换
+                    </>
+                  ) : (
+                    '积分兑换'
+                  )}
+                </button>
+                {Boolean(selectedOwnedCount) && (
+                  <button
+                    type="button"
+                    disabled={usingCard}
+                    onClick={useSelectedCard}
+                    className="flex h-[54px] items-center justify-center rounded-[18px] bg-[#8b66ef] text-[16px] font-semibold text-white shadow-[0_10px_24px_rgba(115,78,218,0.24)]"
+                  >
+                    {usingCard ? (
+                      <>
+                        <LoaderCircle size={18} className="mr-2 animate-spin" />
+                        正在使用
+                      </>
+                    ) : (
+                      '使用'
+                    )}
+                  </button>
+                )}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {confirmingExchange && (
+          <div className="absolute inset-0 z-[115] flex items-center justify-center bg-black/45 px-8">
+            <section className="w-full rounded-[20px] bg-white px-6 py-6 text-center shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
+              <h2 className="text-[18px] font-semibold text-[#222127]">积分兑换</h2>
+              <p className="mt-3 text-[14px] leading-6 text-[#222127]">
+                每{selectedCard.cost}积分可兑换一张悄悄话卡（{selectedCard.days}天），
+                <br />
+                当前剩余积分 {points}。
+              </p>
+              <div className="mt-4 flex items-center justify-center gap-2 text-[#222127]">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ffe49a] text-[13px]">◉</span>
+                <span className="text-[16px] font-semibold">{selectedCard.cost}</span>
+                <span className="text-[16px] font-semibold">=</span>
+                <div className="flex h-10 items-center gap-2 rounded-[8px] border border-[#e9e5ef] bg-[#f7f7f8] px-3">
+                  <DialogueCardVisual days={selectedCard.days} size="mini" />
+                  <input
+                    type="number"
+                    min={1}
+                    max={99}
+                    value={exchangeCount}
+                    onChange={(event) => updateExchangeCount(event.target.value)}
+                    className="h-8 w-10 bg-transparent text-center text-[16px] font-semibold text-[#222127] outline-none"
+                    aria-label="兑换数量"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <p className="mt-3 text-[12px] text-[#8b8792]">
+                本次需消耗 {selectedCard.cost * exchangeCount} 积分
+              </p>
               <button
                 type="button"
-                disabled={selectedTrialCard.status !== 'available' || usingTrialCard}
-                onClick={useTrialCard}
-                className={`mt-6 flex h-[54px] w-full items-center justify-center rounded-[18px] text-[16px] font-semibold ${
-                  selectedTrialCard.status === 'available'
-                    ? 'bg-[#8b66ef] text-white shadow-[0_10px_24px_rgba(115,78,218,0.24)]'
-                    : 'cursor-not-allowed bg-[#dedce1] text-white'
-                }`}
+                onClick={confirmExchangeSelectedCard}
+                className="mt-5 h-12 w-full rounded-[14px] bg-[#7c5ae0] text-[15px] font-semibold text-white"
               >
-                {usingTrialCard ? (
-                  <>
+                {exchangingCard ? (
+                  <span className="inline-flex items-center">
                     <LoaderCircle size={18} className="mr-2 animate-spin" />
-                    正在使用
-                  </>
-                ) : selectedTrialCard.status === 'active' ? (
-                  '使用中'
-                ) : selectedTrialCard.status === 'used' ? (
-                  '已使用'
+                    正在兑换
+                  </span>
                 ) : (
-                  '使用体验卡'
+                  '确定兑换'
                 )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingExchange(false)}
+                className="mt-3 h-11 w-full rounded-[14px] border border-[#e6e1ed] bg-white text-[14px] font-semibold text-[#4f4a55]"
+              >
+                取消
               </button>
             </section>
           </div>
         )}
 
-        {/* System Home Indicator */}
-        <div className="absolute bottom-0 left-[1px] flex items-start pt-[21px] px-[129px] pb-[8px] w-[394px] h-[34px] z-50 pointer-events-none">
-          <div className="w-[134px] h-[5px] bg-[#222222] rounded-[100px]"></div>
-        </div>
+        {showInsufficientPoints && (
+          <div className="absolute inset-0 z-[120] flex items-center justify-center bg-black/45 px-8">
+            <section className="w-full rounded-[24px] bg-white px-6 py-7 text-center shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
+              <h2 className="text-[18px] font-semibold text-[#222127]">当前积分不足</h2>
+              <p className="mt-3 text-[15px] leading-6 text-[#6f6875]">去购买更多积分</p>
+              <button
+                type="button"
+                onClick={() => navigate('/points-store?returnTo=/nest')}
+                className="mt-6 h-12 w-full rounded-[16px] bg-[#8b66ef] text-[15px] font-semibold text-white"
+              >
+                去购买
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowInsufficientPoints(false)}
+                className="mt-3 h-11 w-full rounded-[16px] border border-[#e6e1ed] bg-white text-[14px] font-semibold text-[#4f4a55]"
+              >
+                算了
+              </button>
+            </section>
+          </div>
+        )}
+
+        {confirmingUse && (
+          <div className="absolute inset-0 z-[110] flex items-center justify-center bg-black/45 px-8">
+            <section className="w-full rounded-[24px] bg-white px-5 py-6 text-center shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
+              <h2 className="text-[18px] font-semibold text-[#222127]">使用 {selectedCard.days}天悄悄话卡？</h2>
+              <p className="mt-3 text-[12px] leading-5 text-[#8b8792]">
+                使用后，{deviceName} 会在每日免费聊天结束后继续陪你说悄悄话；如果已有悄悄话时间，时长会自动顺延。
+              </p>
+              <button
+                type="button"
+                onClick={confirmUseSelectedCard}
+                className="mt-6 h-12 w-full rounded-[16px] bg-[#8b66ef] text-[14px] font-semibold text-white"
+              >
+                确认使用
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingUse(false)}
+                className="mt-3 h-11 w-full rounded-[16px] border border-[#e6e1ed] bg-white text-[14px] font-semibold text-[#6f6875]"
+              >
+                取消
+              </button>
+            </section>
+          </div>
+        )}
+
+        {showUseSuccess && (
+          <div className="absolute inset-0 z-[115] flex items-center justify-center bg-black/45 px-8">
+            <section className="w-full rounded-[24px] bg-white px-5 py-6 text-center shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
+              <h2 className="text-[18px] font-semibold text-[#222127]">悄悄话卡已生效</h2>
+              <p className="mt-3 text-[13px] leading-6 text-[#6f6875]">
+                已为你接上悄悄话时间，可以继续和{deviceName}说话。
+              </p>
+              {activeDialogueCard?.expiryDate && (
+                <p className="mt-2 text-[12px] font-semibold text-[#7c5ae0]">
+                  到期时间：{activeDialogueCard.expiryDate}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => navigate('/dialogue-mode?card=active')}
+                className="mt-6 h-12 w-full rounded-[16px] bg-[#8b66ef] text-[14px] font-semibold text-white"
+              >
+                去悄悄话模式
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowUseSuccess(false)}
+                className="mt-3 h-11 w-full rounded-[16px] border border-[#e6e1ed] bg-white text-[14px] font-semibold text-[#6f6875]"
+              >
+                留在小窝
+              </button>
+            </section>
+          </div>
+        )}
+
+        <BottomNav />
 
       </div>
     </div>

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { AudioLines, ChevronRight, CircleHelp, Gem, Gift, WifiOff } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import Lottie from 'lottie-react';
-import { useNavigate } from 'react-router-dom';
+import { BookOpen, ShieldCheck } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import pingjingAnimation from '@/assets/animations/pingjing.json';
 import {
   DialogueSwitch,
@@ -11,270 +11,323 @@ import {
   PrototypeStatusBar,
 } from '@/components/subscription/PrototypeUI';
 import { usePetStore } from '@/store/usePetStore';
-import { isDateExpired, useSubscriptionStore } from '@/store/useSubscriptionStore';
+import { useDialogueStore } from '@/store/useDialogueStore';
+import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
-const faqItems = [
-  ['如何使用语音服务?', '开通Plus会员后打开“语音服务”开关才可以与ropet进行对话。'],
-  ['打开语音服务开关也没说话?', '唤醒说话需要正对着ropet或者说他的名字即可开启对话。'],
-  ['绑定的设备?', '会员充值针对的是当前使用中的肉派派，无法将会员权益转移给其他肉派派。'],
-  ['什么时候在和你对话?', '当你结束发言超过5min后ropet自己会主动关闭对话功能，若果你想要再次唤醒对话，只需要对他说你好肉派派即可；当然你也可以对他说：“不要再说了”他也会结束当前对话。'],
-];
+const getNextUtcRefreshText = () => {
+  const now = new Date();
+  const nextUtcMidnight = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 1,
+    0,
+    0,
+    0,
+  ));
+  const todayText = new Intl.DateTimeFormat('zh-CN', {
+    month: 'numeric',
+    day: 'numeric',
+  }).format(now);
+  const refreshDateText = new Intl.DateTimeFormat('zh-CN', {
+    month: 'numeric',
+    day: 'numeric',
+  }).format(nextUtcMidnight);
+  const refreshTimeText = new Intl.DateTimeFormat('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(nextUtcMidnight);
+  const dateLabel = refreshDateText === todayText ? '今天' : '明天';
+
+  return `${dateLabel} ${refreshTimeText} 刷新`;
+};
 
 const DialogueMode: React.FC = () => {
   const navigate = useNavigate();
-  const [showFaq, setShowFaq] = useState(false);
-  const [showActivationChoice, setShowActivationChoice] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [updatingDialogue, setUpdatingDialogue] = useState(false);
+  const [showPrivacyFlow, setShowPrivacyFlow] = useState(false);
+  const [showTutorialFlow, setShowTutorialFlow] = useState(false);
+  const [manualHint, setManualHint] = useState(false);
+  const [cardToast, setCardToast] = useState(searchParams.get('card') === 'active');
   const { pet, isOnline, setOnline } = usePetStore();
   const deviceName = pet?.name || '肉派派';
   const {
     dialogueEnabled,
-    entitlement,
-    trialCards,
-    expiryDate,
-    autoRenewEnabled,
+    grantVoiceConsent,
     setDialogueEnabled,
   } = useSubscriptionStore();
-  const entitlementExpired = entitlement !== 'none'
-    && !autoRenewEnabled
-    && isDateExpired(expiryDate);
-  const membershipActivated = entitlement === 'subscription' && !entitlementExpired;
-  const trialActivated = entitlement === 'trial' && !entitlementExpired;
-  const entitlementActive = membershipActivated || trialActivated;
-  const availableTrialCards = trialCards.filter((card) => card.status === 'available');
-  const trialAvailable = availableTrialCards.length > 0;
-  const membershipTitle = membershipActivated
-    ? 'ropet Plus'
-    : trialActivated
-      ? 'ropet 体验权益'
-      : '开通 Ropet Plus';
-  const membershipDescription = entitlementActive
-    ? `当前设备权益 · ${expiryDate} 到期`
-    : '为当前设备解锁完整语音对话能力';
-  const listening = isOnline && dialogueEnabled && entitlementActive;
-  const deviceStatus = !isOnline
-    ? {
-        label: '设备不在线',
-        icon: WifiOff,
-        className: 'border-[#e5e2e7] bg-[#f2f1f3]/95 text-[#8b8792]',
-        iconClassName: 'text-[#96919c]',
-      }
-    : listening
-      ? {
-          label: '我在听',
-          icon: AudioLines,
-          className: 'border-[#8b66ef] bg-[#8b66ef] text-white',
-          iconClassName: 'text-white',
-        }
-      : {
-          label: '我没在听',
-          icon: AudioLines,
-          className: 'border-[#e8e4ed] bg-white/95 text-[#4f4a54]',
-          iconClassName: 'text-[#96919c]',
-        };
-  const DeviceStatusIcon = deviceStatus.icon;
+  const { activeDialogueCard, clearActiveDialogueCard } = useDialogueStore();
+  const freeQuotaExhausted = searchParams.get('quota') === 'empty';
+  const needsDialogueCard = freeQuotaExhausted;
+  const nextRefreshText = getNextUtcRefreshText();
+  const policyReturnTo = encodeURIComponent('/dialogue-mode');
+  const showEyeGlow = isOnline && dialogueEnabled && !needsDialogueCard;
+  const ropetSpeech = !isOnline
+    ? '我现在不在线哦'
+    : !dialogueEnabled
+    ? '我现在不会跟你说话哦'
+    : needsDialogueCard
+      ? '我有点累啦，下次再陪你'
+      : '';
+  const statusHint = !isOnline
+    ? '设备断网时，Ropet 暂时无法回应你。'
+    : needsDialogueCard
+      ? null
+      : activeDialogueCard
+        ? null
+        : '每天 Ropet 都能陪你聊一会儿；聊完后，它会提醒你下次再继续。';
+
+  useEffect(() => {
+    if (!cardToast) return;
+    const timer = window.setTimeout(() => {
+      setCardToast(false);
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('card');
+      setSearchParams(nextParams, { replace: true });
+    }, 1800);
+    return () => window.clearTimeout(timer);
+  }, [cardToast, searchParams, setSearchParams]);
 
   const handleToggle = () => {
-    if (entitlement === 'none' || entitlementExpired) {
-      setShowActivationChoice(true);
-      return;
-    }
     if (updatingDialogue) return;
     setUpdatingDialogue(true);
     window.setTimeout(() => {
       setDialogueEnabled(!dialogueEnabled);
+      setManualHint(false);
       setUpdatingDialogue(false);
-    }, 700);
+    }, 650);
+  };
+
+  const toggleQuotaDemo = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (freeQuotaExhausted) {
+      nextParams.delete('quota');
+    } else {
+      nextParams.set('quota', 'empty');
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  const startFirstUseDemo = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('quota');
+    setSearchParams(nextParams, { replace: true });
+    setOnline(true);
+    setDialogueEnabled(false);
+    clearActiveDialogueCard();
+    setManualHint(false);
+    setShowPrivacyFlow(true);
   };
 
   return (
     <PrototypePhone>
       <PrototypeStatusBar />
       <PrototypeHeader
-        title="对话模式"
+        title="悄悄话模式"
         onBack={() => navigate('/')}
       />
-      <div className="px-5 pb-6 pt-2">
-        <button
-          type="button"
-          aria-label={entitlementActive ? `查看${membershipTitle}` : '开通 Ropet Plus'}
-          onClick={() => navigate(entitlementActive ? '/subscription/status' : '/subscription')}
-          className={`flex min-h-[58px] w-full items-center rounded-[17px] border px-4 text-left ${
-            entitlementActive
-              ? 'border-[#ded5fa] bg-[#f7f4ff]'
-              : 'border-[#e7e3ec] bg-white'
-          }`}
-        >
-          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] ${
-            entitlementActive ? 'bg-[#8b66ef] text-white' : 'bg-[#f0ebff] text-[#8b66ef]'
-          }`}>
-            <Gem size={16} fill="currentColor" />
-          </span>
-          <span className="ml-3 min-w-0 flex-1">
-            <span className="flex items-center gap-2">
-              <strong className="truncate text-[13px] text-[#26232a]">{membershipTitle}</strong>
-              <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
-                entitlementActive
-                  ? 'bg-[#e6ddff] text-[#6d4bd0]'
-                  : 'bg-[#f0eff2] text-[#8f8a94]'
-              }`}>
-                {membershipActivated ? '已开通' : trialActivated ? '体验中' : '未开通'}
-              </span>
-            </span>
-            <span className="mt-0.5 block truncate text-[9px] leading-4 text-[#8b8792]">{membershipDescription}</span>
-          </span>
-          <ChevronRight size={17} className="ml-2 shrink-0 text-[#a49eaa]" />
-        </button>
 
-        <section className="relative min-h-[306px] overflow-hidden text-center">
-          <div className="relative z-10">
-            <p className="mt-5 text-[12px] leading-5 text-[#77727f]">
-              直接对{deviceName}说“你好肉派派”开启对话
-            </p>
+      <div className="h-[752px] overflow-y-auto px-5 pb-8 pt-2 scrollbar-hide">
+        {cardToast && (
+          <div className="fixed left-1/2 top-[116px] z-50 -translate-x-1/2 rounded-full bg-[#25212b] px-4 py-2 text-[12px] font-semibold text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
+            已为你接上悄悄话时间，可以继续和{deviceName}说话。
           </div>
+        )}
 
-          <div className="relative mx-auto flex h-[252px] items-center justify-center">
-            <div className="absolute bottom-[20px] h-[28px] w-[220px] rounded-[50%] bg-[#4a346f]/10 blur-[8px]" />
-            <div
-              role="img"
-              aria-label={`正在控制的设备 ${deviceName}`}
-              className="relative z-10 h-[244px] w-[278px]"
-            >
-              <Lottie animationData={pingjingAnimation} loop autoplay className="h-full w-full" />
-            </div>
-            <span className={`absolute right-[18px] top-[26px] z-20 flex items-center rounded-full border px-2.5 py-1.5 text-[10px] font-medium shadow-[0_6px_18px_rgba(50,42,67,0.10)] ${deviceStatus.className}`}>
-              <DeviceStatusIcon size={12} className={`mr-1 ${deviceStatus.iconClassName}`} />
-              {deviceStatus.label}
-            </span>
-            <button
-              type="button"
-              aria-label={isOnline ? '演示设备不在线' : '恢复设备在线'}
-              onClick={() => setOnline(!isOnline)}
-              className="absolute bottom-[10px] right-[18px] z-20 rounded-full border border-[#e5e2e7] bg-white/90 px-2.5 py-1 text-[9px] font-medium text-[#8b8792] shadow-sm"
-            >
-              {isOnline ? '演示离线' : '恢复在线'}
-            </button>
-          </div>
-        </section>
-
-        <section className="overflow-hidden rounded-[20px] border border-[#e8e5eb] bg-white">
-          <div className="px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 pr-4">
-                <h2 className="text-[15px] font-semibold text-[#222127]">对话总开关</h2>
-                <p className="mt-1 text-[10px] leading-4 text-[#8b8792]">
-                  手机端控制 ropet 的对话能力
-                </p>
+        <section className="text-center">
+          <div
+            role="img"
+            aria-label={`当前悄悄话设备 ${deviceName}`}
+            className="relative mx-auto h-[318px] w-[330px]"
+          >
+            {ropetSpeech && (
+              <div className="absolute right-2 top-8 z-30 max-w-[150px] rounded-[18px] bg-white px-3 py-2 text-left text-[12px] font-medium leading-5 text-[#665f6d] shadow-[0_10px_28px_rgba(49,40,67,0.12)]">
+                {ropetSpeech}
+                <span className="absolute bottom-[-6px] left-8 h-4 w-4 rotate-45 bg-white" />
               </div>
-              <DialogueSwitch
-                compact
-                enabled={dialogueEnabled}
-                loading={updatingDialogue}
-                onClick={handleToggle}
-              />
-            </div>
-
-            {updatingDialogue && (
-              <p className="mt-2 text-right text-[10px] text-[#8b66ef]">正在同步设备状态…</p>
+            )}
+            <div className="absolute bottom-[44px] left-1/2 h-[30px] w-[220px] -translate-x-1/2 rounded-[50%] bg-[#4a346f]/10 blur-[8px]" />
+            <Lottie animationData={pingjingAnimation} loop autoplay className="relative z-10 h-full w-full" />
+            {showEyeGlow && (
+              <div className="pointer-events-none absolute inset-0 z-20" aria-hidden="true">
+                <span className="ropet-eye-flow-ring absolute left-[112px] top-[106px] h-[40px] w-[40px]" />
+                <span className="ropet-eye-flow-ring absolute left-[178px] top-[106px] h-[40px] w-[40px]" />
+              </div>
             )}
           </div>
+
+          <div className={`mx-auto max-w-[300px] text-left text-[12px] leading-5 ${
+            isOnline && needsDialogueCard ? 'text-[#9b5a4f]' : 'text-[#8b8792]'
+          }`}>
+            {!isOnline ? (
+              statusHint
+            ) : needsDialogueCard ? (
+              <>
+                <strong className="block text-[13px] text-[#7d423a]">今天的免费聊天结束啦</strong>
+                <span className="mt-1 block text-[11px] leading-4 text-[#9b827e]">
+                  {nextRefreshText}
+                </span>
+                <button
+                  type="button"
+                  aria-label="去使用悄悄话卡"
+                  onClick={() => navigate('/nest')}
+                  className="mt-3 inline-flex h-9 items-center rounded-full bg-[#8b66ef] px-4 text-[12px] font-semibold text-white shadow-[0_8px_18px_rgba(139,102,239,0.22)]"
+                >
+                  去使用悄悄话卡
+                </button>
+              </>
+            ) : (
+              statusHint
+            )}
+          </div>
+
+          {activeDialogueCard && !freeQuotaExhausted && (
+            <div className="mx-auto mt-4 max-w-[300px] rounded-[18px] border border-[#eadfff] bg-[#fbf8ff] px-4 py-3 text-left">
+              <div>
+                <p className="text-[13px] font-semibold text-[#6f4bd6]">悄悄话卡生效中</p>
+                <p className="mt-1 text-[11px] leading-4 text-[#8b8792]">
+                  已为你接上悄悄话时间，可以继续和{deviceName}说话。
+                </p>
+                <p className="mt-1 text-[11px] leading-4 text-[#8b8792]">到期时间：{activeDialogueCard.expiryDate}</p>
+              </div>
+            </div>
+          )}
+
+          <section className={`mx-auto mt-5 flex max-w-[300px] items-center justify-between rounded-full border px-4 py-2.5 text-left ${
+            dialogueEnabled
+              ? 'border-[#eee8ff] bg-[#fbf9ff]'
+              : 'border-[#efedf2] bg-[#fafafa]'
+          }`}>
+            <div className="pr-3">
+              <h2 className="text-[13px] font-semibold text-[#26232a]">
+                {dialogueEnabled ? '悄悄话模式已开启' : '悄悄话模式未开启'}
+              </h2>
+              <p className="mt-0.5 text-[10px] leading-4 text-[#8b8792]">
+                {dialogueEnabled
+                  ? `说“你好${deviceName}”就能唤醒 Ropet`
+                  : `开启后，说“你好${deviceName}”就能唤醒 Ropet`}
+              </p>
+              {manualHint && (
+                <p className="mt-2 text-[11px] font-semibold text-[#7554da]">现在请手动打开开关</p>
+              )}
+            </div>
+            <DialogueSwitch compact enabled={dialogueEnabled} loading={updatingDialogue} onClick={handleToggle} />
+          </section>
+        </section>
+
+        <div className="mt-6 flex justify-center gap-4 text-[10px] text-[#aaa6af]">
           <button
             type="button"
-            aria-label="查看对话疑问"
-            onClick={() => setShowFaq(true)}
-            className="flex h-11 w-full items-center border-t border-[#efedf2] px-4 text-left text-[12px] text-[#77717e]"
+            aria-label="演示首次进入"
+            onClick={startFirstUseDemo}
+            className="font-medium text-[#aaa6af]"
           >
-            <CircleHelp size={16} className="text-[#8b66ef]" />
-            <span className="ml-2 flex-1">对话功能使用帮助</span>
-            <ChevronRight size={16} className="text-[#b6b1ba]" />
+            演示首次进入
           </button>
-        </section>
+          <span aria-hidden="true">·</span>
+          <button
+            type="button"
+            aria-label={freeQuotaExhausted ? '恢复今日免费额度' : '演示今日免费额度用尽'}
+            onClick={toggleQuotaDemo}
+            className={`font-medium ${freeQuotaExhausted ? 'text-[#9b5a4f]' : 'text-[#aaa6af]'}`}
+          >
+            {freeQuotaExhausted ? '恢复额度' : '演示额度用尽'}
+          </button>
+          <span aria-hidden="true">·</span>
+          <button
+            type="button"
+            aria-label={isOnline ? '演示设备断网' : '恢复设备联网'}
+            onClick={() => setOnline(!isOnline)}
+            className={`font-medium ${isOnline ? 'text-[#aaa6af]' : 'text-[#747b88]'}`}
+          >
+            {isOnline ? '演示断网' : '恢复联网'}
+          </button>
+        </div>
       </div>
 
-      {showFaq && (
+      {showPrivacyFlow && (
         <ModalOverlay>
-          <div className="w-full rounded-[22px] bg-white px-5 pb-5 pt-7">
-            <h3 className="text-center text-[18px] font-medium text-[#222127]">对话的疑问?</h3>
-            <div className="mt-4 space-y-4">
-              {faqItems.map(([question, answer]) => (
-                <div key={question} className="relative pl-4">
-                  <span className="absolute left-0 top-[7px] h-[5px] w-[5px] rounded-full bg-[#8b66ef]" />
-                  <div className="text-[13px] font-medium text-[#8b66ef]">{question}</div>
-                  <p className="mt-1 text-[11px] leading-[18px] text-[#8c8791]">{answer}</p>
-                </div>
-              ))}
+          <div className="w-[320px] rounded-[24px] bg-white px-6 py-6 text-left">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[16px] bg-[#f1edff] text-[#8b66ef]">
+              <ShieldCheck size={24} />
+            </div>
+            <h2 className="mt-5 text-[21px] font-bold leading-7 text-[#26232a]">使用悄悄话功能前，需要你同意隐私授权</h2>
+            <p className="mt-3 text-[13px] leading-6 text-[#7c7783]">
+              开启后，Ropet 才能通过语音服务识别“你好{deviceName}”并回应你。你可以随时在本页关闭悄悄话许可。
+            </p>
+            <div className="mt-5 rounded-[16px] bg-[#f8f6ff] px-4 py-3 text-[12px] leading-5 text-[#7b6fb3]">
+              我已阅读并同意
+              <button
+                type="button"
+                onClick={() => navigate(`/policies/privacy?returnTo=${policyReturnTo}`)}
+                className="font-semibold text-[#7c5ae0] underline underline-offset-2"
+              >
+                《Ropet 隐私政策》
+              </button>
+              和
+              <button
+                type="button"
+                onClick={() => navigate(`/policies/subscription?returnTo=${policyReturnTo}`)}
+                className="font-semibold text-[#7c5ae0] underline underline-offset-2"
+              >
+                《使用协议》
+              </button>
+              中关于语音服务的说明。
             </div>
             <button
               type="button"
-              aria-label="知道了"
-              onClick={() => setShowFaq(false)}
-              className="mx-auto mt-5 block h-12 w-[222px] rounded-full bg-[#8b66ef] text-[14px] font-medium text-white"
+              onClick={() => {
+                grantVoiceConsent();
+                setShowPrivacyFlow(false);
+                setShowTutorialFlow(true);
+              }}
+              className="mt-6 h-12 w-full rounded-full bg-[#8b66ef] text-[15px] font-semibold text-white"
             >
-              知道了
+              同意并观看新手教程
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPrivacyFlow(false)}
+              className="mt-3 h-11 w-full rounded-full bg-[#f0eef2] text-[14px] font-semibold text-[#8b8792]"
+            >
+              稍后再说
             </button>
           </div>
         </ModalOverlay>
       )}
 
-      {showActivationChoice && (
+      {showTutorialFlow && (
         <ModalOverlay>
-          <div className="w-full rounded-[24px] bg-white px-5 pb-5 pt-6">
-            <h3 className="text-center text-[20px] font-semibold text-[#222127]">选择开启方式</h3>
-            <p className="mt-2 text-center text-[12px] leading-5 text-[#8c8791]">
-              开启语音对话需要有效的体验卡或 Ropet Plus。
-            </p>
-
-            <div className="mt-5 space-y-3">
-              <button
-                type="button"
-                disabled={!trialAvailable}
-                aria-label={trialAvailable ? `选择体验卡，共 ${availableTrialCards.length} 张可用` : '体验卡已用完'}
-                onClick={() => navigate(`/nest?item=trial-card&card=${encodeURIComponent(availableTrialCards[0]?.id ?? '')}`)}
-                className={`flex min-h-[72px] w-full items-center rounded-[18px] px-4 text-left ${
-                  trialAvailable
-                    ? 'bg-[#fff4b8] ring-1 ring-[#efd462]'
-                    : 'cursor-not-allowed bg-[#ecebed] text-[#aaa6ae]'
-                }`}
-              >
-                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] ${
-                  trialAvailable ? 'bg-white/75 text-[#8b66ef]' : 'bg-[#d9d7dc] text-[#aaa6ae]'
-                }`}>
-                  <Gift size={22} />
-                </span>
-                <span className="ml-3 flex-1">
-                  <strong className={`block text-[15px] ${trialAvailable ? 'text-[#5f4914]' : 'text-[#99959e]'}`}>
-                    选择体验卡
-                  </strong>
-                  <span className={`mt-1 block text-[11px] ${trialAvailable ? 'text-[#9c823e]' : 'text-[#aaa6ae]'}`}>
-                    {trialAvailable ? `${availableTrialCards.length} 张可用，选择一张开启对话` : '体验额度已使用完'}
-                  </span>
-                </span>
-                {trialAvailable && <ChevronRight size={20} color="#8b66ef" />}
-              </button>
-
-              <button
-                type="button"
-                aria-label="订阅 Ropet Plus"
-                onClick={() => navigate('/subscription')}
-                className="flex min-h-[72px] w-full items-center rounded-[18px] bg-[#f1edff] px-4 text-left ring-1 ring-[#c9bbf8]"
-              >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-[#8b66ef] text-white">
-                  <Gem size={21} fill="white" />
-                </span>
-                <span className="ml-3 flex-1">
-                  <strong className="block text-[15px] text-[#5f3fc3]">订阅 Ropet Plus</strong>
-                  <span className="mt-1 block text-[11px] text-[#8773bd]">￥69.9/月，持续使用完整权益</span>
-                </span>
-                <ChevronRight size={20} color="#8b66ef" />
-              </button>
+          <div className="w-[320px] rounded-[24px] bg-white px-6 py-6 text-left">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[16px] bg-[#fff6d7] text-[#d9a100]">
+              <BookOpen size={24} />
             </div>
-
+            <h2 className="mt-5 text-[21px] font-bold text-[#26232a]">怎么和 {deviceName} 说话</h2>
+            <div className="mt-5 space-y-4">
+              {[
+                ['1', '同意隐私授权后，App 会为你开启「悄悄话模式」。'],
+                ['2', `面对设备说“你好${deviceName}”，它会开始回应你。`],
+                ['3', '每天都有免费聊天时间，用完后悄悄话卡会自动接上。'],
+              ].map(([index, text]) => (
+                <div key={index} className="flex items-start gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#8b66ef] text-[12px] font-bold text-white">
+                    {index}
+                  </span>
+                  <p className="pt-[2px] text-[13px] leading-5 text-[#6f6a75]">{text}</p>
+                </div>
+              ))}
+            </div>
             <button
               type="button"
-              onClick={() => setShowActivationChoice(false)}
-              className="mt-4 h-11 w-full text-[14px] text-[#77727f]"
+              onClick={() => {
+                setShowTutorialFlow(false);
+                setDialogueEnabled(true);
+                setManualHint(false);
+              }}
+              className="mt-6 h-12 w-full rounded-full bg-[#8b66ef] text-[15px] font-semibold text-white"
             >
-              暂不开启
+              我知道了，开启悄悄话
             </button>
           </div>
         </ModalOverlay>

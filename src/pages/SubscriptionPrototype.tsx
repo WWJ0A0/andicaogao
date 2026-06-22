@@ -138,13 +138,13 @@ const StatusScreen = () => {
         <Card className="mt-5 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[18px] font-bold text-[#19181f]">对话能力已解锁</div>
+              <div className="text-[18px] font-bold text-[#19181f]">悄悄话能力已解锁</div>
               <div className="mt-1 text-[13px] text-[#8b8792]">权益跟随 ropet 设备</div>
             </div>
             <ShieldCheck size={26} color={purple} />
           </div>
           <div className="mt-5 space-y-4">
-            <BenefitRow icon={<MessageCircle size={16} />} title="不限量对话能力" desc="可以继续深度交流" />
+            <BenefitRow icon={<MessageCircle size={16} />} title="不限量悄悄话" desc="可以继续深度交流" />
             <BenefitRow icon={<Sparkles size={16} />} title="长期记忆能力" desc="持续记住你们的相处片段" />
             <BenefitRow icon={<HeartHandshake size={16} />} title="更高的情绪感知能力" />
           </div>
@@ -157,7 +157,7 @@ const StatusScreen = () => {
       </div>
 
       <BottomButton onClick={() => navigate('/pet-interact')} sub="Ropet Plus 当前已生效">
-        开始对话
+        开始悄悄话
       </BottomButton>
     </PhoneFrame>
   );
@@ -176,13 +176,13 @@ const PlansScreen = () => {
             <MessageCircle size={30} />
           </div>
           <h1 className="mt-5 text-[30px] leading-[36px] font-bold text-[#19181f]">获取 Ropet Plus</h1>
-          <p className="mt-2 text-[16px] text-[#19181f99]">解锁完整对话能力</p>
+          <p className="mt-2 text-[16px] text-[#19181f99]">解锁完整悄悄话能力</p>
         </div>
 
         <Card className="mt-8 overflow-hidden">
-          <div className="bg-[#a793e8] text-white px-6 py-4 text-[21px] font-semibold">对话权益</div>
+          <div className="bg-[#a793e8] text-white px-6 py-4 text-[21px] font-semibold">悄悄话权益</div>
           <div className="px-6 py-6 space-y-5">
-            <BenefitRow icon={<MessageCircle size={16} />} title="不限量对话能力" />
+            <BenefitRow icon={<MessageCircle size={16} />} title="不限量悄悄话" />
             <BenefitRow icon={<Sparkles size={16} />} title="长期记忆能力" desc="过期后默认保留 10 年，可续订恢复" />
             <BenefitRow icon={<HeartHandshake size={16} />} title="更高的情绪感知能力" />
             <BenefitRow icon={<ShieldCheck size={16} />} title="深度交流能力" />
@@ -232,7 +232,7 @@ const PaymentScreen = () => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-[18px] font-semibold text-[#19181f]">Ropet Plus 月订阅</div>
-                <div className="mt-1 text-[13px] text-[#8b8792]">不限量对话 · 长期记忆 · 设备权益</div>
+                <div className="mt-1 text-[13px] text-[#8b8792]">不限量悄悄话 · 长期记忆 · 设备权益</div>
               </div>
               <div className="text-[22px] font-bold text-[#19181f]">￥69.9</div>
             </div>
@@ -276,7 +276,7 @@ const SuccessScreen = () => {
           <Check size={48} />
         </div>
         <h1 className="mt-8 text-[30px] font-bold text-[#19181f]">ropet 已开通</h1>
-        <p className="mt-2 text-[16px] text-[#8b8792]">Ropet Plus 对话权益已生效</p>
+        <p className="mt-2 text-[16px] text-[#8b8792]">Ropet Plus 悄悄话权益已生效</p>
 
         <Card className="mt-8 p-5 text-left">
           <div className="flex justify-between py-3 border-b border-[#eeeeee]">
@@ -314,12 +314,12 @@ const TrialScreen = () => {
             <Gift size={48} />
           </div>
           <div className="mt-6 rounded-[18px] bg-white/18 px-4 py-3 text-[13px] leading-[20px]">
-            使用后给当前设备 ropet 增加 7 天对话权益。体验卡权益跟随设备，不跟随账号。
+            使用后给当前设备 ropet 增加 7 天悄悄话权益。体验卡权益跟随设备，不跟随账号。
           </div>
         </Card>
 
         <div className="mt-6 space-y-3">
-          {['不限量对话能力', '长期记忆体验', '可与付费订阅顺延叠加'].map((item) => (
+          {['不限量悄悄话', '长期记忆体验', '可与付费订阅顺延叠加'].map((item) => (
             <div key={item} className="h-[54px] rounded-[18px] bg-[#f6f6f7] px-4 flex items-center gap-3">
               <Check size={18} color={purple} />
               <span className="text-[15px] font-medium text-[#19181f]">{item}</span>
@@ -408,7 +408,7 @@ const InvoiceScreen = () => (
         <ul className="mt-4 space-y-3 text-[14px] leading-[21px] text-[#5d5967]">
           <li>取消自动续费不退款，当前周期继续可用。</li>
           <li>重复扣款、误扣、支付成功未开通，可申请退款。</li>
-          <li>退款成功后，该 Ropet 对话权益立即关闭。</li>
+          <li>退款成功后，该 Ropet 悄悄话权益立即关闭。</li>
           <li>已正常开通并使用，不按剩余时间折算退款。</li>
         </ul>
       </Card>

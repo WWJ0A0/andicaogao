@@ -3,23 +3,21 @@ import { Brain, Check, ChevronDown, ChevronRight, ChevronUp, HeartHandshake, Mes
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import TrialCardArtwork from '@/components/subscription/TrialCardArtwork';
 import { PrototypeHeader, PrototypePhone, PrototypeStatusBar } from '@/components/subscription/PrototypeUI';
-import { TrialCard, useSubscriptionStore } from '@/store/useSubscriptionStore';
+import { isDateExpired, TrialCard, useSubscriptionStore } from '@/store/useSubscriptionStore';
 
 const trialBenefits = [
-  { title: '不限时长语音对话', icon: MessageCircle },
+  { title: '不限时长悄悄话', icon: MessageCircle },
   { title: '长期记忆能力', icon: Brain },
   { title: '更高的情绪感知', icon: HeartHandshake },
   { title: '深度交流能力', icon: Check },
 ];
 
 const statusLabel = (card: TrialCard) => {
-  if (card.status === 'active') return '使用中';
   if (card.status === 'used') return '已使用';
-  return '可使用';
+  return '未使用';
 };
 
 const statusClassName = (card: TrialCard) => {
-  if (card.status === 'active') return 'bg-[#eee8ff] text-[#704bd4]';
   if (card.status === 'used') return 'bg-[#eeeeef] text-[#96919b]';
   return 'bg-[#e8f7ef] text-[#31845c]';
 };
@@ -29,12 +27,12 @@ const TrialExperience: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [showBenefits, setShowBenefits] = useState(false);
   const returnTo = searchParams.get('returnTo') || '/dialogue-mode';
-  const { expiryDate, trialCards } = useSubscriptionStore();
+  const { entitlement, expiryDate, trialCards } = useSubscriptionStore();
 
   const availableCount = trialCards.filter((card) => card.status === 'available').length;
-  const activeCount = trialCards.filter((card) => card.status === 'active').length;
+  const trialEntitlementActive = entitlement === 'trial' && !isDateExpired(expiryDate);
   const orderedCards = [...trialCards].sort((a, b) => {
-    const order = { active: 0, available: 1, used: 2 };
+    const order = { available: 0, used: 1 };
     return order[a.status] - order[b.status];
   });
 
@@ -62,9 +60,9 @@ const TrialExperience: React.FC = () => {
               </div>
             </div>
             <div className="text-right text-[11px] leading-5 text-white/80">
-              {activeCount > 0 ? (
+              {trialEntitlementActive ? (
                 <>
-                  <strong className="block text-[13px] text-white">正在使用</strong>
+                  <strong className="block text-[13px] text-white">体验权益已生效</strong>
                   <span>{expiryDate} 到期</span>
                 </>
               ) : (

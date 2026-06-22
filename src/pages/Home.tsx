@@ -148,7 +148,7 @@ const HomePage: React.FC = () => {
 
               <DialogueEntryButton
                 enabled={dialogueEnabled}
-                className="absolute left-[207px] top-[4px] z-10"
+                className="absolute left-[203px] top-[4px] z-10"
                 onClick={() => navigate('/dialogue-mode')}
               />
               
@@ -204,8 +204,7 @@ const HomePage: React.FC = () => {
         <div className="absolute top-[410px] left-0 flex flex-col items-start rounded-[24px] bg-[#f8f8f8e5] pt-[69px] px-[21px] pl-5 w-[393px] h-[442px] gap-3">
           {/* 已陪伴和今日互动统计 */}
           <div 
-            className="flex items-start self-stretch border border-[#2222220d] rounded-[20px] bg-[#eeeeee] px-[30px] py-[13px] pr-[30px] pl-[41px] shrink-0 cursor-pointer hover:bg-[#e0e0e0] transition-colors"
-            onClick={() => navigate('/interaction-history')}
+            className="flex items-start self-stretch border border-[#2222220d] rounded-[20px] bg-[#eeeeee] px-[30px] py-[13px] pr-[30px] pl-[41px] shrink-0 transition-colors"
           >
             {/* 已陪伴天数 */}
             <div className="flex flex-col items-center w-[90px] gap-1">
@@ -224,10 +223,14 @@ const HomePage: React.FC = () => {
             />
 
             {/* 今日互动 */}
-            <div className="flex flex-col items-center justify-center ml-[31px] gap-1">
+            <button
+              type="button"
+              className="ml-[31px] flex flex-col items-center justify-center gap-1 rounded-[16px] px-2 transition-colors hover:bg-white/50"
+              onClick={() => navigate('/interaction-score')}
+            >
               <p className="shrink-0 opacity-80 leading-[22px] tracking-normal text-[#3f3f6099] text-[16px]">今日互动</p>
               <p className="shrink-0 self-stretch text-center tracking-[-0.84px] text-[#222222] text-[28px] font-semibold">{todaysInteractions}</p>
-            </div>
+            </button>
           </div>
 
           {/* 宠物状态和功能区域 */}

@@ -12,18 +12,30 @@ import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 const VoiceConsent: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { setPaymentState, grantVoiceConsent } = useSubscriptionStore();
+  const {
+    voiceConsentGranted,
+    setDialogueEnabled,
+    setPaymentState,
+    grantVoiceConsent,
+  } = useSubscriptionStore();
+  const [agreed, setAgreed] = useState(voiceConsentGranted);
   const source = searchParams.get('source') === 'subscription' ? 'subscription' : 'trial';
+  const subscriptionActivated = source === 'subscription' && searchParams.get('activated') === '1';
   const returnTo = searchParams.get('returnTo') || (source === 'trial' ? '/dialogue-mode' : '/subscription');
-  const consentPath = `/subscription/voice-consent?source=${source}&returnTo=${encodeURIComponent(returnTo)}`;
+  const consentPath = `/subscription/voice-consent?source=${source}${subscriptionActivated ? '&activated=1' : ''}&returnTo=${encodeURIComponent(returnTo)}`;
 
   const handleAgree = () => {
     if (!agreed || submitting) return;
     setSubmitting(true);
     window.setTimeout(() => {
       grantVoiceConsent();
+      if (subscriptionActivated) {
+        setDialogueEnabled(true);
+        setPaymentState('success');
+        navigate('/dialogue-mode');
+        return;
+      }
       setPaymentState('opening');
       navigate(`/subscription/opening?source=${source}`);
     }, 600);
@@ -46,12 +58,25 @@ const VoiceConsent: React.FC = () => {
       </div>
       <div className="absolute left-0 top-[322px] w-full px-8">
         <h1 className="text-[21px] font-semibold leading-8 text-[#222127]">
-          使用语音对话功能，<br />
-          让「ropet」能与你流利对话。
+          {subscriptionActivated ? (
+            <>
+              Ropet Plus 已开通，<br />
+              同意隐私政策后即可开启悄悄话。
+            </>
+          ) : source === 'subscription' ? (
+            <>
+              付款已完成，<br />
+              同意隐私政策后即可开启悄悄话。
+            </>
+          ) : (
+            <>
+              体验卡已兑换，<br />
+              同意隐私政策后即可开启悄悄话。
+            </>
+          )}
         </h1>
         <p className="mt-7 text-[13px] leading-6 text-[#66616c]">
-          在使用前，需要先开启“语音服务”功能，该功能可在详情右上角进行关闭。<br />
-          语音服务功能开启即代表你同意 ropet 获取语音视频权限。
+          为提供语音唤醒与悄悄话服务，需要获取设备的语音权限。你可以随时在悄悄话模式中关闭许可。
         </p>
       </div>
       <div className="absolute bottom-[66px] left-5 right-5">
@@ -84,7 +109,7 @@ const VoiceConsent: React.FC = () => {
         </AgreementCheck>
         <div className="mt-5 grid grid-cols-2 gap-3">
           <button type="button" disabled={submitting} onClick={() => navigate(-1)} className="h-[54px] rounded-full bg-[#d3d2d6] text-[15px] font-medium text-white">
-            再次再说
+            暂不开启
           </button>
           <button
             type="button"
