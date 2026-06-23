@@ -15,7 +15,7 @@ const PolaroidCard = () => (
     <div className="absolute left-10 top-1 h-[188px] w-[150px] rotate-3 rounded-[5px] bg-[#fff7e8] p-3 shadow-[0_18px_32px_rgba(67,52,29,0.18)]">
       <div className="h-[120px] rounded-[3px] bg-gradient-to-br from-[#fff9ea] to-[#d7c39f]" />
       <div className="mt-4 flex items-center justify-between">
-        <span className="text-[16px] font-bold text-[#8b66ef]">1 DAY</span>
+        <span className="text-[16px] font-bold text-[#8b66ef]">1 次</span>
         <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#d7c39f] text-[#c8aa72]">
           <Ticket size={12} />
         </span>
@@ -55,7 +55,7 @@ const DialogueShop: React.FC = () => {
       window.setTimeout(() => setMessage(''), 1800);
       return;
     }
-    setMessage('悄悄话时间已生效');
+    setMessage('社交电量已充满');
     window.setTimeout(() => navigate('/dialogue-mode'), 900);
   };
 
@@ -83,9 +83,9 @@ const DialogueShop: React.FC = () => {
           <span className="absolute -left-8 top-[-20px] text-[150px] font-black leading-none text-white/10">1</span>
           <div className="relative z-10">
             <p className="text-[12px] text-white/72">悄悄话卡</p>
-            <h2 className="mt-1 text-[24px] font-semibold">1 天悄悄话时间</h2>
+            <h2 className="mt-1 text-[24px] font-semibold">充满一次社交电量</h2>
             <p className="mt-2 text-[12px] leading-5 text-white/70">
-              每日免费聊天结束后，悄悄话卡会自动接上。
+              今天的免费聊天结束后，可以用它继续说悄悄话。
             </p>
           </div>
           <div className="mt-9">
@@ -96,9 +96,9 @@ const DialogueShop: React.FC = () => {
         <section className="mt-[-34px] rounded-[24px] bg-white px-5 pb-5 pt-7 shadow-[0_16px_38px_rgba(47,39,68,0.12)]">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-[20px] font-semibold text-[#222127]">1天悄悄话卡</h2>
+              <h2 className="text-[20px] font-semibold text-[#222127]">悄悄话卡</h2>
               <p className="mt-1 text-[12px] leading-5 text-[#8b8792]">
-                免费聊天结束后，使用它继续和 Ropet 说悄悄话。
+                使用后充满一次社交电量，继续和 Ropet 说悄悄话。
               </p>
             </div>
             <span className="rounded-full bg-[#f5f3f7] px-3 py-1 text-[11px] font-semibold text-[#8b8792]">
@@ -148,9 +148,9 @@ const DialogueShop: React.FC = () => {
             >
               <X size={20} />
             </button>
-            <h2 className="text-[18px] font-semibold text-[#222127]">积分兑换</h2>
-            <p className="mt-3 text-[14px] leading-6 text-[#4d4952]">
-              每 {cardCost} 积分可兑换一张 1天悄悄话卡，当前剩余积分 {points}。
+              <h2 className="text-[18px] font-semibold text-[#222127]">积分兑换</h2>
+              <p className="mt-3 text-[14px] leading-6 text-[#4d4952]">
+              每 {cardCost} 积分可兑换一张悄悄话卡，当前剩余积分 {points}。
             </p>
             <div className="mt-4 flex items-center justify-center text-[15px] font-semibold text-[#222127]">
               <Coins size={18} className="mr-2 text-[#f3b12f]" />

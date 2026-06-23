@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Gamepad2, Gift, Sparkles, Star, X } from 'lucide-react';
+import { ChevronLeft, Star, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ModalOverlay,
@@ -10,10 +10,10 @@ import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
 
 const pointProducts = [
-  { points: 1000, price: 6 },
-  { points: 10000, price: 25 },
-  { points: 100000, price: 289 },
-  { points: 1000000, price: 800 },
+  { points: 6000, price: 6, discount: '' },
+  { points: 19000, price: 18, discount: '' },
+  { points: 48000, price: 45, discount: '' },
+  { points: 206800, price: 188, discount: '多得 10%' },
 ];
 
 const paymentChannels = [
@@ -118,7 +118,10 @@ const PointsStore: React.FC = () => {
                   <Star size={14} className="mr-1 text-[#ffd943]" fill="#ffd943" />
                   {item.points}
                 </div>
-                <span className="mt-3 inline-flex h-9 min-w-[92px] items-center justify-center rounded-[9px] bg-[#8b66ef] text-[15px] font-semibold text-white">
+                {item.discount && (
+                  <div className="mt-2 text-[11px] font-semibold text-[#8b66ef]">{item.discount}</div>
+                )}
+                <span className={`${item.discount ? 'mt-3' : 'mt-4'} inline-flex h-9 min-w-[92px] items-center justify-center rounded-[9px] bg-[#8b66ef] text-[15px] font-semibold text-white`}>
                   ￥{item.price}
                 </span>
               </button>
@@ -129,33 +132,9 @@ const PointsStore: React.FC = () => {
         <section className="relative z-10 mt-5 rounded-[20px] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(58,49,75,0.06)]">
           <h2 className="text-[17px] font-semibold text-[#26232a]">不花钱也能拿积分</h2>
           <div className="mt-4 space-y-3">
-            <div className="flex items-start">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-[#e9f5ee] text-[#35715b]">
-                <Gift size={18} />
-              </span>
-              <div className="ml-3">
-                <h3 className="text-[14px] font-semibold text-[#302b37]">每日照顾 Ropet</h3>
-                <p className="mt-0.5 text-[11px] leading-5 text-[#8b8792]">喂食、互动、查看成长状态，都可以获得少量积分。</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-[#f0ecff] text-[#8b66ef]">
-                <Gamepad2 size={18} />
-              </span>
-              <div className="ml-3">
-                <h3 className="text-[14px] font-semibold text-[#302b37]">完成活动任务</h3>
-                <p className="mt-0.5 text-[11px] leading-5 text-[#8b8792]">小游戏、共创活动、每日任务会提供更多积分奖励。</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              aria-label="去日常活动"
-              onClick={() => navigate('/interaction-score')}
-              className="mt-2 flex h-11 w-full items-center justify-center rounded-[13px] bg-[#f8f6fe] text-[14px] font-semibold text-[#6d4bd0]"
-            >
-              <Sparkles size={17} className="mr-1.5" />
-              去日常活动
-            </button>
+            <p className="rounded-[14px] bg-[#f8f6fe] px-4 py-3 text-[12px] leading-5 text-[#6d6573]">
+              积分可以通过日常互动获得，也可以在这里购买补充。购买的积分会归属当前设备。
+            </p>
           </div>
         </section>
 

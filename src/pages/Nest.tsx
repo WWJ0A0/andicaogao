@@ -6,16 +6,14 @@ import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
 
 const WHISPER_CARD_PRODUCTS = [
-  { days: 1, cost: 1000 },
-  { days: 7, cost: 6000 },
-  { days: 30, cost: 24000 },
+  { days: 1, cost: 5000 },
 ];
 
 const DialogueCardVisual: React.FC<{
   days: number;
   size?: 'mini' | 'tile' | 'hero';
   muted?: boolean;
-}> = ({ days, size = 'tile', muted = false }) => {
+}> = ({ size = 'tile', muted = false }) => {
   const hero = size === 'hero';
   const mini = size === 'mini';
   return (
@@ -27,10 +25,7 @@ const DialogueCardVisual: React.FC<{
       <div className={`absolute rounded-full bg-white/10 ${hero ? '-right-8 -top-8 h-24 w-24' : '-right-4 -top-4 h-12 w-12'}`} />
       <div className={`absolute rounded-full border border-white/12 ${hero ? '-bottom-8 -left-8 h-24 w-24' : '-bottom-5 -left-5 h-12 w-12'}`} />
       <div className="relative flex items-end justify-center">
-        <strong className={`${hero ? 'text-[76px] leading-[76px]' : mini ? 'text-[13px] leading-[14px]' : 'text-[30px] leading-[31px]'} font-bold tracking-normal`}>
-          {days}
-        </strong>
-        <span className={`${hero ? 'mb-3 ml-2 text-[19px]' : mini ? 'mb-0 ml-[1px] text-[5px]' : 'mb-[4px] ml-1 text-[9px]'} font-semibold`}>天</span>
+        <span className={`${hero ? 'h-16 w-16' : mini ? 'h-2 w-2' : 'h-5 w-5'} rounded-full bg-white/18 shadow-[0_0_24px_rgba(255,255,255,0.32)]`} />
       </div>
     </div>
   );
@@ -43,7 +38,6 @@ const Nest: React.FC = () => {
   const deviceName = pet?.name || '肉派派';
   const {
     points,
-    activeDialogueCard,
     dialogueCards,
     dialogueCardInventory,
     exchangeDialogueCard,
@@ -53,7 +47,6 @@ const Nest: React.FC = () => {
   const [selectedCardDays, setSelectedCardDays] = useState(initialCardDays);
   const [exchangingCard, setExchangingCard] = useState(false);
   const [usingCard, setUsingCard] = useState(false);
-  const [confirmingUse, setConfirmingUse] = useState(false);
   const [confirmingExchange, setConfirmingExchange] = useState(false);
   const [exchangeCount, setExchangeCount] = useState(1);
   const [showUseSuccess, setShowUseSuccess] = useState(false);
@@ -109,13 +102,7 @@ const Nest: React.FC = () => {
 
   const useSelectedCard = () => {
     if (!selectedOwnedCount || usingCard) return;
-    setConfirmingUse(true);
-  };
-
-  const confirmUseSelectedCard = () => {
-    if (!selectedOwnedCount || usingCard) return;
     setUsingCard(true);
-    setConfirmingUse(false);
     window.setTimeout(() => {
       applyDialogueCard(selectedCard.days);
       setUsingCard(false);
@@ -260,7 +247,7 @@ const Nest: React.FC = () => {
                     >
                       <DialogueCardVisual days={card.days} />
                       <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">
-                        {card.days}天卡
+                        悄悄话卡
                       </span>
                     </button>
                   ))}
@@ -374,7 +361,7 @@ const Nest: React.FC = () => {
                 <div>
                   <h2 className="text-[22px] font-semibold text-[#222127]">悄悄话卡</h2>
                   <p className="mt-2 max-w-[245px] text-[12px] leading-5 text-[#8b8792]">
-                    每日免费聊天结束后，悄悄话卡会自动接上，继续陪你和 {deviceName} 说话。
+                    使用后可以充满一次社交电量，让 {deviceName} 继续陪你说悄悄话。
                   </p>
                 </div>
                 <span className="rounded-full bg-[#f3f0fb] px-3 py-1.5 text-[11px] font-semibold text-[#7c5ae0]">
@@ -429,7 +416,7 @@ const Nest: React.FC = () => {
             <section className="w-full rounded-[20px] bg-white px-6 py-6 text-center shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
               <h2 className="text-[18px] font-semibold text-[#222127]">积分兑换</h2>
               <p className="mt-3 text-[14px] leading-6 text-[#222127]">
-                每{selectedCard.cost}积分可兑换一张悄悄话卡（{selectedCard.days}天），
+                每{selectedCard.cost}积分可兑换一张悄悄话卡，
                 <br />
                 当前剩余积分 {points}。
               </p>
@@ -502,43 +489,13 @@ const Nest: React.FC = () => {
           </div>
         )}
 
-        {confirmingUse && (
-          <div className="absolute inset-0 z-[110] flex items-center justify-center bg-black/45 px-8">
-            <section className="w-full rounded-[24px] bg-white px-5 py-6 text-center shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
-              <h2 className="text-[18px] font-semibold text-[#222127]">使用 {selectedCard.days}天悄悄话卡？</h2>
-              <p className="mt-3 text-[12px] leading-5 text-[#8b8792]">
-                使用后，{deviceName} 会在每日免费聊天结束后继续陪你说悄悄话；如果已有悄悄话时间，时长会自动顺延。
-              </p>
-              <button
-                type="button"
-                onClick={confirmUseSelectedCard}
-                className="mt-6 h-12 w-full rounded-[16px] bg-[#8b66ef] text-[14px] font-semibold text-white"
-              >
-                确认使用
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmingUse(false)}
-                className="mt-3 h-11 w-full rounded-[16px] border border-[#e6e1ed] bg-white text-[14px] font-semibold text-[#6f6875]"
-              >
-                取消
-              </button>
-            </section>
-          </div>
-        )}
-
         {showUseSuccess && (
           <div className="absolute inset-0 z-[115] flex items-center justify-center bg-black/45 px-8">
             <section className="w-full rounded-[24px] bg-white px-5 py-6 text-center shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
               <h2 className="text-[18px] font-semibold text-[#222127]">悄悄话卡已生效</h2>
               <p className="mt-3 text-[13px] leading-6 text-[#6f6875]">
-                已为你接上悄悄话时间，可以继续和{deviceName}说话。
+                已为你充满一次社交电量，可以继续和{deviceName}说话。
               </p>
-              {activeDialogueCard?.expiryDate && (
-                <p className="mt-2 text-[12px] font-semibold text-[#7c5ae0]">
-                  到期时间：{activeDialogueCard.expiryDate}
-                </p>
-              )}
               <button
                 type="button"
                 onClick={() => navigate('/dialogue-mode?card=active')}

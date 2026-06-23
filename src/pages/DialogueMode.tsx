@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import Lottie from 'lottie-react';
-import { BookOpen, ShieldCheck } from 'lucide-react';
+import { ShieldCheck, WifiOff, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import pingjingAnimation from '@/assets/animations/pingjing.json';
 import {
   DialogueSwitch,
   ModalOverlay,
@@ -14,42 +12,6 @@ import { usePetStore } from '@/store/usePetStore';
 import { useDialogueStore } from '@/store/useDialogueStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
-const getNextUtcRefreshText = () => {
-  const now = new Date();
-  const nextUtcMidnight = new Date(Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate() + 1,
-    0,
-    0,
-    0,
-  ));
-  const todayText = new Intl.DateTimeFormat('zh-CN', {
-    month: 'numeric',
-    day: 'numeric',
-  }).format(now);
-  const refreshDateText = new Intl.DateTimeFormat('zh-CN', {
-    month: 'numeric',
-    day: 'numeric',
-  }).format(nextUtcMidnight);
-  const refreshTimeText = new Intl.DateTimeFormat('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(nextUtcMidnight);
-  const dateLabel = refreshDateText === todayText ? '今天' : '明天';
-
-  return `${dateLabel} ${refreshTimeText} 刷新`;
-};
-
-const FREE_QUOTA_SECONDS = 5 * 60;
-
-const formatQuotaTime = (seconds: number) => {
-  const minutes = Math.floor(seconds / 60);
-  const restSeconds = seconds % 60;
-  return `${minutes}:${String(restSeconds).padStart(2, '0')}`;
-};
-
 const DialogueMode: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -57,7 +19,9 @@ const DialogueMode: React.FC = () => {
   const [showPrivacyFlow, setShowPrivacyFlow] = useState(false);
   const [showTutorialFlow, setShowTutorialFlow] = useState(false);
   const [manualHint, setManualHint] = useState(false);
-  const [cardToast, setCardToast] = useState(searchParams.get('card') === 'active');
+  const cardActivatedFromNest = searchParams.get('card') === 'active';
+  const [cardToast, setCardToast] = useState(cardActivatedFromNest);
+  const [playCardCharge, setPlayCardCharge] = useState(cardActivatedFromNest);
   const { pet, isOnline, setOnline } = usePetStore();
   const deviceName = pet?.name || '肉派派';
   const {
@@ -66,27 +30,12 @@ const DialogueMode: React.FC = () => {
     setDialogueEnabled,
   } = useSubscriptionStore();
   const { activeDialogueCard, clearActiveDialogueCard } = useDialogueStore();
-  const freeQuotaExhausted = searchParams.get('quota') === 'empty';
+  const quotaEmptyDemo = searchParams.get('quota') === 'empty';
+  const cardEnergyActive = Boolean(activeDialogueCard) && !quotaEmptyDemo;
+  const freeQuotaExhausted = quotaEmptyDemo;
   const needsDialogueCard = freeQuotaExhausted;
-  const nextRefreshText = getNextUtcRefreshText();
-  const freeQuotaRemaining = freeQuotaExhausted ? 0 : FREE_QUOTA_SECONDS;
-  const freeQuotaProgress = (freeQuotaRemaining / FREE_QUOTA_SECONDS) * 100;
+  const hasFreeEnergy = !freeQuotaExhausted && !cardEnergyActive;
   const policyReturnTo = encodeURIComponent('/dialogue-mode');
-  const showEyeGlow = isOnline && dialogueEnabled && !needsDialogueCard;
-  const ropetSpeech = !isOnline
-    ? '我现在不在线哦'
-    : !dialogueEnabled
-    ? '我现在不会跟你说话哦'
-    : needsDialogueCard
-      ? '我有点累啦，下次再陪你'
-      : '';
-  const statusHint = !isOnline
-    ? '设备断网时，Ropet 暂时无法回应你。'
-    : needsDialogueCard
-      ? null
-      : activeDialogueCard
-        ? null
-        : '每天 Ropet 都能陪你聊一会儿；聊完后，它会提醒你下次再继续。';
 
   useEffect(() => {
     if (!cardToast) return;
@@ -98,6 +47,12 @@ const DialogueMode: React.FC = () => {
     }, 1800);
     return () => window.clearTimeout(timer);
   }, [cardToast, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (!playCardCharge) return;
+    const timer = window.setTimeout(() => setPlayCardCharge(false), 1400);
+    return () => window.clearTimeout(timer);
+  }, [playCardCharge]);
 
   const handleToggle = () => {
     if (updatingDialogue) return;
@@ -115,6 +70,7 @@ const DialogueMode: React.FC = () => {
       nextParams.delete('quota');
     } else {
       nextParams.set('quota', 'empty');
+      clearActiveDialogueCard();
     }
     setSearchParams(nextParams, { replace: true });
   };
@@ -141,101 +97,82 @@ const DialogueMode: React.FC = () => {
       <div className="h-[752px] overflow-y-auto px-5 pb-8 pt-2 scrollbar-hide">
         {cardToast && (
           <div className="fixed left-1/2 top-[116px] z-50 -translate-x-1/2 rounded-full bg-[#25212b] px-4 py-2 text-[12px] font-semibold text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
-            已为你接上悄悄话时间，可以继续和{deviceName}说话。
+            已为你充满一次社交电量，可以继续和{deviceName}说话。
           </div>
         )}
 
-        <section className="text-center">
-          <div
-            role="img"
-            aria-label={`当前悄悄话设备 ${deviceName}`}
-            className="relative mx-auto h-[318px] w-[330px]"
-          >
-            {ropetSpeech && (
-              <div className="absolute right-2 top-8 z-30 max-w-[150px] rounded-[18px] bg-white px-3 py-2 text-left text-[12px] font-medium leading-5 text-[#665f6d] shadow-[0_10px_28px_rgba(49,40,67,0.12)]">
-                {ropetSpeech}
-                <span className="absolute bottom-[-6px] left-8 h-4 w-4 rotate-45 bg-white" />
-              </div>
-            )}
-            <div className="absolute bottom-[44px] left-1/2 h-[30px] w-[220px] -translate-x-1/2 rounded-[50%] bg-[#4a346f]/10 blur-[8px]" />
-            <Lottie animationData={pingjingAnimation} loop autoplay className="relative z-10 h-full w-full" />
-            {showEyeGlow && (
-              <div className="pointer-events-none absolute inset-0 z-20" aria-hidden="true">
-                <span className="ropet-eye-flow-ring absolute left-[112px] top-[106px] h-[40px] w-[40px]" />
-                <span className="ropet-eye-flow-ring absolute left-[178px] top-[106px] h-[40px] w-[40px]" />
-              </div>
-            )}
+        {!isOnline && (
+          <div className="mx-auto mb-4 flex h-11 max-w-[330px] items-center rounded-[8px] bg-[#ff805d] px-4 text-left text-white shadow-[0_8px_18px_rgba(255,128,93,0.24)]">
+            <WifiOff size={20} strokeWidth={2.3} className="mr-3 shrink-0 text-white" />
+            <span className="text-[14px] font-medium tracking-normal">网络连接异常，请检查网络设备</span>
           </div>
+        )}
 
-          <div className={`mx-auto max-w-[300px] text-left text-[12px] leading-5 ${
-            isOnline && needsDialogueCard ? 'text-[#9b5a4f]' : 'text-[#8b8792]'
-          }`}>
-            {!isOnline ? (
-              statusHint
-            ) : needsDialogueCard ? (
-              <>
-                <strong className="block text-[13px] text-[#7d423a]">今天的免费聊天结束啦</strong>
-                <span className="mt-1 block text-[11px] leading-4 text-[#9b827e]">
-                  {nextRefreshText}
-                </span>
-                <button
-                  type="button"
-                  aria-label="去使用悄悄话卡"
-                  onClick={() => navigate('/nest')}
-                  className="mt-3 inline-flex h-9 items-center rounded-full bg-[#8b66ef] px-4 text-[12px] font-semibold text-white shadow-[0_8px_18px_rgba(139,102,239,0.22)]"
-                >
-                  去使用悄悄话卡
-                </button>
-              </>
-            ) : (
-              statusHint
-            )}
-          </div>
-
-          <div className={`mx-auto mt-4 max-w-[300px] rounded-[18px] border px-4 py-3 text-left ${
+        <section className="pt-4 text-center">
+          <div className={`mx-auto mt-0 max-w-[300px] rounded-[24px] border px-4 py-4 text-left shadow-[0_14px_34px_rgba(78,58,120,0.07)] ${
             freeQuotaExhausted
-              ? 'border-[#f1ddd8] bg-[#fff8f6]'
-              : 'border-[#efe8ff] bg-[#fbf9ff]'
+              ? 'border-[#f1ddd8] bg-[#fffafa]'
+              : 'border-[#eee6ff] bg-white'
           }`}>
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[13px] font-semibold text-[#26232a]">今日免费聊天</p>
-                <p className="mt-0.5 text-[10px] leading-4 text-[#8b8792]">只有真正说悄悄话时才消耗</p>
+                <p className="text-[15px] font-semibold text-[#26232a]">今日社交电量</p>
               </div>
-              <div className={`rounded-full px-3 py-1 text-[12px] font-semibold ${
-                freeQuotaExhausted ? 'bg-[#f7e7e2] text-[#9b5a4f]' : 'bg-[#efe8ff] text-[#7c5ae0]'
-              }`}>
-                {formatQuotaTime(freeQuotaRemaining)} / {formatQuotaTime(FREE_QUOTA_SECONDS)}
-              </div>
+              {cardEnergyActive && (
+                <span className="rounded-full bg-[#f0eaff] px-2.5 py-1 text-[11px] font-semibold text-[#7656dc]">
+                  悄悄话卡
+                </span>
+              )}
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#ebe7ef]">
-              <div
-                className={`h-full rounded-full transition-all ${
-                  freeQuotaExhausted
-                    ? 'bg-[#c78b80]'
-                    : 'bg-gradient-to-r from-[#a98dff] to-[#7c5ae0]'
-                }`}
-                style={{ width: `${freeQuotaProgress}%` }}
-              />
-            </div>
-            <p className={`mt-2 text-[10px] leading-4 ${
-              freeQuotaExhausted ? 'text-[#9b5a4f]' : 'text-[#8b8792]'
+            <div className={`relative mt-4 h-9 overflow-hidden rounded-full p-1 ${
+              freeQuotaExhausted ? 'bg-[#f1e9e7]' : 'bg-[#f0ecfb]'
             }`}>
-              {freeQuotaExhausted ? `今日额度已用完 · ${nextRefreshText}` : '开关开启、等待唤醒时不扣时长'}
-            </p>
-          </div>
-
-          {activeDialogueCard && !freeQuotaExhausted && (
-            <div className="mx-auto mt-4 max-w-[300px] rounded-[18px] border border-[#eadfff] bg-[#fbf8ff] px-4 py-3 text-left">
-              <div>
-                <p className="text-[13px] font-semibold text-[#6f4bd6]">悄悄话卡生效中</p>
-                <p className="mt-1 text-[11px] leading-4 text-[#8b8792]">
-                  已为你接上悄悄话时间，可以继续和{deviceName}说话。
-                </p>
-                <p className="mt-1 text-[11px] leading-4 text-[#8b8792]">到期时间：{activeDialogueCard.expiryDate}</p>
+              {!freeQuotaExhausted && (
+                <>
+                  <div className="absolute inset-y-1 right-1 w-1/3 rounded-full bg-[#e9e2f3]" />
+                  {cardEnergyActive && (
+                    <div
+                      className={`absolute inset-y-1 left-1 w-2/3 overflow-hidden rounded-full bg-gradient-to-r from-[#d5c6ff] via-[#a987ff] to-[#8060ea] shadow-[0_0_20px_rgba(139,102,239,0.3)] ${
+                        playCardCharge ? 'social-energy-charge' : ''
+                      }`}
+                    >
+                      <span className="absolute inset-y-1 left-5 w-12 rounded-full bg-white/24 blur-[2px]" />
+                      <span className="absolute inset-y-1 right-6 w-10 rounded-full bg-white/18 blur-[2px]" />
+                    </div>
+                  )}
+                  {hasFreeEnergy && (
+                    <div className="absolute inset-y-1 right-1 w-1/3 overflow-hidden rounded-full bg-gradient-to-r from-[#c8b8ff] to-[#8b66ef] shadow-[0_0_18px_rgba(139,102,239,0.26)]">
+                      <span className="absolute inset-y-1 left-3 w-8 rounded-full bg-white/24 blur-[2px]" />
+                    </div>
+                  )}
+                  <span className="absolute inset-y-1 left-1 w-2/3 rounded-full ring-1 ring-white/50" />
+                  <span className="absolute inset-y-1 right-1 w-1/3 rounded-full ring-1 ring-white/70" />
+                </>
+              )}
+              <div className={`relative h-full overflow-hidden rounded-full ${
+                freeQuotaExhausted ? 'bg-[#e8e2ea]' : 'bg-transparent'
+              }`}>
+                {freeQuotaExhausted && (
+                  <span className="absolute inset-0 flex items-center justify-center text-[12px] font-semibold text-[#8f8492]">
+                    已用尽
+                  </span>
+                )}
               </div>
             </div>
-          )}
+            {freeQuotaExhausted && (
+              <p className="mt-3 text-[12px] font-medium text-[#9b5a4f]">明天 08:00 刷新免费额度</p>
+            )}
+            {needsDialogueCard && (
+              <button
+                type="button"
+                aria-label="去使用悄悄话卡"
+                onClick={() => navigate('/nest')}
+                className="mt-4 flex h-10 w-full items-center justify-center rounded-full bg-[#8b66ef] text-[13px] font-semibold text-white shadow-[0_8px_18px_rgba(139,102,239,0.22)]"
+              >
+                去使用悄悄话卡
+              </button>
+            )}
+          </div>
 
           <section className={`mx-auto mt-5 flex max-w-[300px] items-center justify-between rounded-full border px-4 py-2.5 text-left ${
             dialogueEnabled
@@ -247,9 +184,7 @@ const DialogueMode: React.FC = () => {
                 {dialogueEnabled ? '悄悄话模式已开启' : '悄悄话模式未开启'}
               </h2>
               <p className="mt-0.5 text-[10px] leading-4 text-[#8b8792]">
-                {dialogueEnabled
-                  ? `说“你好${deviceName}”就能唤醒 Ropet`
-                  : `开启后，说“你好${deviceName}”就能唤醒 Ropet`}
+                靠近{deviceName}，面对着它，和它随便聊点什么吧。听到你的声音后，悄悄话就会开启，并消耗今日社交电量。
               </p>
               {manualHint && (
                 <p className="mt-2 text-[11px] font-semibold text-[#7554da]">现在请手动打开开关</p>
@@ -342,25 +277,47 @@ const DialogueMode: React.FC = () => {
 
       {showTutorialFlow && (
         <ModalOverlay>
-          <div className="w-[320px] rounded-[24px] bg-white px-6 py-6 text-left">
-            <div className="flex h-12 w-12 items-center justify-center rounded-[16px] bg-[#fff6d7] text-[#d9a100]">
-              <BookOpen size={24} />
+          <div className="relative flex h-full w-full flex-col bg-white px-5 pb-8 pt-5 text-left">
+            <div className="flex h-10 items-center justify-center">
+              <button
+                type="button"
+                aria-label="关闭新手教程"
+                onClick={() => setShowTutorialFlow(false)}
+                className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center text-[#222127]"
+              >
+                <X size={24} strokeWidth={2.2} />
+              </button>
+              <h2 className="text-[17px] font-bold text-[#222127]">怎么和{deviceName}唠唠？</h2>
             </div>
-            <h2 className="mt-5 text-[21px] font-bold text-[#26232a]">怎么和 {deviceName} 说话</h2>
-            <div className="mt-5 space-y-4">
+
+            <div className="mt-9 space-y-6">
               {[
-                ['1', '同意隐私授权后，App 会为你开启「悄悄话模式」。'],
-                ['2', `面对设备说“你好${deviceName}”，它会开始回应你。`],
-                ['3', '每天都有免费聊天时间，用完后悄悄话卡会自动接上。'],
-              ].map(([index, text]) => (
-                <div key={index} className="flex items-start gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#8b66ef] text-[12px] font-bold text-white">
-                    {index}
-                  </span>
-                  <p className="pt-[2px] text-[13px] leading-5 text-[#6f6a75]">{text}</p>
-                </div>
+                {
+                  title: '01. 同意隐私授权后，App 会开启「悄悄话模式」',
+                  body: '开启悄悄话模式，代表你同意在对话过程中获取语音信息，并同意 Ropet 将内容上传和进行 AI 处理。',
+                },
+                {
+                  title: `02. 面对设备说话，${deviceName} 会开始回应你`,
+                  body: '靠近设备，面对着它，和它随便聊点什么。听到你的声音后，悄悄话就会开启。',
+                },
+                {
+                  title: '03. 每天都有免费社交电量，用完后可以使用悄悄话卡',
+                  body: '免费社交电量用完后，可以用积分兑换悄悄话卡，充满一次社交电量后继续聊天。',
+                },
+                {
+                  title: '04. 为什么悄悄话卡需要用积分兑换？',
+                  body: '悄悄话会产生 AI 对话成本。积分让用户可以通过日常互动或购买来继续使用，也让功能规则更清楚。',
+                },
+              ].map((item) => (
+                <section key={item.title}>
+                  <h3 className="inline bg-[#eef05a] box-decoration-clone px-0.5 text-[15px] font-black leading-7 text-[#202027]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-3 text-[12px] leading-6 text-[#6f6875]">{item.body}</p>
+                </section>
               ))}
             </div>
+
             <button
               type="button"
               onClick={() => {
@@ -368,9 +325,9 @@ const DialogueMode: React.FC = () => {
                 setDialogueEnabled(true);
                 setManualHint(false);
               }}
-              className="mt-6 h-12 w-full rounded-full bg-[#8b66ef] text-[15px] font-semibold text-white"
+              className="mx-auto mt-auto flex h-12 w-[236px] items-center justify-center rounded-[14px] bg-[#8057df] text-[14px] font-semibold text-white shadow-[0_10px_22px_rgba(128,87,223,0.22)]"
             >
-              我知道了，开启悄悄话
+              开启
             </button>
           </div>
         </ModalOverlay>
