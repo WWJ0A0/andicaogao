@@ -7,6 +7,7 @@ import {
   PrototypeStatusBar,
 } from '@/components/subscription/PrototypeUI';
 import { useDialogueStore } from '@/store/useDialogueStore';
+import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
 const PolaroidCard = () => (
   <div className="relative mx-auto h-[230px] w-[220px]">
@@ -34,11 +35,13 @@ const DialogueShop: React.FC = () => {
     exchangeCard,
     useCard: consumeDialogueCard,
   } = useDialogueStore();
+  const { minorModeEnabled } = useSubscriptionStore();
   const [showExchange, setShowExchange] = useState(false);
   const [message, setMessage] = useState('');
   const enoughPoints = points >= cardCost;
 
   const confirmExchange = () => {
+    if (minorModeEnabled) return;
     if (!exchangeCard()) {
       setShowExchange(false);
       navigate('/points-store?returnTo=/dialogue-shop');
@@ -50,6 +53,7 @@ const DialogueShop: React.FC = () => {
   };
 
   const handleUse = () => {
+    if (minorModeEnabled) return;
     if (!consumeDialogueCard()) {
       setMessage('还没有可用悄悄话卡，先兑换一张吧');
       window.setTimeout(() => setMessage(''), 1800);
@@ -116,20 +120,32 @@ const DialogueShop: React.FC = () => {
             </div>
           )}
 
+          {minorModeEnabled && (
+            <div className="mt-4 rounded-[14px] bg-[#f4f3f5] px-3 py-2 text-center text-[12px] font-semibold text-[#8b8792]">
+              未成年模式下暂不可用
+            </div>
+          )}
+
           <div className="mt-6 grid grid-cols-2 gap-3">
             <button
               type="button"
               aria-label="积分兑换"
+              disabled={minorModeEnabled}
               onClick={() => setShowExchange(true)}
-              className="h-12 rounded-[14px] border border-[#e4e0e8] bg-white text-[14px] font-semibold text-[#302b37]"
+              className={`h-12 rounded-[14px] border border-[#e4e0e8] text-[14px] font-semibold ${
+                minorModeEnabled ? 'bg-[#eeeeef] text-[#aaa6af]' : 'bg-white text-[#302b37]'
+              }`}
             >
               积分兑换
             </button>
             <button
               type="button"
               aria-label="使用悄悄话卡"
+              disabled={minorModeEnabled}
               onClick={handleUse}
-              className="h-12 rounded-[14px] bg-[#8b66ef] text-[14px] font-semibold text-white"
+              className={`h-12 rounded-[14px] text-[14px] font-semibold text-white ${
+                minorModeEnabled ? 'bg-[#d6d4dc]' : 'bg-[#8b66ef]'
+              }`}
             >
               使用
             </button>

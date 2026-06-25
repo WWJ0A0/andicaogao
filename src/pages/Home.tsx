@@ -6,13 +6,24 @@ import Lottie from 'lottie-react';
 import pingjingAnimation from '@/assets/animations/pingjing.json';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 import DialogueEntryButton from '@/components/DialogueEntryButton';
+import { Check, X } from 'lucide-react';
 
 const HomePage: React.FC = () => {
   const { pet, todaysInteractions, incrementInteraction } = usePetStore();
-  const { dialogueEnabled } = useSubscriptionStore();
+  const {
+    dialogueEnabled,
+    voiceConsentGranted,
+    grantVoiceConsent,
+    setDialogueEnabled,
+    resetPrototype,
+    minorModeEnabled,
+  } = useSubscriptionStore();
   const navigate = useNavigate();
   const [showDiaryModal, setShowDiaryModal] = useState(false);
   const [isDiaryChecked, setIsDiaryChecked] = useState(false);
+  const [showDialogueConsent, setShowDialogueConsent] = useState(false);
+  const [showDialogueTutorial, setShowDialogueTutorial] = useState(false);
+  const [dialogueConsentChecked, setDialogueConsentChecked] = useState(false);
 
   // 亮度和音量状态 (0 - 100)
   const [brightness, setBrightness] = useState(50);
@@ -90,6 +101,25 @@ const HomePage: React.FC = () => {
     navigate('/pet-interact');
   };
 
+  const openDialogueMode = () => {
+    if (minorModeEnabled) return;
+
+    if (voiceConsentGranted) {
+      navigate('/dialogue-mode');
+      return;
+    }
+
+    setDialogueConsentChecked(false);
+    setShowDialogueConsent(true);
+  };
+
+  const startFirstEntryDemo = () => {
+    resetPrototype();
+    setDialogueConsentChecked(false);
+    setShowDialogueTutorial(false);
+    setShowDialogueConsent(true);
+  };
+
   if (!pet) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -146,11 +176,13 @@ const HomePage: React.FC = () => {
                 onClick={() => navigate('/settings')}
               />
 
-              <DialogueEntryButton
-                enabled={dialogueEnabled}
-                className="absolute left-[203px] top-[4px] z-10"
-                onClick={() => navigate('/dialogue-mode')}
-              />
+              {!minorModeEnabled && (
+                <DialogueEntryButton
+                  enabled={dialogueEnabled}
+                  className="absolute left-[203px] top-[4px] z-10"
+                  onClick={openDialogueMode}
+                />
+              )}
               
               {/* 换眼睛按钮 */}
               <div 
@@ -385,6 +417,190 @@ const HomePage: React.FC = () => {
 
         {/* 底部导航栏 */}
         <BottomNav />
+
+        {!minorModeEnabled && (
+          <button
+            type="button"
+            aria-label="体验首次进入"
+            onClick={startFirstEntryDemo}
+            className="absolute bottom-[92px] left-1/2 z-[60] -translate-x-1/2 text-[10px] font-medium text-[#aaa6af]"
+          >
+            体验首次进入
+          </button>
+        )}
+
+        {showDialogueConsent && (
+          <div
+            className="absolute inset-0 z-[500] flex items-center justify-center bg-black/62 px-[24px]"
+            onClick={() => setShowDialogueConsent(false)}
+          >
+            <div
+              className="relative mt-[14px] w-[326px] pt-[82px] text-left"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <img
+                src="/images/dialogue-consent-hero.png"
+                alt=""
+                aria-hidden="true"
+                className="absolute left-1/2 top-0 z-10 h-[184px] w-[230px] -translate-x-1/2 object-contain"
+              />
+              <div className="relative rounded-[24px] bg-white px-[22px] pb-[24px] pt-[104px] shadow-[0_18px_42px_rgba(70,57,87,0.18)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[104px] overflow-hidden rounded-t-[24px]">
+                  <div className="absolute left-[-34px] top-[-38px] h-[96px] w-[96px] rounded-full bg-[#f4efff]" />
+                  <div className="absolute right-[-34px] top-[-38px] h-[96px] w-[96px] rounded-full bg-[#f4efff]" />
+                  <div className="absolute left-[96px] top-[30px] h-[96px] w-[96px] rounded-full bg-[#f4efff]" />
+                </div>
+                <h2 className="relative text-center text-[20px] font-bold leading-[28px] text-[#26232a]">
+                  让{pet.name}陪你聊一聊
+                </h2>
+                <p className="relative mt-[16px] text-[14px] font-medium leading-[26px] text-[#67636d]">
+                  开启后，{pet.name}会在互动过程中获取必要的语音和画面信息，并上传至云端进行 AI 分析与处理，帮助它更好地听懂你、回应你。悄悄话仅面向年满 16 周岁的用户开放。请确认你已满 16 周岁，再和{pet.name}说说话吧。
+                </p>
+                <div className="relative mt-[18px] flex items-start gap-3 text-[13px] font-medium leading-[22px] text-[#aaa6af]">
+                  <button
+                    type="button"
+                    aria-label={dialogueConsentChecked ? '取消勾选协议' : '勾选同意协议'}
+                    aria-pressed={dialogueConsentChecked}
+                    onClick={() => setDialogueConsentChecked(!dialogueConsentChecked)}
+                    className={`mt-0.5 flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-[7px] border-2 ${
+                      dialogueConsentChecked
+                        ? 'border-[#8b66ef] bg-[#8b66ef] text-white'
+                        : 'border-[#d8d5dc] bg-white text-transparent'
+                    }`}
+                  >
+                    <Check size={16} strokeWidth={3} />
+                  </button>
+                  <span>
+                    我已阅读
+                    <button
+                      type="button"
+                      onClick={() => navigate('/policies/privacy?returnTo=/')}
+                      className="mx-1 font-semibold text-[#7c5ae0]"
+                    >
+                      《隐私政策》
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/policies/subscription?returnTo=/')}
+                      className="mr-1 font-semibold text-[#7c5ae0]"
+                    >
+                      《使用协议》
+                    </button>
+                    并同意协议内容。
+                  </span>
+                </div>
+                <div className="mt-[22px] grid grid-cols-2 gap-[18px]">
+                  <button
+                    type="button"
+                    onClick={() => setShowDialogueConsent(false)}
+                    className="h-[48px] rounded-full bg-[#d6d6d8] text-[16px] font-bold text-white"
+                  >
+                    下次再说
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!dialogueConsentChecked}
+                    onClick={() => {
+                      if (!dialogueConsentChecked) return;
+                      grantVoiceConsent();
+                      setShowDialogueConsent(false);
+                      setShowDialogueTutorial(true);
+                    }}
+                    className={`h-[48px] rounded-full text-[16px] font-bold text-white ${
+                      dialogueConsentChecked
+                        ? 'bg-[#8b66ef] shadow-[0_10px_22px_rgba(139,102,239,0.22)]'
+                        : 'bg-[#c9b6f6]'
+                    }`}
+                  >
+                    确认并同意
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showDialogueTutorial && (
+          <div className="absolute inset-0 z-[510] flex flex-col bg-white text-left">
+            <div className="flex h-11 items-center justify-between px-7 pt-2 text-[#19181f]">
+              <span className="text-[15px] font-semibold">9:41</span>
+              <div className="flex items-center gap-[6px]">
+                <div className="flex items-end gap-[2px]">
+                  {[6, 9, 12, 15].map((height) => (
+                    <span key={height} className="w-[3px] rounded-full bg-current" style={{ height }} />
+                  ))}
+                </div>
+                <div className="relative h-[13px] w-[19px] overflow-hidden">
+                  <span className="absolute left-0 top-[2px] h-[14px] w-[19px] rounded-t-full border-[3px] border-current" />
+                  <span className="absolute left-[7px] top-[8px] h-[5px] w-[5px] rounded-full bg-current" />
+                </div>
+                <div className="relative h-[13px] w-[25px] rounded-[4px] border-2 border-current">
+                  <span className="absolute right-[-4px] top-[2px] h-[5px] w-[2px] rounded-r bg-current" />
+                  <span className="absolute inset-[2px] rounded-[1px] bg-current" />
+                </div>
+              </div>
+            </div>
+            <div className="relative flex h-[56px] items-center justify-center">
+              <button
+                type="button"
+                aria-label="关闭新手教程"
+                onClick={() => setShowDialogueTutorial(false)}
+                className="absolute left-[19px] top-[6px] flex h-10 w-10 items-center justify-center text-[#222127]"
+              >
+                <X size={26} strokeWidth={2.2} />
+              </button>
+              <h2 className="text-[17px] font-bold text-[#222127]">怎么和{pet.name}说悄悄话？</h2>
+            </div>
+
+            <img
+              src="/images/dialogue-tutorial-panels.png"
+              alt=""
+              aria-hidden="true"
+              className="mx-auto mt-[6px] h-[202px] w-[379px] object-cover"
+            />
+
+            <div className="px-[21px] pt-[26px]">
+              {[
+                {
+                  title: '01. 在App打开「悄悄话模式」开关',
+                  body: `打开开关，为${pet.name}带上悄悄话项圈，${pet.name}才能和你用人类的语言沟通哦。`,
+                },
+                {
+                  title: `02. 面对${pet.name}，随便和它聊聊`,
+                  body: `和${pet.name}随便聊聊，好好的感受彼此的心意吧❤️`,
+                },
+                {
+                  title: '03.「悄悄话项圈」每天都会刷新免费的「心声能量」',
+                  body: '每天8：00刷新免费的心声能量。能量耗尽后，可以去小窝使用积分兑换额外的心声能量哦👌',
+                },
+                {
+                  title: '04.如何退出「悄悄话模式」？',
+                  body: `和${pet.name}说“不聊啦”或从App关闭「悄悄话模式」开关，可暂停消耗「心声能量」。积分兑换的「心声能量」可保留，不会每日刷新。`,
+                },
+              ].map((item, index) => (
+                <section key={item.title} className={index === 0 ? '' : 'mt-[25px]'}>
+                  <h3 className="inline bg-[#e9fb37] box-decoration-clone px-0.5 text-[17px] font-black leading-[28px] text-[#222127]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-[13px] text-[13px] font-medium leading-[26px] text-[#6d6973]">{item.body}</p>
+                </section>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowDialogueTutorial(false);
+                setDialogueEnabled(true);
+                navigate('/dialogue-mode');
+              }}
+              className="mx-auto mt-auto mb-[73px] flex h-[47px] w-[236px] items-center justify-center rounded-[14px] bg-[#8b66ef] text-[14px] font-semibold text-white shadow-[0_10px_22px_rgba(128,87,223,0.18)]"
+            >
+              知道啦
+            </button>
+            <div className="absolute bottom-[11px] left-1/2 h-[5px] w-[134px] -translate-x-1/2 rounded-full bg-[#111111]" />
+          </div>
+        )}
       </div>
       {/* Diary Modal Overlay */}
       {showDiaryModal && (

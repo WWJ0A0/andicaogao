@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import BottomNav from '@/components/BottomNav';
 import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
+import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
 const WHISPER_CARD_PRODUCTS = [
   { days: 1, cost: 5000 },
@@ -36,6 +37,7 @@ const Nest: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { pet } = usePetStore();
   const deviceName = pet?.name || '肉派派';
+  const { minorModeEnabled } = useSubscriptionStore();
   const {
     points,
     dialogueCards,
@@ -52,7 +54,9 @@ const Nest: React.FC = () => {
   const [showUseSuccess, setShowUseSuccess] = useState(false);
   const [showInsufficientPoints, setShowInsufficientPoints] = useState(false);
   const [toast, setToast] = useState('');
-  const cardDetailOpen = searchParams.get('item') === 'dialogue-card' || searchParams.get('item') === 'trial-card';
+  const cardDetailOpen = !minorModeEnabled && (
+    searchParams.get('item') === 'dialogue-card' || searchParams.get('item') === 'trial-card'
+  );
   const selectedCard = WHISPER_CARD_PRODUCTS.find((card) => card.days === selectedCardDays)
     || WHISPER_CARD_PRODUCTS[0];
   const getOwnedCount = (days: number) => {
@@ -62,6 +66,7 @@ const Nest: React.FC = () => {
   const selectedOwnedCount = getOwnedCount(selectedCard.days);
 
   const openWhisperCardDetail = (days: number) => {
+    if (minorModeEnabled) return;
     setSelectedCardDays(days);
     setSearchParams({ item: 'dialogue-card', card: String(days) });
   };
@@ -71,7 +76,7 @@ const Nest: React.FC = () => {
   };
 
   const exchangeSelectedCard = () => {
-    if (exchangingCard) return;
+    if (minorModeEnabled || exchangingCard) return;
     setExchangeCount(1);
     setConfirmingExchange(true);
   };
@@ -82,7 +87,7 @@ const Nest: React.FC = () => {
   };
 
   const confirmExchangeSelectedCard = () => {
-    if (exchangingCard) return;
+    if (minorModeEnabled || exchangingCard) return;
     const totalCost = selectedCard.cost * exchangeCount;
     if (points < totalCost) {
       setConfirmingExchange(false);
@@ -227,32 +232,36 @@ const Nest: React.FC = () => {
                 </div>
               </div>
 
-              {/* Vector 1 Separator */}
-              <img src="/images/mo1cw4a9-og2pxnl.svg" alt="Section Separator" className="w-[305px] h-[1px] mt-[14px]" />
+              {!minorModeEnabled && (
+                <>
+                  {/* Vector 1 Separator */}
+                  <img src="/images/mo1cw4a9-og2pxnl.svg" alt="Section Separator" className="w-[305px] h-[1px] mt-[14px]" />
 
-              {/* Section 2: 悄悄话 */}
-              <div className="w-full flex flex-col mt-[14px]">
-                <div className="flex items-center gap-[8px] relative">
-                  <h3 className="text-[16px] text-[#000000] font-medium tracking-[0.16px] leading-[22px]">悄悄话</h3>
-                  <HelpCircle size={15} className="text-[#7c5ae0]" />
-                </div>
+                  {/* Section 2: 悄悄话 */}
+                  <div className="w-full flex flex-col mt-[14px]">
+                    <div className="flex items-center gap-[8px] relative">
+                      <h3 className="text-[16px] text-[#000000] font-medium tracking-[0.16px] leading-[22px]">悄悄话</h3>
+                      <HelpCircle size={15} className="text-[#7c5ae0]" />
+                    </div>
 
-                <div className="flex items-center gap-[10px] mt-[11px] overflow-x-auto scrollbar-hide">
-                  {WHISPER_CARD_PRODUCTS.map((card) => (
-                    <button
-                      type="button"
-                      key={card.days}
-                      onClick={() => openWhisperCardDetail(card.days)}
-                      className="flex shrink-0 flex-col items-center rounded-[8px] border border-[#2222220d] bg-[#22222208] px-[14px] pb-[12px] pt-[12px]"
-                    >
-                      <DialogueCardVisual days={card.days} />
-                      <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">
-                        悄悄话卡
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+                    <div className="flex items-center gap-[10px] mt-[11px] overflow-x-auto scrollbar-hide">
+                      {WHISPER_CARD_PRODUCTS.map((card) => (
+                        <button
+                          type="button"
+                          key={card.days}
+                          onClick={() => openWhisperCardDetail(card.days)}
+                          className="flex shrink-0 flex-col items-center rounded-[8px] border border-[#2222220d] bg-[#22222208] px-[14px] pb-[12px] pt-[12px]"
+                        >
+                          <DialogueCardVisual days={card.days} />
+                          <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">
+                            悄悄话卡
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Vector 1 Separator */}
               <img src="/images/mo1cw4a9-og2pxnl.svg" alt="Section Separator" className="w-[305px] h-[1px] mt-[14px]" />

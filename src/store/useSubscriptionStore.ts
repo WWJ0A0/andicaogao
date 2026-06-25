@@ -49,6 +49,7 @@ interface SubscriptionStore {
   activeTrialCardId: string;
   autoRenewEnabled: boolean;
   voiceConsentGranted: boolean;
+  minorModeEnabled: boolean;
   paymentState: PaymentState;
   expiryDate: string;
   nextChargeDate: string;
@@ -65,6 +66,7 @@ interface SubscriptionStore {
   redeemTrialCard: (cardId: string) => void;
   setPaymentState: (state: PaymentState) => void;
   grantVoiceConsent: () => void;
+  setMinorModeEnabled: (enabled: boolean) => void;
   activateTrial: () => void;
   activateSubscription: () => void;
   setSubscriptionExpiredForDemo: (expired: boolean) => void;
@@ -127,6 +129,7 @@ const initialState = {
   activeTrialCardId: '',
   autoRenewEnabled: false,
   voiceConsentGranted: false,
+  minorModeEnabled: false,
   paymentState: 'idle' as PaymentState,
   expiryDate: '',
   nextChargeDate: '',
@@ -234,10 +237,16 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
         });
       },
       setDialogueEnabled: (dialogueEnabled) => {
-        set({ dialogueEnabled });
+        set((state) => ({ dialogueEnabled: state.minorModeEnabled ? false : dialogueEnabled }));
       },
       setPaymentState: (paymentState) => set({ paymentState }),
       grantVoiceConsent: () => set({ voiceConsentGranted: true }),
+      setMinorModeEnabled: (minorModeEnabled) => {
+        set({
+          minorModeEnabled,
+          dialogueEnabled: minorModeEnabled ? false : get().dialogueEnabled,
+        });
+      },
       activateTrial: () => {
         const state = get();
         const selectedCard = state.trialCards.find(
@@ -255,7 +264,7 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
 
         set({
           entitlement: state.entitlement === 'subscription' ? 'subscription' : 'trial',
-          dialogueEnabled: true,
+          dialogueEnabled: !state.minorModeEnabled,
           selectedTrialCardId: '',
           activeTrialCardId: selectedCard.id,
           paymentState: 'success',
@@ -306,6 +315,7 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
         });
       },
       setSubscriptionExpiredForDemo: (expired) => {
+        const state = get();
         const date = new Date();
         date.setDate(date.getDate() + (expired ? -1 : 30));
         const entitlementDate = formatSubscriptionDate(date);
@@ -314,7 +324,7 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
           selectedPlan: 'auto-renew',
           subscribedPlan: 'auto-renew',
           autoRenewEnabled: !expired,
-          dialogueEnabled: !expired,
+          dialogueEnabled: !expired && !state.minorModeEnabled,
           expiryDate: entitlementDate,
           nextChargeDate: expired ? '' : entitlementDate,
         });

@@ -8,6 +8,7 @@ import {
 } from '@/components/subscription/PrototypeUI';
 import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
+import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
 const pointProducts = [
   { points: 6000, price: 6, discount: '' },
@@ -36,6 +37,7 @@ const PointsStore: React.FC = () => {
   const { pet } = usePetStore();
   const deviceName = pet?.name || '肉派派';
   const { points, purchasePoints } = useDialogueStore();
+  const { minorModeEnabled } = useSubscriptionStore();
   const [payingProduct, setPayingProduct] = useState<typeof pointProducts[number] | null>(null);
   const [paymentChannel, setPaymentChannel] = useState<typeof paymentChannels[number] | null>(null);
   const [message, setMessage] = useState('');
@@ -48,7 +50,7 @@ const PointsStore: React.FC = () => {
   };
 
   const confirmPay = () => {
-    if (!payingProduct || !paymentChannel) return;
+    if (!payingProduct || !paymentChannel || minorModeEnabled) return;
     purchasePoints(payingProduct.points, payingProduct.price, deviceName, paymentChannel.label);
     setMessage(`${paymentChannel.label}支付成功，已返回积分商城`);
     navigate(pointsStorePath, { replace: true });
@@ -101,14 +103,22 @@ const PointsStore: React.FC = () => {
 
         <section className="relative z-10 mt-5 rounded-[20px] bg-[#cbbdff] px-4 pb-5 pt-4">
           <h2 className="text-[17px] font-semibold text-[#4b3b7c]">积分特惠</h2>
+          {minorModeEnabled && (
+            <p className="mt-2 rounded-[12px] bg-white/70 px-3 py-2 text-[12px] font-medium leading-5 text-[#7c728d]">
+              未成年模式下暂不开放购买
+            </p>
+          )}
           <div className="mt-4 grid grid-cols-2 gap-4">
             {pointProducts.map((item) => (
               <button
                 key={item.points}
                 type="button"
                 aria-label={`购买 ${item.points} 积分`}
+                disabled={minorModeEnabled}
                 onClick={() => setPayingProduct(item)}
-                className="rounded-[10px] bg-white px-3 pb-4 pt-5 text-center shadow-[0_8px_20px_rgba(68,52,116,0.10)]"
+                className={`rounded-[10px] bg-white px-3 pb-4 pt-5 text-center shadow-[0_8px_20px_rgba(68,52,116,0.10)] ${
+                  minorModeEnabled ? 'opacity-45 grayscale' : ''
+                }`}
               >
                 <div className="mx-auto flex h-16 w-20 items-center justify-center">
                   <Star size={34} className="text-[#ffd943]" fill="#ffd943" />
@@ -241,8 +251,13 @@ const PointsStore: React.FC = () => {
                 <button
                   type="button"
                   aria-label={`${paymentChannel.label}支付成功并返回 App`}
+                  disabled={minorModeEnabled}
                   onClick={confirmPay}
-                  className={`mt-5 h-12 w-full rounded-[16px] text-[15px] font-semibold text-white ${paymentChannelStyles[paymentChannel.id as keyof typeof paymentChannelStyles].accent}`}
+                  className={`mt-5 h-12 w-full rounded-[16px] text-[15px] font-semibold text-white ${
+                    minorModeEnabled
+                      ? 'bg-[#d6d4dc]'
+                      : paymentChannelStyles[paymentChannel.id as keyof typeof paymentChannelStyles].accent
+                  }`}
                 >
                   支付成功，返回 App
                 </button>

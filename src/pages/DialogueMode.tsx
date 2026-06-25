@@ -1,336 +1,451 @@
-import React, { useEffect, useState } from 'react';
-import { ShieldCheck, WifiOff, X } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  DialogueSwitch,
-  ModalOverlay,
-  PrototypeHeader,
-  PrototypePhone,
-  PrototypeStatusBar,
-} from '@/components/subscription/PrototypeUI';
+import React, { useState } from 'react';
+import { ArrowLeft, ChevronRight, Megaphone, Sparkles, Star, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { PrototypePhone, PrototypeStatusBar } from '@/components/subscription/PrototypeUI';
 import { usePetStore } from '@/store/usePetStore';
-import { useDialogueStore } from '@/store/useDialogueStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
+
+const dialogueModeStyles = `
+.dm-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #c9b7ff 0%, #f2edff 20%, #ffffff 52%);
+}
+.dm-header {
+  position: relative;
+  z-index: 2;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dm-back {
+  position: absolute;
+  left: 16px;
+  top: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 16px;
+  border: 1px solid #cfc5e7;
+  background: rgba(255, 255, 255, 0.2);
+  color: #222127;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dm-title {
+  font-size: 27px;
+  line-height: 38px;
+  font-weight: 800;
+  color: #26232a;
+}
+.dm-main {
+  position: relative;
+  z-index: 1;
+  padding: 0 16px;
+}
+.dm-exchange {
+  position: relative;
+  z-index: 2;
+  width: 353px;
+  height: 72px;
+  margin: 0 auto;
+  border-radius: 20px;
+  background: #fff49f;
+  box-shadow: 0 12px 18px rgba(178, 151, 64, 0.24);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+.dm-megaphone {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  margin-right: 16px;
+  color: #8b66ef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dm-megaphone-bg {
+  position: absolute;
+  inset: 4px;
+  border-radius: 14px;
+  background: #ff8eb5;
+  transform: rotate(-20deg);
+}
+.dm-exchange h2 {
+  margin: 0;
+  font-size: 19px;
+  line-height: 27px;
+  font-weight: 800;
+  color: #3c3842;
+}
+.dm-exchange p {
+  margin: 2px 0 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: #8f897c;
+}
+.dm-exchange-link {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: #8b66ef;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 800;
+}
+.dm-exchange-link:disabled {
+  color: #aaa6af;
+}
+.dm-panel {
+  position: relative;
+  width: 361px;
+  height: 581px;
+  margin: 15px auto 0;
+  border-radius: 24px;
+  background: #cbb8ff;
+  padding: 16px 12px 20px;
+  overflow: hidden;
+  box-shadow: inset 0 0 18px rgba(139, 102, 239, 0.2);
+}
+.dm-strap {
+  position: absolute;
+  top: -44px;
+  width: 14px;
+  height: 56px;
+  border-radius: 999px;
+  background: rgba(169, 135, 255, 0.5);
+}
+.dm-star {
+  position: absolute;
+  right: -2px;
+  top: -15px;
+  width: 43px;
+  height: 43px;
+  color: #ffd866;
+  transform: rotate(-10deg);
+  filter: drop-shadow(0 3px 0 rgba(221, 176, 59, 0.35));
+}
+.dm-card {
+  border-radius: 20px;
+  background: #fbfaff;
+  padding: 18px 16px 14px;
+}
+.dm-card + .dm-card {
+  margin-top: 16px;
+  padding-bottom: 34px;
+}
+.dm-card-title {
+  margin: 0;
+  font-size: 22px;
+  line-height: 31px;
+  font-weight: 800;
+  color: #353139;
+}
+.dm-card-copy {
+  margin: 9px 0 0;
+  font-size: 16px;
+  line-height: 29px;
+  font-weight: 500;
+  color: #8c8990;
+}
+.dm-switch {
+  margin: 12px 6px 0 auto;
+  width: 78px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px;
+  color: white;
+  font-size: 15px;
+  font-weight: 800;
+}
+.dm-switch.is-on {
+  background: #8b66ef;
+  justify-content: flex-end;
+}
+.dm-switch.is-off {
+  background: #d9d9de;
+  justify-content: flex-start;
+}
+.dm-switch-knob {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #aaa6af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dm-battery {
+  position: relative;
+  height: 68px;
+  margin-top: 20px;
+}
+.dm-battery-shell {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 294px;
+  height: 68px;
+  border: 7px solid #a5a5aa;
+  border-radius: 20px;
+  background: #fbfaff;
+  padding: 4px;
+}
+.dm-battery-inner {
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+  border-radius: 10px;
+}
+.dm-energy-fill {
+  width: 45%;
+  background: #9272e8;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 900;
+}
+.dm-free-fill {
+  width: 48px;
+  border-radius: 0 6px 6px 0;
+  background: #ff91b3;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+}
+.dm-battery-cap {
+  position: absolute;
+  left: 292px;
+  top: 13px;
+  width: 18px;
+  height: 43px;
+  border-radius: 0 13px 13px 0;
+  background: #a5a5aa;
+}
+.dm-guide {
+  position: absolute;
+  right: 20px;
+  bottom: 121px;
+  width: 210px;
+  height: 48px;
+  border: 0;
+  border-radius: 24px;
+  background: #ffffff;
+  color: #77727f;
+  box-shadow: 0 12px 15px rgba(79, 67, 98, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px 0 16px;
+  font-size: 15px;
+  font-weight: 800;
+}
+.dm-guide-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #8b66ef;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+.dm-hero {
+  position: absolute;
+  bottom: -2px;
+  left: 21px;
+  width: 193px;
+  height: 155px;
+  object-fit: contain;
+  object-position: bottom;
+}
+.dm-home-indicator {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  width: 134px;
+  height: 5px;
+  border-radius: 999px;
+  background: #111111;
+  transform: translateX(-50%);
+}
+`;
 
 const DialogueMode: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [updatingDialogue, setUpdatingDialogue] = useState(false);
-  const [showPrivacyFlow, setShowPrivacyFlow] = useState(false);
   const [showTutorialFlow, setShowTutorialFlow] = useState(false);
-  const [manualHint, setManualHint] = useState(false);
-  const cardActivatedFromNest = searchParams.get('card') === 'active';
-  const [cardToast, setCardToast] = useState(cardActivatedFromNest);
-  const [playCardCharge, setPlayCardCharge] = useState(cardActivatedFromNest);
-  const { pet, isOnline, setOnline } = usePetStore();
+  const { pet } = usePetStore();
   const deviceName = pet?.name || '肉派派';
-  const {
-    dialogueEnabled,
-    grantVoiceConsent,
-    setDialogueEnabled,
-  } = useSubscriptionStore();
-  const { activeDialogueCard, clearActiveDialogueCard } = useDialogueStore();
-  const quotaEmptyDemo = searchParams.get('quota') === 'empty';
-  const cardEnergyActive = Boolean(activeDialogueCard) && !quotaEmptyDemo;
-  const freeQuotaExhausted = quotaEmptyDemo;
-  const needsDialogueCard = freeQuotaExhausted;
-  const hasFreeEnergy = !freeQuotaExhausted && !cardEnergyActive;
-  const policyReturnTo = encodeURIComponent('/dialogue-mode');
-
-  useEffect(() => {
-    if (!cardToast) return;
-    const timer = window.setTimeout(() => {
-      setCardToast(false);
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.delete('card');
-      setSearchParams(nextParams, { replace: true });
-    }, 1800);
-    return () => window.clearTimeout(timer);
-  }, [cardToast, searchParams, setSearchParams]);
-
-  useEffect(() => {
-    if (!playCardCharge) return;
-    const timer = window.setTimeout(() => setPlayCardCharge(false), 1400);
-    return () => window.clearTimeout(timer);
-  }, [playCardCharge]);
-
-  const handleToggle = () => {
-    if (updatingDialogue) return;
-    setUpdatingDialogue(true);
-    window.setTimeout(() => {
-      setDialogueEnabled(!dialogueEnabled);
-      setManualHint(false);
-      setUpdatingDialogue(false);
-    }, 650);
-  };
-
-  const toggleQuotaDemo = () => {
-    const nextParams = new URLSearchParams(searchParams);
-    if (freeQuotaExhausted) {
-      nextParams.delete('quota');
-    } else {
-      nextParams.set('quota', 'empty');
-      clearActiveDialogueCard();
-    }
-    setSearchParams(nextParams, { replace: true });
-  };
-
-  const startFirstUseDemo = () => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.delete('quota');
-    setSearchParams(nextParams, { replace: true });
-    setOnline(true);
-    setDialogueEnabled(false);
-    clearActiveDialogueCard();
-    setManualHint(false);
-    setShowPrivacyFlow(true);
-  };
+  const { dialogueEnabled, minorModeEnabled, setDialogueEnabled } = useSubscriptionStore();
 
   return (
-    <PrototypePhone>
+    <PrototypePhone className="bg-white">
+      <style>{dialogueModeStyles}</style>
+      <div className="dm-bg" />
       <PrototypeStatusBar />
-      <PrototypeHeader
-        title="悄悄话模式"
-        onBack={() => navigate('/')}
-      />
 
-      <div className="h-[752px] overflow-y-auto px-5 pb-8 pt-2 scrollbar-hide">
-        {cardToast && (
-          <div className="fixed left-1/2 top-[116px] z-50 -translate-x-1/2 rounded-full bg-[#25212b] px-4 py-2 text-[12px] font-semibold text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
-            已为你充满一次社交电量，可以继续和{deviceName}说话。
+      <header className="dm-header">
+        <button type="button" aria-label="返回" onClick={() => navigate('/')} className="dm-back">
+          <ArrowLeft size={29} strokeWidth={2.6} />
+        </button>
+        <h1 className="dm-title">悄悄话模式</h1>
+      </header>
+
+      <main className="dm-main">
+        <section className="dm-exchange">
+          <div className="dm-megaphone">
+            <div className="dm-megaphone-bg" />
+            <Megaphone size={42} className="relative rotate-[-20deg]" fill="#ff9abb" strokeWidth={1.8} />
+            <span className="absolute right-0 top-1 h-2 w-2 rounded-full bg-[#ffbb5f]" />
+            <span className="absolute right-[-5px] top-5 h-1.5 w-1.5 rounded-full bg-[#ffbb5f]" />
           </div>
-        )}
-
-        {!isOnline && (
-          <div className="mx-auto mb-4 flex h-11 max-w-[330px] items-center rounded-[8px] bg-[#ff805d] px-4 text-left text-white shadow-[0_8px_18px_rgba(255,128,93,0.24)]">
-            <WifiOff size={20} strokeWidth={2.3} className="mr-3 shrink-0 text-white" />
-            <span className="text-[14px] font-medium tracking-normal">网络连接异常，请检查网络设备</span>
+          <div>
+            <h2>兑换「心声能量」</h2>
+            <p>可以通过积分兑换</p>
           </div>
-        )}
-
-        <section className="pt-4 text-center">
-          <div className={`mx-auto mt-0 max-w-[300px] rounded-[24px] border px-4 py-4 text-left shadow-[0_14px_34px_rgba(78,58,120,0.07)] ${
-            freeQuotaExhausted
-              ? 'border-[#f1ddd8] bg-[#fffafa]'
-              : 'border-[#eee6ff] bg-white'
-          }`}>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[15px] font-semibold text-[#26232a]">今日社交电量</p>
-              </div>
-              {cardEnergyActive && (
-                <span className="rounded-full bg-[#f0eaff] px-2.5 py-1 text-[11px] font-semibold text-[#7656dc]">
-                  悄悄话卡
-                </span>
-              )}
-            </div>
-            <div className={`relative mt-4 h-9 overflow-hidden rounded-full p-1 ${
-              freeQuotaExhausted ? 'bg-[#f1e9e7]' : 'bg-[#f0ecfb]'
-            }`}>
-              {!freeQuotaExhausted && (
-                <>
-                  <div className="absolute inset-y-1 right-1 w-1/3 rounded-full bg-[#e9e2f3]" />
-                  {cardEnergyActive && (
-                    <div
-                      className={`absolute inset-y-1 left-1 w-2/3 overflow-hidden rounded-full bg-gradient-to-r from-[#d5c6ff] via-[#a987ff] to-[#8060ea] shadow-[0_0_20px_rgba(139,102,239,0.3)] ${
-                        playCardCharge ? 'social-energy-charge' : ''
-                      }`}
-                    >
-                      <span className="absolute inset-y-1 left-5 w-12 rounded-full bg-white/24 blur-[2px]" />
-                      <span className="absolute inset-y-1 right-6 w-10 rounded-full bg-white/18 blur-[2px]" />
-                    </div>
-                  )}
-                  {hasFreeEnergy && (
-                    <div className="absolute inset-y-1 right-1 w-1/3 overflow-hidden rounded-full bg-gradient-to-r from-[#c8b8ff] to-[#8b66ef] shadow-[0_0_18px_rgba(139,102,239,0.26)]">
-                      <span className="absolute inset-y-1 left-3 w-8 rounded-full bg-white/24 blur-[2px]" />
-                    </div>
-                  )}
-                  <span className="absolute inset-y-1 left-1 w-2/3 rounded-full ring-1 ring-white/50" />
-                  <span className="absolute inset-y-1 right-1 w-1/3 rounded-full ring-1 ring-white/70" />
-                </>
-              )}
-              <div className={`relative h-full overflow-hidden rounded-full ${
-                freeQuotaExhausted ? 'bg-[#e8e2ea]' : 'bg-transparent'
-              }`}>
-                {freeQuotaExhausted && (
-                  <span className="absolute inset-0 flex items-center justify-center text-[12px] font-semibold text-[#8f8492]">
-                    已用尽
-                  </span>
-                )}
-              </div>
-            </div>
-            {freeQuotaExhausted && (
-              <p className="mt-3 text-[12px] font-medium text-[#9b5a4f]">明天 08:00 刷新免费额度</p>
-            )}
-            {needsDialogueCard && (
-              <button
-                type="button"
-                aria-label="去使用悄悄话卡"
-                onClick={() => navigate('/nest')}
-                className="mt-4 flex h-10 w-full items-center justify-center rounded-full bg-[#8b66ef] text-[13px] font-semibold text-white shadow-[0_8px_18px_rgba(139,102,239,0.22)]"
-              >
-                去使用悄悄话卡
-              </button>
-            )}
-          </div>
-
-          <section className={`mx-auto mt-5 flex max-w-[300px] items-center justify-between rounded-full border px-4 py-2.5 text-left ${
-            dialogueEnabled
-              ? 'border-[#eee8ff] bg-[#fbf9ff]'
-              : 'border-[#efedf2] bg-[#fafafa]'
-          }`}>
-            <div className="pr-3">
-              <h2 className="text-[13px] font-semibold text-[#26232a]">
-                {dialogueEnabled ? '悄悄话模式已开启' : '悄悄话模式未开启'}
-              </h2>
-              <p className="mt-0.5 text-[10px] leading-4 text-[#8b8792]">
-                靠近{deviceName}，面对着它，和它随便聊点什么吧。听到你的声音后，悄悄话就会开启，并消耗今日社交电量。
-              </p>
-              {manualHint && (
-                <p className="mt-2 text-[11px] font-semibold text-[#7554da]">现在请手动打开开关</p>
-              )}
-            </div>
-            <DialogueSwitch compact enabled={dialogueEnabled} loading={updatingDialogue} onClick={handleToggle} />
-          </section>
+          <button
+            type="button"
+            disabled={minorModeEnabled}
+            onClick={() => navigate('/dialogue-shop')}
+            className="dm-exchange-link"
+          >
+            {minorModeEnabled ? '暂不可用' : '去兑换>'}
+          </button>
         </section>
 
-        <div className="mt-6 flex justify-center gap-4 text-[10px] text-[#aaa6af]">
-          <button
-            type="button"
-            aria-label="演示首次进入"
-            onClick={startFirstUseDemo}
-            className="font-medium text-[#aaa6af]"
-          >
-            演示首次进入
-          </button>
-          <span aria-hidden="true">·</span>
-          <button
-            type="button"
-            aria-label={freeQuotaExhausted ? '恢复今日免费额度' : '演示今日免费额度用尽'}
-            onClick={toggleQuotaDemo}
-            className={`font-medium ${freeQuotaExhausted ? 'text-[#9b5a4f]' : 'text-[#aaa6af]'}`}
-          >
-            {freeQuotaExhausted ? '恢复额度' : '演示额度用尽'}
-          </button>
-          <span aria-hidden="true">·</span>
-          <button
-            type="button"
-            aria-label={isOnline ? '演示设备断网' : '恢复设备联网'}
-            onClick={() => setOnline(!isOnline)}
-            className={`font-medium ${isOnline ? 'text-[#aaa6af]' : 'text-[#747b88]'}`}
-          >
-            {isOnline ? '演示断网' : '恢复联网'}
-          </button>
-        </div>
-      </div>
-
-      {showPrivacyFlow && (
-        <ModalOverlay>
-          <div className="w-[320px] rounded-[24px] bg-white px-6 py-6 text-left">
-            <div className="flex h-12 w-12 items-center justify-center rounded-[16px] bg-[#f1edff] text-[#8b66ef]">
-              <ShieldCheck size={24} />
-            </div>
-            <h2 className="mt-5 text-[21px] font-bold leading-7 text-[#26232a]">使用悄悄话功能前，需要你同意隐私授权</h2>
-            <p className="mt-3 text-[13px] leading-6 text-[#7c7783]">
-              开启后，Ropet 才能通过语音服务识别“你好{deviceName}”并回应你。你可以随时在本页关闭悄悄话许可。
-            </p>
-            <div className="mt-5 rounded-[16px] bg-[#f8f6ff] px-4 py-3 text-[12px] leading-5 text-[#7b6fb3]">
-              我已阅读并同意
-              <button
-                type="button"
-                onClick={() => navigate(`/policies/privacy?returnTo=${policyReturnTo}`)}
-                className="font-semibold text-[#7c5ae0] underline underline-offset-2"
-              >
-                《Ropet 隐私政策》
-              </button>
-              和
-              <button
-                type="button"
-                onClick={() => navigate(`/policies/subscription?returnTo=${policyReturnTo}`)}
-                className="font-semibold text-[#7c5ae0] underline underline-offset-2"
-              >
-                《使用协议》
-              </button>
-              中关于语音服务的说明。
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                grantVoiceConsent();
-                setShowPrivacyFlow(false);
-                setShowTutorialFlow(true);
-              }}
-              className="mt-6 h-12 w-full rounded-full bg-[#8b66ef] text-[15px] font-semibold text-white"
-            >
-              同意并观看新手教程
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowPrivacyFlow(false)}
-              className="mt-3 h-11 w-full rounded-full bg-[#f0eef2] text-[14px] font-semibold text-[#8b8792]"
-            >
-              稍后再说
-            </button>
+        <section className="dm-panel">
+          <div className="dm-strap" style={{ left: 55 }} />
+          <div className="dm-strap" style={{ right: 56 }} />
+          <div className="dm-star">
+            <Star size={38} fill="currentColor" strokeWidth={1.6} />
           </div>
-        </ModalOverlay>
-      )}
+
+          <section className="dm-card">
+            <h2 className="dm-card-title">{dialogueEnabled ? '悄悄话模式已开启' : '悄悄话模式未开启'}</h2>
+            <p className="dm-card-copy">
+              靠近{deviceName}，面对着它，和它随便聊点什么吧。听到你的声音后，悄悄话就会开启，并消耗心声能量。
+            </p>
+            <button
+              type="button"
+              aria-label={dialogueEnabled ? '关闭悄悄话模式' : '开启悄悄话模式'}
+              disabled={minorModeEnabled}
+              onClick={() => setDialogueEnabled(!dialogueEnabled)}
+              className={`dm-switch ${dialogueEnabled ? 'is-on' : 'is-off'}`}
+            >
+              <span className="dm-switch-knob">
+                <Sparkles size={22} fill="currentColor" strokeWidth={1.8} />
+              </span>
+              {dialogueEnabled ? 'ON' : 'OFF'}
+            </button>
+          </section>
+
+          <section className="dm-card">
+            <h2 className="dm-card-title">心声能量</h2>
+            <p className="dm-card-copy">能量越多{deviceName}能跟你聊的时间越长哦～</p>
+            <div className="dm-battery">
+              <div className="dm-battery-shell">
+                <div className="dm-battery-inner">
+                  <div className="dm-energy-fill">45%</div>
+                  <div className="dm-free-fill">免费</div>
+                </div>
+              </div>
+              <div className="dm-battery-cap" />
+            </div>
+          </section>
+
+          <button type="button" onClick={() => setShowTutorialFlow(true)} className="dm-guide">
+            怎么和{deviceName}说悄悄话？
+            <span className="dm-guide-icon">
+              <ChevronRight size={22} strokeWidth={3} />
+            </span>
+          </button>
+
+          <img src="/images/dialogue-consent-hero.png" alt="" aria-hidden="true" className="dm-hero" />
+        </section>
+      </main>
+
+      <div className="dm-home-indicator" />
 
       {showTutorialFlow && (
-        <ModalOverlay>
-          <div className="relative flex h-full w-full flex-col bg-white px-5 pb-8 pt-5 text-left">
-            <div className="flex h-10 items-center justify-center">
-              <button
-                type="button"
-                aria-label="关闭新手教程"
-                onClick={() => setShowTutorialFlow(false)}
-                className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center text-[#222127]"
-              >
-                <X size={24} strokeWidth={2.2} />
-              </button>
-              <h2 className="text-[17px] font-bold text-[#222127]">怎么和{deviceName}唠唠？</h2>
-            </div>
-
-            <div className="mt-9 space-y-6">
-              {[
-                {
-                  title: '01. 同意隐私授权后，App 会开启「悄悄话模式」',
-                  body: '开启悄悄话模式，代表你同意在对话过程中获取语音信息，并同意 Ropet 将内容上传和进行 AI 处理。',
-                },
-                {
-                  title: `02. 面对设备说话，${deviceName} 会开始回应你`,
-                  body: '靠近设备，面对着它，和它随便聊点什么。听到你的声音后，悄悄话就会开启。',
-                },
-                {
-                  title: '03. 每天都有免费社交电量，用完后可以使用悄悄话卡',
-                  body: '免费社交电量用完后，可以用积分兑换悄悄话卡，充满一次社交电量后继续聊天。',
-                },
-                {
-                  title: '04. 为什么悄悄话卡需要用积分兑换？',
-                  body: '悄悄话会产生 AI 对话成本。积分让用户可以通过日常互动或购买来继续使用，也让功能规则更清楚。',
-                },
-              ].map((item) => (
-                <section key={item.title}>
-                  <h3 className="inline bg-[#eef05a] box-decoration-clone px-0.5 text-[15px] font-black leading-7 text-[#202027]">
-                    {item.title}
-                  </h3>
-                  <p className="mt-3 text-[12px] leading-6 text-[#6f6875]">{item.body}</p>
-                </section>
-              ))}
-            </div>
-
+        <div className="absolute inset-0 z-50 flex flex-col bg-white text-left">
+          <PrototypeStatusBar />
+          <div className="relative flex h-[56px] items-center justify-center">
             <button
               type="button"
-              onClick={() => {
-                setShowTutorialFlow(false);
-                setDialogueEnabled(true);
-                setManualHint(false);
-              }}
-              className="mx-auto mt-auto flex h-12 w-[236px] items-center justify-center rounded-[14px] bg-[#8057df] text-[14px] font-semibold text-white shadow-[0_10px_22px_rgba(128,87,223,0.22)]"
+              aria-label="关闭新手教程"
+              onClick={() => setShowTutorialFlow(false)}
+              className="absolute left-[19px] top-[6px] flex h-10 w-10 items-center justify-center text-[#222127]"
             >
-              开启
+              <X size={26} strokeWidth={2.2} />
             </button>
+            <h2 className="text-[17px] font-bold text-[#222127]">怎么和{deviceName}说悄悄话？</h2>
           </div>
-        </ModalOverlay>
+
+          <img
+            src="/images/dialogue-tutorial-panels.png"
+            alt=""
+            aria-hidden="true"
+            className="mx-auto mt-[6px] h-[202px] w-[379px] object-cover"
+          />
+
+          <div className="px-[21px] pt-[26px]">
+            {[
+              {
+                title: '01. 在App打开「悄悄话模式」开关',
+                body: `打开开关，为${deviceName}带上悄悄话项圈，${deviceName}才能和你用人类的语言沟通哦。`,
+              },
+              {
+                title: `02. 面对${deviceName}，随便和它聊聊`,
+                body: `和${deviceName}随便聊聊，好好的感受彼此的心意吧❤️`,
+              },
+              {
+                title: '03.「悄悄话项圈」每天都会刷新免费的「心声能量」',
+                body: '每天8：00刷新免费的心声能量。能量耗尽后，可以去小窝使用积分兑换额外的心声能量哦👌',
+              },
+              {
+                title: '04.如何退出「悄悄话模式」？',
+                body: `和${deviceName}说“不聊啦”或从App关闭「悄悄话模式」开关，可暂停消耗「心声能量」。积分兑换的「心声能量」可保留，不会每日刷新。`,
+              },
+            ].map((item, index) => (
+              <section key={item.title} className={index === 0 ? '' : 'mt-[25px]'}>
+                <h3 className="inline bg-[#e9fb37] box-decoration-clone px-0.5 text-[17px] font-black leading-[28px] text-[#222127]">
+                  {item.title}
+                </h3>
+                <p className="mt-[13px] text-[13px] font-medium leading-[26px] text-[#6d6973]">{item.body}</p>
+              </section>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowTutorialFlow(false);
+              if (!minorModeEnabled) {
+                setDialogueEnabled(true);
+              }
+            }}
+            className="mx-auto mt-auto mb-[73px] flex h-[47px] w-[236px] items-center justify-center rounded-[14px] bg-[#8b66ef] text-[14px] font-semibold text-white shadow-[0_10px_22px_rgba(128,87,223,0.18)]"
+          >
+            知道啦
+          </button>
+          <div className="absolute bottom-[11px] left-1/2 h-[5px] w-[134px] -translate-x-1/2 rounded-full bg-[#111111]" />
+        </div>
       )}
     </PrototypePhone>
   );
