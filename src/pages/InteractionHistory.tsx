@@ -65,14 +65,6 @@ const InteractionHistory: React.FC = () => {
                   <li>首次绑定 ropet，加 160 分，每只 ropet 只加一次。</li>
                 </ul>
               </div>
-              <button
-                type="button"
-                aria-label="购买积分"
-                onClick={() => navigate('/points-store?returnTo=/interaction-score')}
-                className="mt-5 h-12 w-full rounded-full bg-[#8b66ef] text-[15px] font-semibold text-white shadow-[0_10px_22px_rgba(139,102,239,0.22)]"
-              >
-                购买积分
-              </button>
             </section>
           </div>
         )}

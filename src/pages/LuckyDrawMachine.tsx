@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import BottomNav from '@/components/BottomNav';
 import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
+import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
 const pointProducts = [
   { points: 1000, price: 6, stars: 1 },
@@ -49,6 +50,7 @@ const LuckyDrawMachine: React.FC = () => {
   const { pet } = usePetStore();
   const deviceName = pet?.name || '肉派派';
   const { points, purchasePoints } = useDialogueStore();
+  const { minorModeEnabled } = useSubscriptionStore();
   const [showChannels, setShowChannels] = useState(false);
   const [showRecharge, setShowRecharge] = useState(false);
   const [payingProduct, setPayingProduct] = useState<typeof pointProducts[number] | null>(null);
@@ -61,7 +63,7 @@ const LuckyDrawMachine: React.FC = () => {
   };
 
   const confirmPay = () => {
-    if (!payingProduct || !paymentChannel) return;
+    if (!payingProduct || !paymentChannel || minorModeEnabled) return;
     purchasePoints(payingProduct.points, payingProduct.price, deviceName, paymentChannel.label);
     setMessage(`${paymentChannel.label}支付成功，已返回积分商城`);
     navigate('/points-store?returnTo=/interaction-history', { replace: true });
@@ -79,16 +81,18 @@ const LuckyDrawMachine: React.FC = () => {
           alt="抽奖机界面"
         />
 
-        <button
-          type="button"
-          aria-label="获取更多积分"
-          onClick={() => navigate('/points-store?returnTo=/interaction-history')}
-          className="absolute left-[145px] top-[63px] z-30 flex h-[42px] w-[118px] items-center justify-end rounded-full pr-1"
-        >
-          <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#8b66ef] text-[18px] font-bold leading-none text-white shadow-[0_4px_10px_rgba(86,56,168,0.25)]">
-            +
-          </span>
-        </button>
+        {!minorModeEnabled && (
+          <button
+            type="button"
+            aria-label="获取更多积分"
+            onClick={() => navigate('/points-store?returnTo=/interaction-history')}
+            className="absolute left-[145px] top-[63px] z-30 flex h-[42px] w-[118px] items-center justify-end rounded-full pr-1"
+          >
+            <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#8b66ef] text-[18px] font-bold leading-none text-white shadow-[0_4px_10px_rgba(86,56,168,0.25)]">
+              +
+            </span>
+          </button>
+        )}
 
         <BottomNav />
 
@@ -111,21 +115,23 @@ const LuckyDrawMachine: React.FC = () => {
                   <strong className="mt-4 block text-[15px] text-[#27232d]">和 Ropet 互动</strong>
                   <span className="mt-1 block text-[11px] leading-4 text-[#8b8792]">互动、照顾、完成任务获得积分</span>
                 </button>
-                <button
-                  type="button"
-                  aria-label="充值购买积分"
-                  onClick={() => {
-                    setShowChannels(false);
-                    setShowRecharge(true);
-                  }}
-                  className="min-h-[112px] rounded-[18px] bg-[#fff7d7] px-4 py-4 text-left"
-                >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-[13px] bg-[#ffd948] text-white">
-                    <CreditCard size={20} />
-                  </span>
-                  <strong className="mt-4 block text-[15px] text-[#27232d]">充值购买</strong>
-                  <span className="mt-1 block text-[11px] leading-4 text-[#8b8792]">快速补充积分，继续抽奖</span>
-                </button>
+                {!minorModeEnabled && (
+                  <button
+                    type="button"
+                    aria-label="充值购买积分"
+                    onClick={() => {
+                      setShowChannels(false);
+                      setShowRecharge(true);
+                    }}
+                    className="min-h-[112px] rounded-[18px] bg-[#fff7d7] px-4 py-4 text-left"
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-[13px] bg-[#ffd948] text-white">
+                      <CreditCard size={20} />
+                    </span>
+                    <strong className="mt-4 block text-[15px] text-[#27232d]">充值购买</strong>
+                    <span className="mt-1 block text-[11px] leading-4 text-[#8b8792]">快速补充积分，继续抽奖</span>
+                  </button>
+                )}
               </div>
               <button
                 type="button"
@@ -184,8 +190,11 @@ const LuckyDrawMachine: React.FC = () => {
                     key={item.points}
                     type="button"
                     aria-label={`购买 ${item.points} 积分`}
+                    disabled={minorModeEnabled}
                     onClick={() => setPayingProduct(item)}
-                    className="rounded-[10px] bg-white px-3 pb-5 pt-5 text-center shadow-[0_8px_20px_rgba(68,52,116,0.10)]"
+                    className={`rounded-[10px] bg-white px-3 pb-5 pt-5 text-center shadow-[0_8px_20px_rgba(68,52,116,0.10)] ${
+                      minorModeEnabled ? 'opacity-45 grayscale' : ''
+                    }`}
                   >
                     <StarPile count={item.stars} />
                     <div className="mt-1 flex items-center justify-center text-[16px] font-medium text-[#27232d]">
@@ -282,8 +291,13 @@ const LuckyDrawMachine: React.FC = () => {
                   <button
                     type="button"
                     aria-label={`${paymentChannel.label}支付成功并返回 App`}
+                    disabled={minorModeEnabled}
                     onClick={confirmPay}
-                    className={`mt-5 h-12 w-full rounded-[16px] text-[15px] font-semibold text-white ${paymentChannelStyles[paymentChannel.id as keyof typeof paymentChannelStyles].accent}`}
+                    className={`mt-5 h-12 w-full rounded-[16px] text-[15px] font-semibold text-white ${
+                      minorModeEnabled
+                        ? 'bg-[#d6d4dc]'
+                        : paymentChannelStyles[paymentChannel.id as keyof typeof paymentChannelStyles].accent
+                    }`}
                   >
                     支付成功，返回 App
                   </button>

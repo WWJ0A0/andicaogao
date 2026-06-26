@@ -7,6 +7,7 @@ import {
   PrototypeStatusBar,
 } from '@/components/subscription/PrototypeUI';
 import { useDialogueStore } from '@/store/useDialogueStore';
+import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
 type PointOrderStatus = 'creating' | 'unpaid' | 'failed' | 'cancelled' | 'paid' | 'refunding' | 'refunded';
 
@@ -140,6 +141,7 @@ const STATUS_META: Record<PointOrderStatus, {
 const PointsOrders: React.FC = () => {
   const navigate = useNavigate();
   const { pointOrders } = useDialogueStore();
+  const { minorModeEnabled } = useSubscriptionStore();
   const [copiedOrderNo, setCopiedOrderNo] = useState('');
   const [toast, setToast] = useState('');
   const [supportOrder, setSupportOrder] = useState<DisplayPointOrder | null>(null);
@@ -281,13 +283,15 @@ const PointsOrders: React.FC = () => {
             <p className="mt-2 text-[12px] leading-5 text-[#96919c]">
               购买积分后的订单会展示在这里，悄悄话卡兑换记录暂不放入订单。
             </p>
-            <button
-              type="button"
-              onClick={() => navigate('/points-store')}
-              className="mt-5 h-10 rounded-full bg-[#8b66ef] px-5 text-[13px] font-semibold text-white"
-            >
-              去购买积分
-            </button>
+            {!minorModeEnabled && (
+              <button
+                type="button"
+                onClick={() => navigate('/points-store')}
+                className="mt-5 h-10 rounded-full bg-[#8b66ef] px-5 text-[13px] font-semibold text-white"
+              >
+                去购买积分
+              </button>
+            )}
           </div>
         )}
       </div>
