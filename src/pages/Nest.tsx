@@ -18,15 +18,59 @@ const DialogueCardVisual: React.FC<{
   const hero = size === 'hero';
   const mini = size === 'mini';
   return (
-    <div
-      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-[8px] bg-gradient-to-br from-[#aa8cff] via-[#8a66ef] to-[#6f4bd6] text-white ${
-        hero ? 'h-[190px] w-[170px]' : mini ? 'h-[26px] w-[22px]' : 'h-[58px] w-[58px]'
-      } ${muted ? 'grayscale opacity-40' : ''}`}
-    >
-      <div className={`absolute rounded-full bg-white/10 ${hero ? '-right-8 -top-8 h-24 w-24' : '-right-4 -top-4 h-12 w-12'}`} />
-      <div className={`absolute rounded-full border border-white/12 ${hero ? '-bottom-8 -left-8 h-24 w-24' : '-bottom-5 -left-5 h-12 w-12'}`} />
-      <div className="relative flex items-end justify-center">
-        <span className={`${hero ? 'h-16 w-16' : mini ? 'h-2 w-2' : 'h-5 w-5'} rounded-full bg-white/18 shadow-[0_0_24px_rgba(255,255,255,0.32)]`} />
+    <div className={`relative flex shrink-0 items-center justify-center ${hero ? 'h-[300px] w-[260px]' : mini ? 'h-[26px] w-[22px]' : 'h-[58px] w-[58px]'} ${muted ? 'grayscale opacity-40' : ''}`}>
+      <div className={`absolute rounded-[50%] bg-[#1b1720]/10 blur-[10px] ${hero ? 'bottom-[22px] h-[15px] w-[150px]' : mini ? 'bottom-0 h-[3px] w-[18px]' : 'bottom-[4px] h-[6px] w-[42px]'}`} />
+      <div className={`relative rotate-[-31deg] rounded-full border border-[#c8c6bd] bg-gradient-to-br from-[#f5f4ec] via-[#d9d6ca] to-[#9f9b8e] shadow-[inset_0_8px_14px_rgba(255,255,255,0.78),0_16px_28px_rgba(77,72,62,0.18)] ${hero ? 'h-[174px] w-[86px]' : mini ? 'h-[25px] w-[13px]' : 'h-[52px] w-[26px]'}`}>
+        <div className={`absolute left-1/2 -translate-x-1/2 rounded-full border border-[#bfc4c7] bg-gradient-to-br from-[#eef2f6] to-[#b9b9b1] ${hero ? 'top-[10px] h-[54px] w-[66px]' : mini ? 'top-[2px] h-[8px] w-[10px]' : 'top-[4px] h-[17px] w-[20px]'}`}>
+          <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border bg-[#caeeff] ${hero ? 'h-[37px] w-[37px] border-[3px] border-[#69d6ff]' : mini ? 'h-[5px] w-[5px] border border-[#69d6ff]' : 'h-[11px] w-[11px] border border-[#69d6ff]'}`} />
+        </div>
+        <div className={`absolute rounded-full border border-[#6acfff] bg-[#70d1ff] shadow-[0_0_8px_rgba(92,210,255,0.72)] ${hero ? 'right-[12px] top-[70px] h-[17px] w-[17px]' : mini ? 'right-[2px] top-[10px] h-[3px] w-[3px]' : 'right-[4px] top-[23px] h-[6px] w-[6px]'}`} />
+        <div className={`absolute left-1/2 -translate-x-1/2 rounded-full bg-[#8e887c] ${hero ? 'bottom-[17px] h-[28px] w-[52px]' : mini ? 'bottom-[2px] h-[4px] w-[8px]' : 'bottom-[5px] h-[8px] w-[15px]'}`}>
+          <span className={`absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2 rotate-[28deg] bg-[#d2cdc1] ${hero ? 'h-[6px] w-[18px]' : mini ? 'h-[1px] w-[3px]' : 'h-[2px] w-[6px]'}`} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SmartCollarVisual: React.FC<{
+  size?: 'tile' | 'hero';
+}> = ({ size = 'tile' }) => {
+  const hero = size === 'hero';
+
+  return (
+    <div className={`relative flex shrink-0 items-center justify-center ${hero ? 'h-[245px] w-[250px]' : 'h-[58px] w-[58px]'}`}>
+      <div
+        className={`absolute rounded-[50%] bg-[#1d1a24]/10 blur-[10px] ${
+          hero ? 'bottom-[32px] h-[16px] w-[150px]' : 'bottom-[5px] h-[6px] w-[38px]'
+        }`}
+      />
+      <div
+        className={`relative rounded-[50%] border bg-gradient-to-br from-[#f4f6fb] via-[#d8dce7] to-[#a9aebc] shadow-[inset_0_10px_18px_rgba(255,255,255,0.82),0_12px_28px_rgba(61,65,80,0.18)] ${
+          hero ? 'h-[104px] w-[184px] rotate-[-10deg] border-[#c8ccd8]' : 'h-[29px] w-[48px] rotate-[-10deg] border-[#c8ccd8]'
+        }`}
+      >
+        <div
+          className={`absolute rounded-[50%] bg-[#fafbff] ${
+            hero ? 'left-[28px] top-[20px] h-[56px] w-[104px]' : 'left-[8px] top-[7px] h-[14px] w-[29px]'
+          }`}
+        />
+        <div
+          className={`absolute rounded-full bg-gradient-to-br from-[#f4f5fa] to-[#9ba0ac] shadow-[inset_0_4px_8px_rgba(255,255,255,0.55)] ${
+            hero ? 'right-[2px] top-[50px] h-[28px] w-[55px] rotate-[-12deg]' : 'right-[-1px] top-[15px] h-[9px] w-[17px] rotate-[-12deg]'
+          }`}
+        />
+        <div
+          className={`absolute rounded-full bg-gradient-to-br from-[#eef3ff] to-[#aeb4c2] shadow-[0_3px_8px_rgba(45,48,61,0.18)] ${
+            hero ? 'left-[18px] top-[50px] h-[50px] w-[50px]' : 'left-[5px] top-[15px] h-[15px] w-[15px]'
+          }`}
+        >
+          <div
+            className={`absolute rounded-full border bg-[#c9edff] ${
+              hero ? 'inset-[8px] border-[3px] border-[#62cfff]' : 'inset-[3px] border border-[#62cfff]'
+            }`}
+          />
+        </div>
       </div>
     </div>
   );
@@ -43,7 +87,6 @@ const Nest: React.FC = () => {
     dialogueCards,
     dialogueCardInventory,
     exchangeDialogueCard,
-    useDialogueCard: applyDialogueCard,
   } = useDialogueStore();
   const initialCardDays = Number(searchParams.get('card')) || WHISPER_CARD_PRODUCTS[0].days;
   const [selectedCardDays, setSelectedCardDays] = useState(initialCardDays);
@@ -57,6 +100,7 @@ const Nest: React.FC = () => {
   const cardDetailOpen = !minorModeEnabled && (
     searchParams.get('item') === 'dialogue-card' || searchParams.get('item') === 'trial-card'
   );
+  const collarDetailOpen = !minorModeEnabled && searchParams.get('item') === 'smart-collar';
   const selectedCard = WHISPER_CARD_PRODUCTS.find((card) => card.days === selectedCardDays)
     || WHISPER_CARD_PRODUCTS[0];
   const getOwnedCount = (days: number) => {
@@ -69,6 +113,11 @@ const Nest: React.FC = () => {
     if (minorModeEnabled) return;
     setSelectedCardDays(days);
     setSearchParams({ item: 'dialogue-card', card: String(days) });
+  };
+
+  const openSmartCollarDetail = () => {
+    if (minorModeEnabled) return;
+    setSearchParams({ item: 'smart-collar' });
   };
 
   const closeTrialCardDetail = () => {
@@ -109,10 +158,9 @@ const Nest: React.FC = () => {
     if (!selectedOwnedCount || usingCard) return;
     setUsingCard(true);
     window.setTimeout(() => {
-      applyDialogueCard(selectedCard.days);
       setUsingCard(false);
       setSearchParams({});
-      setShowUseSuccess(true);
+      navigate('/dialogue-mode');
     }, 500);
   };
 
@@ -237,14 +285,25 @@ const Nest: React.FC = () => {
                   {/* Vector 1 Separator */}
                   <img src="/images/mo1cw4a9-og2pxnl.svg" alt="Section Separator" className="w-[305px] h-[1px] mt-[14px]" />
 
-                  {/* Section 2: 悄悄话 */}
+                  {/* Section 2: 变声 */}
                   <div className="w-full flex flex-col mt-[14px]">
                     <div className="flex items-center gap-[8px] relative">
-                      <h3 className="text-[16px] text-[#000000] font-medium tracking-[0.16px] leading-[22px]">悄悄话</h3>
+                      <h3 className="text-[16px] text-[#000000] font-medium tracking-[0.16px] leading-[22px]">变声</h3>
                       <HelpCircle size={15} className="text-[#7c5ae0]" />
                     </div>
 
                     <div className="flex items-center gap-[10px] mt-[11px] overflow-x-auto scrollbar-hide">
+                      <button
+                        type="button"
+                        onClick={openSmartCollarDetail}
+                        className="flex shrink-0 flex-col items-center rounded-[8px] border border-[#2222220d] bg-[#22222208] px-[14px] pb-[12px] pt-[12px]"
+                      >
+                        <SmartCollarVisual />
+                        <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">
+                          智能项环
+                        </span>
+                        <span className="mt-[3px] text-[11px] text-[#22222266] tracking-[0.11px] leading-[15px]">已拥有</span>
+                      </button>
                       {WHISPER_CARD_PRODUCTS.map((card) => (
                         <button
                           type="button"
@@ -254,7 +313,7 @@ const Nest: React.FC = () => {
                         >
                           <DialogueCardVisual days={card.days} />
                           <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">
-                            悄悄话卡
+                            项环电池
                           </span>
                         </button>
                       ))}
@@ -338,6 +397,49 @@ const Nest: React.FC = () => {
           </div>
         )}
 
+        {collarDetailOpen && (
+          <div
+            className="absolute inset-0 z-[90] flex items-end bg-black/55"
+            onClick={closeTrialCardDetail}
+          >
+            <div className="absolute left-1/2 top-[146px] z-[95] flex h-10 -translate-x-1/2 items-center rounded-full border border-black/20 bg-[#f1f1f3] px-4 shadow-[0_8px_18px_rgba(0,0,0,0.18)]">
+              <span className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#ffe49a] text-[12px] shadow-inner">
+                ◉
+              </span>
+              <span className="text-[18px] font-medium tracking-normal text-[#222127]">{points}</span>
+            </div>
+            <section
+              className="relative min-h-[590px] w-full rounded-t-[10px] bg-[#fafafa] px-4 pb-8 pt-9 shadow-[0_-14px_40px_rgba(0,0,0,0.16)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                aria-label="关闭智能项环详情"
+                onClick={closeTrialCardDetail}
+                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#eeeeef] text-[#5f5b64]"
+              >
+                <X size={19} />
+              </button>
+
+              <div className="flex h-[320px] items-center justify-center">
+                <SmartCollarVisual size="hero" />
+              </div>
+
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-[18px] font-semibold leading-[25px] text-[#222127]">智能变声项环</h2>
+                  <p className="mt-3 max-w-[280px] text-[13px] font-medium leading-[22px] text-[#8b8792]">
+                    经过两年的研发努力，何博士发明了一个能够帮助{deviceName}与人类更好沟通的变声项环。
+                  </p>
+                </div>
+                <span className="mt-1 rounded-full bg-[#f3f3f5] px-3 py-1 text-[11px] font-medium text-[#8b8792]">
+                  已拥有
+                </span>
+              </div>
+            </section>
+          </div>
+        )}
+
         {cardDetailOpen && selectedCard && (
           <div
             className="absolute inset-0 z-[90] flex items-end bg-black/55"
@@ -355,7 +457,7 @@ const Nest: React.FC = () => {
             >
               <button
                 type="button"
-                aria-label="关闭悄悄话卡详情"
+                aria-label="关闭项环电池详情"
                 onClick={closeTrialCardDetail}
                 className="absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#eeeeef] text-[#5f5b64]"
               >
@@ -368,9 +470,9 @@ const Nest: React.FC = () => {
 
               <div className="mt-5 flex items-start justify-between">
                 <div>
-                  <h2 className="text-[22px] font-semibold text-[#222127]">悄悄话卡</h2>
+                  <h2 className="text-[22px] font-semibold text-[#222127]">项环电池</h2>
                   <p className="mt-2 max-w-[245px] text-[12px] leading-5 text-[#8b8792]">
-                    使用后可以充满一次社交电量，让 {deviceName} 继续陪你说悄悄话。
+                    一块项环电池即可给项环充满电，充满后{deviceName}就可以持续发出人类的声音。
                   </p>
                 </div>
                 <span className="rounded-full bg-[#f3f0fb] px-3 py-1.5 text-[11px] font-semibold text-[#7c5ae0]">
@@ -423,9 +525,9 @@ const Nest: React.FC = () => {
         {confirmingExchange && (
           <div className="absolute inset-0 z-[115] flex items-center justify-center bg-black/45 px-8">
             <section className="w-full rounded-[20px] bg-white px-6 py-6 text-center shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
-              <h2 className="text-[18px] font-semibold text-[#222127]">积分兑换</h2>
+              <h2 className="text-[18px] font-semibold text-[#222127]">兑换项环电池</h2>
               <p className="mt-3 text-[14px] leading-6 text-[#222127]">
-                每{selectedCard.cost}积分可兑换一张悄悄话卡，
+                每{selectedCard.cost}积分可兑换一块项环电池，
                 <br />
                 当前剩余积分 {points}。
               </p>
@@ -501,16 +603,16 @@ const Nest: React.FC = () => {
         {showUseSuccess && (
           <div className="absolute inset-0 z-[115] flex items-center justify-center bg-black/45 px-8">
             <section className="w-full rounded-[24px] bg-white px-5 py-6 text-center shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
-              <h2 className="text-[18px] font-semibold text-[#222127]">悄悄话卡已生效</h2>
+              <h2 className="text-[18px] font-semibold text-[#222127]">项环电池已添加</h2>
               <p className="mt-3 text-[13px] leading-6 text-[#6f6875]">
-                已为你充满一次社交电量，可以继续和{deviceName}说话。
+                已为你补满一次项环电量，可以继续让{deviceName}变声。
               </p>
               <button
                 type="button"
                 onClick={() => navigate('/dialogue-mode?card=active')}
                 className="mt-6 h-12 w-full rounded-[16px] bg-[#8b66ef] text-[14px] font-semibold text-white"
               >
-                去悄悄话模式
+                去变声模式
               </button>
               <button
                 type="button"

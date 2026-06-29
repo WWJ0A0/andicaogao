@@ -27,7 +27,6 @@ import SubscriptionFlow from "@/pages/SubscriptionFlow";
 import TrialExperience from "@/pages/TrialExperience";
 import VoiceConsent from "@/pages/VoiceConsent";
 import PolicyDocument from "@/pages/PolicyDocument";
-import DialogueShop from "@/pages/DialogueShop";
 import PointsStore from "@/pages/PointsStore";
 import PointsOrders from "@/pages/PointsOrders";
 
@@ -72,7 +71,6 @@ export default function App() {
         <Route path="/drink-water-reminder" element={<DrinkWaterReminderPage />} />
         <Route path="/eye-change" element={<EyeChange />} />
         <Route path="/dialogue-mode" element={<DialogueMode />} />
-        <Route path="/dialogue-shop" element={<DialogueShop />} />
         <Route path="/points-store" element={<PointsStore />} />
         <Route path="/points-orders" element={<PointsOrders />} />
         <Route path="/subscription" element={<SubscriptionFlow screen="plans" />} />

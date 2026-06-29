@@ -9,7 +9,7 @@ import {
 import { useDialogueStore } from '@/store/useDialogueStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
-type PointOrderStatus = 'creating' | 'unpaid' | 'failed' | 'cancelled' | 'paid' | 'refunding' | 'refunded';
+type PointOrderStatus = 'creating' | 'unpaid' | 'failed' | 'cancelled' | 'paid' | 'processing' | 'timeout' | 'refunding' | 'refunded';
 
 type DisplayPointOrder = {
   id: string;
@@ -24,6 +24,17 @@ type DisplayPointOrder = {
 };
 
 const DEMO_POINT_ORDERS: DisplayPointOrder[] = [
+  {
+    id: 'demo-processing',
+    orderNo: 'PT20260622101933',
+    deviceName: '肉派派',
+    points: 19000,
+    amount: 18,
+    channel: 'App Store',
+    time: '2026.06.22 10:19',
+    timeLabel: '支付时间',
+    status: 'processing',
+  },
   {
     id: 'demo-creating',
     orderNo: 'PT20260622100421',
@@ -126,6 +137,17 @@ const STATUS_META: Record<PointOrderStatus, {
     className: 'bg-[#e8f7ef] text-[#31845c]',
     note: '积分已发放到当前设备。',
   },
+  processing: {
+    label: '处理中',
+    className: 'bg-[#eef3ff] text-[#4c72c9]',
+    note: '支付成功但积分暂未到账，请联系客服处理。',
+  },
+  timeout: {
+    label: '已超时',
+    className: 'bg-[#f0eef2] text-[#77717e]',
+    note: '订单已超时，请重新下单。',
+    action: '重新支付',
+  },
   refunding: {
     label: '退款中',
     className: 'bg-[#fff0df] text-[#b66a25]',
@@ -201,7 +223,7 @@ const PointsOrders: React.FC = () => {
             <section className="mb-3 rounded-[16px] border border-[#ece9f1] bg-white px-4 py-3">
               <p className="text-[13px] font-semibold text-[#26232a]">状态演示</p>
               <p className="mt-1 text-[11px] leading-5 text-[#96919c]">
-                包含创建中、未支付、支付失败、取消付款、退款中、已退款和支付成功等状态。
+                包含创建中、未支付、支付失败、取消付款、处理中、超时、退款中、已退款和支付成功等状态。
               </p>
             </section>
 
@@ -281,7 +303,7 @@ const PointsOrders: React.FC = () => {
             <ReceiptText size={44} className="mx-auto text-[#d7d3dc]" />
             <h2 className="mt-4 text-[18px] font-semibold text-[#26232a]">暂无积分订单</h2>
             <p className="mt-2 text-[12px] leading-5 text-[#96919c]">
-              购买积分后的订单会展示在这里，悄悄话卡兑换记录暂不放入订单。
+              购买积分后的订单会展示在这里，变声电池兑换记录暂不放入订单。
             </p>
             {!minorModeEnabled && (
               <button

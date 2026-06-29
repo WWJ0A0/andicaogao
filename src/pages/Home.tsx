@@ -454,7 +454,7 @@ const HomePage: React.FC = () => {
                   让{pet.name}陪你聊一聊
                 </h2>
                 <p className="relative mt-[16px] text-[14px] font-medium leading-[26px] text-[#67636d]">
-                  开启后，{pet.name}会在互动过程中获取必要的语音和画面信息，并上传至云端进行 AI 分析与处理，帮助它更好地听懂你、回应你。悄悄话仅面向年满 16 周岁的用户开放。请确认你已满 16 周岁，再和{pet.name}说说话吧。
+                  开启后，{pet.name}会在互动过程中获取必要的语音和画面信息，并上传至云端进行 AI 分析与处理，帮助它更好地听懂你、回应你。对话功能仅面向年满 16 周岁的用户开放。请确认你已满 16 周岁，再和{pet.name}说说话吧。
                 </p>
                 <div className="relative mt-[18px] flex items-start gap-3 text-[13px] font-medium leading-[22px] text-[#aaa6af]">
                   <button
@@ -549,7 +549,7 @@ const HomePage: React.FC = () => {
               >
                 <X size={26} strokeWidth={2.2} />
               </button>
-              <h2 className="text-[17px] font-bold text-[#222127]">怎么和{pet.name}说悄悄话？</h2>
+              <h2 className="text-[17px] font-bold text-[#222127]">怎么让{pet.name}变声？</h2>
             </div>
 
             <img
@@ -562,20 +562,20 @@ const HomePage: React.FC = () => {
             <div className="px-[21px] pt-[26px]">
               {[
                 {
-                  title: '01. 在App打开「悄悄话模式」开关',
-                  body: `打开开关，为${pet.name}带上悄悄话项圈，${pet.name}才能和你用人类的语言沟通哦。`,
+                  title: '01. 在App打开「智能项环」开关',
+                  body: `打开开关，为${pet.name}带上智能项环，${pet.name}才能开启变声和你沟通哦。`,
                 },
                 {
                   title: `02. 面对${pet.name}，随便和它聊聊`,
                   body: `和${pet.name}随便聊聊，好好的感受彼此的心意吧❤️`,
                 },
                 {
-                  title: '03.「悄悄话项圈」每天都会刷新免费的「心声能量」',
-                  body: '每天8：00刷新免费的心声能量。能量耗尽后，可以去小窝使用积分兑换额外的心声能量哦👌',
+                  title: '03.「智能项环」每天都会刷新免费的「项环电量」',
+                  body: '每天0：00刷新免费的 5 分钟项环电量。电量耗尽后，可以去小窝使用积分兑换变声电池哦👌',
                 },
                 {
-                  title: '04.如何退出「悄悄话模式」？',
-                  body: `和${pet.name}说“不聊啦”或从App关闭「悄悄话模式」开关，可暂停消耗「心声能量」。积分兑换的「心声能量」可保留，不会每日刷新。`,
+                  title: '04.如何退出「变声模式」？',
+                  body: `和${pet.name}说“不聊啦”或从App关闭「智能项环」开关，可暂停消耗「项环电量」。积分兑换的「变声电池」可保留，不会每日刷新。`,
                 },
               ].map((item, index) => (
                 <section key={item.title} className={index === 0 ? '' : 'mt-[25px]'}>

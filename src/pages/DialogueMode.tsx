@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, ChevronRight, Megaphone, Sparkles, Star, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PrototypePhone, PrototypeStatusBar } from '@/components/subscription/PrototypeUI';
+import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
@@ -42,7 +43,15 @@ const dialogueModeStyles = `
 .dm-main {
   position: relative;
   z-index: 1;
-  padding: 0 16px;
+  height: 744px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 16px 64px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.dm-main::-webkit-scrollbar {
+  display: none;
 }
 .dm-exchange {
   position: relative;
@@ -104,11 +113,11 @@ const dialogueModeStyles = `
 .dm-panel {
   position: relative;
   width: 361px;
-  height: 581px;
+  min-height: 581px;
   margin: 15px auto 0;
   border-radius: 24px;
   background: #cbb8ff;
-  padding: 16px 12px 20px;
+  padding: 16px 12px 0;
   overflow: hidden;
   box-shadow: inset 0 0 18px rgba(139, 102, 239, 0.2);
 }
@@ -137,7 +146,7 @@ const dialogueModeStyles = `
 }
 .dm-card + .dm-card {
   margin-top: 16px;
-  padding-bottom: 34px;
+  padding-bottom: 18px;
 }
 .dm-card-title {
   margin: 0;
@@ -188,7 +197,7 @@ const dialogueModeStyles = `
 .dm-battery {
   position: relative;
   height: 68px;
-  margin-top: 20px;
+  margin-top: 16px;
 }
 .dm-battery-shell {
   position: absolute;
@@ -208,7 +217,6 @@ const dialogueModeStyles = `
   border-radius: 10px;
 }
 .dm-energy-fill {
-  width: 45%;
   background: #9272e8;
   color: #ffffff;
   display: flex;
@@ -216,6 +224,9 @@ const dialogueModeStyles = `
   justify-content: center;
   font-size: 24px;
   font-weight: 900;
+}
+.dm-energy-fill.is-free {
+  background: #f596b9;
 }
 .dm-free-fill {
   width: 48px;
@@ -228,6 +239,62 @@ const dialogueModeStyles = `
   font-size: 16px;
   font-weight: 800;
 }
+.dm-battery-packs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+.dm-battery-pack {
+  position: relative;
+  height: 40px;
+  border: 0;
+  border-radius: 9px;
+  background: #d9d9d9;
+  color: #8d8a91;
+  font-size: 22px;
+  line-height: 40px;
+  font-weight: 500;
+  box-shadow: inset -5px 0 0 rgba(166, 166, 166, 0.6);
+}
+.dm-battery-pack::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 8px;
+  width: 6px;
+  height: 24px;
+  border-radius: 0 7px 7px 0;
+  background: #c4c4c4;
+}
+.dm-battery-pack.is-full {
+  background: #9272e8;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.46), inset -5px 0 0 rgba(112, 82, 205, 0.55);
+}
+.dm-battery-stock {
+  margin: 10px 0 0;
+  color: #8c8990;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+}
+.dm-battery-toast {
+  position: absolute;
+  left: 50%;
+  top: 374px;
+  z-index: 8;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(39, 35, 45, 0.9);
+  padding: 7px 12px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 .dm-battery-cap {
   position: absolute;
   left: 292px;
@@ -238,11 +305,10 @@ const dialogueModeStyles = `
   background: #a5a5aa;
 }
 .dm-guide {
-  position: absolute;
-  right: 20px;
-  bottom: 121px;
+  position: relative;
   width: 210px;
   height: 48px;
+  margin: 28px 20px 0 auto;
   border: 0;
   border-radius: 24px;
   background: #ffffff;
@@ -267,11 +333,12 @@ const dialogueModeStyles = `
   flex: 0 0 auto;
 }
 .dm-hero {
-  position: absolute;
-  bottom: -2px;
+  position: relative;
+  display: block;
   left: 21px;
   width: 193px;
   height: 155px;
+  margin-top: 8px;
   object-fit: contain;
   object-position: bottom;
 }
@@ -285,14 +352,112 @@ const dialogueModeStyles = `
   background: #111111;
   transform: translateX(-50%);
 }
+.dm-confirm-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 31px;
+  background: rgba(25, 24, 31, 0.58);
+}
+.dm-confirm {
+  width: 100%;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 25px 23px 26px;
+  text-align: center;
+  box-shadow: 0 18px 42px rgba(42, 34, 58, 0.24);
+}
+.dm-confirm h3 {
+  margin: 0;
+  color: #222222;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 700;
+}
+.dm-confirm p {
+  margin: 13px auto 0;
+  max-width: 236px;
+  color: #4d4952;
+  font-size: 14px;
+  line-height: 26px;
+  font-weight: 500;
+  text-align: center;
+}
+.dm-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 13px;
+  margin-top: 25px;
+}
+.dm-confirm-actions button {
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.dm-confirm-cancel {
+  border: 1px solid #e4e1e6 !important;
+  background: #ffffff;
+  color: #222222;
+}
+.dm-confirm-primary {
+  background: #8b66ef;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(139, 102, 239, 0.2);
+}
 `;
 
 const DialogueMode: React.FC = () => {
   const navigate = useNavigate();
   const [showTutorialFlow, setShowTutorialFlow] = useState(false);
+  const [batteryConfirm, setBatteryConfirm] = useState<'add' | 'buy' | null>(null);
+  const [batteryToast, setBatteryToast] = useState('');
   const { pet } = usePetStore();
   const deviceName = pet?.name || '肉派派';
   const { dialogueEnabled, minorModeEnabled, setDialogueEnabled } = useSubscriptionStore();
+  const {
+    dialogueCards: itemBatteryCount,
+    dialogueCardInventory,
+    placedVoiceBatteries,
+    addVoiceBatteryToSlot,
+  } = useDialogueStore();
+  const availableBatteryCount = Math.max(dialogueCardInventory?.[1] ?? 0, itemBatteryCount);
+  const hasLoadedBattery = placedVoiceBatteries > 0;
+  const activeBatteryLabel = hasLoadedBattery ? '100%' : '免费';
+
+  const showBatteryToast = (message: string) => {
+    setBatteryToast(message);
+    window.setTimeout(() => setBatteryToast(''), 1600);
+  };
+
+  const openBatterySlot = () => {
+    if (minorModeEnabled) return;
+    if (placedVoiceBatteries >= 4) return;
+    if (availableBatteryCount <= 0) {
+      setBatteryConfirm('buy');
+      return;
+    }
+    setBatteryConfirm('add');
+  };
+
+  const confirmBatteryAction = () => {
+    if (!batteryConfirm) return;
+    if (batteryConfirm === 'buy') {
+      setBatteryConfirm(null);
+      navigate('/nest?item=dialogue-card&card=1');
+      return;
+    }
+    if (!addVoiceBatteryToSlot()) {
+      setBatteryConfirm('buy');
+      return;
+    }
+    setBatteryConfirm(null);
+    showBatteryToast('已添加项环电池');
+  };
 
   return (
     <PrototypePhone className="bg-white">
@@ -304,7 +469,7 @@ const DialogueMode: React.FC = () => {
         <button type="button" aria-label="返回" onClick={() => navigate('/')} className="dm-back">
           <ArrowLeft size={29} strokeWidth={2.6} />
         </button>
-        <h1 className="dm-title">悄悄话模式</h1>
+        <h1 className="dm-title">{deviceName}变声</h1>
       </header>
 
       <main className="dm-main">
@@ -316,16 +481,16 @@ const DialogueMode: React.FC = () => {
             <span className="absolute right-[-5px] top-5 h-1.5 w-1.5 rounded-full bg-[#ffbb5f]" />
           </div>
           <div>
-            <h2>兑换「心声能量」</h2>
-            <p>可以通过积分兑换</p>
+            <h2>购买「项环电池」</h2>
+            <p>可以通过积分购买</p>
           </div>
           <button
             type="button"
             disabled={minorModeEnabled}
-            onClick={() => navigate('/dialogue-shop')}
+            onClick={() => navigate('/nest?item=dialogue-card&card=1')}
             className="dm-exchange-link"
           >
-            {minorModeEnabled ? '暂不可用' : '去兑换>'}
+            {minorModeEnabled ? '暂不可用' : '去购买>'}
           </button>
         </section>
 
@@ -337,13 +502,13 @@ const DialogueMode: React.FC = () => {
           </div>
 
           <section className="dm-card">
-            <h2 className="dm-card-title">{dialogueEnabled ? '悄悄话模式已开启' : '悄悄话模式未开启'}</h2>
+            <h2 className="dm-card-title">{dialogueEnabled ? '智能项环开关已开启' : '智能项环开关未开启'}</h2>
             <p className="dm-card-copy">
-              靠近{deviceName}，面对着它，和它随便聊点什么吧。听到你的声音后，悄悄话就会开启，并消耗心声能量。
+              靠近{deviceName}，面对着它，和它随便聊点什么吧。听到你的声音后，变声模式就会开启，并消耗今日项环电量。
             </p>
             <button
               type="button"
-              aria-label={dialogueEnabled ? '关闭悄悄话模式' : '开启悄悄话模式'}
+              aria-label={dialogueEnabled ? '关闭智能项环开关' : '开启智能项环开关'}
               disabled={minorModeEnabled}
               onClick={() => setDialogueEnabled(!dialogueEnabled)}
               className={`dm-switch ${dialogueEnabled ? 'is-on' : 'is-off'}`}
@@ -356,21 +521,46 @@ const DialogueMode: React.FC = () => {
           </section>
 
           <section className="dm-card">
-            <h2 className="dm-card-title">心声能量</h2>
-            <p className="dm-card-copy">能量越多{deviceName}能跟你聊的时间越长哦～</p>
+            <h2 className="dm-card-title">今日项环电量</h2>
+            <p className="dm-card-copy">项环的电量越多{deviceName}能跟你聊的时间越长哦～最多一次加 4 块项环电池。</p>
             <div className="dm-battery">
               <div className="dm-battery-shell">
                 <div className="dm-battery-inner">
-                  <div className="dm-energy-fill">45%</div>
-                  <div className="dm-free-fill">免费</div>
+                  <div
+                    className={`dm-energy-fill ${hasLoadedBattery ? '' : 'is-free'}`}
+                    style={{ width: '100%' }}
+                  >
+                    {activeBatteryLabel}
+                  </div>
                 </div>
               </div>
               <div className="dm-battery-cap" />
             </div>
+            <div className="dm-battery-packs" aria-label="项环电池槽">
+              {Array.from({ length: 4 }).map((_, index) => {
+                const hasBattery = index >= 4 - placedVoiceBatteries;
+
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    aria-label={hasBattery ? '已添加项环电池' : '添加项环电池'}
+                    disabled={minorModeEnabled}
+                    onClick={hasBattery ? undefined : openBatterySlot}
+                    className={`dm-battery-pack ${hasBattery ? 'is-full' : ''}`}
+                  >
+                    {hasBattery ? '100%' : '+'}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="dm-battery-stock">当前剩余电池数：{availableBatteryCount} 块</p>
           </section>
 
+          {batteryToast && <div className="dm-battery-toast">{batteryToast}</div>}
+
           <button type="button" onClick={() => setShowTutorialFlow(true)} className="dm-guide">
-            怎么和{deviceName}说悄悄话？
+            怎么让{deviceName}变声？
             <span className="dm-guide-icon">
               <ChevronRight size={22} strokeWidth={3} />
             </span>
@@ -382,19 +572,40 @@ const DialogueMode: React.FC = () => {
 
       <div className="dm-home-indicator" />
 
+      {batteryConfirm && (
+        <div className="dm-confirm-mask" onClick={() => setBatteryConfirm(null)}>
+          <section className="dm-confirm" onClick={(event) => event.stopPropagation()}>
+            <h3>{batteryConfirm === 'add' ? '是否要添加一块电池' : '暂无电池'}</h3>
+            <p>
+              {batteryConfirm === 'add'
+                ? `当前剩余电池数 ${availableBatteryCount} 块`
+                : '当前剩余电池数 0 块，是否去购买新的电池？'}
+            </p>
+            <div className="dm-confirm-actions">
+              <button type="button" className="dm-confirm-primary" onClick={confirmBatteryAction}>
+                {batteryConfirm === 'add' ? '确定' : '去购买'}
+              </button>
+              <button type="button" className="dm-confirm-cancel" onClick={() => setBatteryConfirm(null)}>
+                取消
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {showTutorialFlow && (
         <div className="absolute inset-0 z-50 flex flex-col bg-white text-left">
           <PrototypeStatusBar />
           <div className="relative flex h-[56px] items-center justify-center">
             <button
               type="button"
-              aria-label="关闭新手教程"
+              aria-label="关闭说明"
               onClick={() => setShowTutorialFlow(false)}
               className="absolute left-[19px] top-[6px] flex h-10 w-10 items-center justify-center text-[#222127]"
             >
               <X size={26} strokeWidth={2.2} />
             </button>
-            <h2 className="text-[17px] font-bold text-[#222127]">怎么和{deviceName}说悄悄话？</h2>
+            <h2 className="text-[17px] font-bold text-[#222127]">怎么让{deviceName}变声？</h2>
           </div>
 
           <img
@@ -407,20 +618,20 @@ const DialogueMode: React.FC = () => {
           <div className="px-[21px] pt-[26px]">
             {[
               {
-                title: '01. 在App打开「悄悄话模式」开关',
-                body: `打开开关，为${deviceName}带上悄悄话项圈，${deviceName}才能和你用人类的语言沟通哦。`,
+                title: '01. 在App打开「智能项环」开关',
+                body: `打开开关，为${deviceName}带上智能项环，${deviceName}才能开启变声和你沟通哦。`,
               },
               {
                 title: `02. 面对${deviceName}，随便和它聊聊`,
                 body: `和${deviceName}随便聊聊，好好的感受彼此的心意吧❤️`,
               },
               {
-                title: '03.「悄悄话项圈」每天都会刷新免费的「心声能量」',
-                body: '每天8：00刷新免费的心声能量。能量耗尽后，可以去小窝使用积分兑换额外的心声能量哦👌',
+                title: '03.「智能项环」每天都会刷新免费的「项环电量」',
+                body: '每天0：00刷新免费的 5 分钟项环电量。电量耗尽后，可以点击空电池位添加已有的项环电池，最多一次加 4 块；没有库存时再去购买哦👌',
               },
               {
-                title: '04.如何退出「悄悄话模式」？',
-                body: `和${deviceName}说“不聊啦”或从App关闭「悄悄话模式」开关，可暂停消耗「心声能量」。积分兑换的「心声能量」可保留，不会每日刷新。`,
+                title: '04.如何退出「变声模式」？',
+                body: `和${deviceName}说“不聊啦”或从App关闭「智能项环」开关，可暂停消耗「项环电量」。积分兑换的「项环电池」可保留，不会每日刷新。`,
               },
             ].map((item, index) => (
               <section key={item.title} className={index === 0 ? '' : 'mt-[25px]'}>

@@ -75,8 +75,8 @@ const Settings: React.FC = () => {
             </h3>
             <p className="mt-3 text-left text-[14px] font-medium leading-6 text-[#66616d]">
               {nextMinorMode
-                ? '开启后，对话功能会被禁用；小窝界面里的悄悄话卡将隐藏，货币与积分的兑换入口也会关闭。'
-                : '关闭后，对话功能、小窝里的悄悄话卡，以及货币与积分兑换入口将恢复显示。'}
+                ? '开启后，对话功能会被禁用；小窝界面里的变声栏目将隐藏，货币与积分的兑换入口也会关闭。'
+                : '关闭后，对话功能、小窝里的变声栏目，以及货币与积分兑换入口将恢复显示。'}
             </p>
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button

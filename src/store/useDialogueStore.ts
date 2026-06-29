@@ -9,6 +9,7 @@ interface DialogueStore {
     fills: number;
     activatedAt: string;
   } | null;
+  placedVoiceBatteries: number;
   pointOrders: {
     id: string;
     orderNo: string;
@@ -17,16 +18,25 @@ interface DialogueStore {
     amount: number;
     channel?: string;
     paidAt: string;
-    status: 'paid';
+    status: 'creating' | 'unpaid' | 'failed' | 'cancelled' | 'paid' | 'processing' | 'timeout';
   }[];
   cardCost: number;
   exchangeCard: (count?: number) => boolean;
   exchangeDialogueCard: (days: number, cost: number, count?: number) => boolean;
   useCard: () => boolean;
   useDialogueCard: (days: number) => boolean;
+  addVoiceBatteryToSlot: () => boolean;
+  consumePlacedVoiceBattery: () => boolean;
   clearActiveDialogueCard: () => void;
   addPoints: (amount: number) => void;
   purchasePoints: (points: number, amount: number, deviceName?: string, channel?: string) => void;
+  recordPointOrder: (
+    points: number,
+    amount: number,
+    deviceName?: string,
+    channel?: string,
+    status?: 'creating' | 'unpaid' | 'failed' | 'cancelled' | 'paid' | 'processing' | 'timeout',
+  ) => void;
 }
 
 const formatDate = (date: Date) => {
@@ -47,6 +57,7 @@ export const useDialogueStore = create<DialogueStore>()(
       dialogueCards: 0,
       dialogueCardInventory: {},
       activeDialogueCard: null,
+      placedVoiceBatteries: 0,
       pointOrders: [],
       cardCost: 5000,
       exchangeCard: (count = 1) => {
@@ -117,6 +128,32 @@ export const useDialogueStore = create<DialogueStore>()(
         });
         return true;
       },
+      addVoiceBatteryToSlot: () => {
+        const state = get();
+        if (state.placedVoiceBatteries >= 4) return false;
+        const inventory = state.dialogueCardInventory ?? {};
+        const inventoryCount = inventory[1] ?? 0;
+        const oneDayCount = Math.max(inventoryCount, state.dialogueCards);
+        if (oneDayCount <= 0) return false;
+
+        set({
+          dialogueCards: Math.max(0, state.dialogueCards - 1),
+          dialogueCardInventory: {
+            ...inventory,
+            1: Math.max(0, oneDayCount - 1),
+          },
+          placedVoiceBatteries: Math.min(4, state.placedVoiceBatteries + 1),
+        });
+        return true;
+      },
+      consumePlacedVoiceBattery: () => {
+        const state = get();
+        if (state.placedVoiceBatteries <= 0) return false;
+        set({
+          placedVoiceBatteries: Math.max(0, state.placedVoiceBatteries - 1),
+        });
+        return true;
+      },
       clearActiveDialogueCard: () => set({ activeDialogueCard: null }),
       addPoints: (amount) => set((state) => ({ points: state.points + amount })),
       purchasePoints: (points, amount, deviceName = '肉派派', channel = 'App Store') => {
@@ -133,6 +170,24 @@ export const useDialogueStore = create<DialogueStore>()(
               channel,
               paidAt: formatPaymentTime(now),
               status: 'paid',
+            },
+            ...state.pointOrders,
+          ],
+        }));
+      },
+      recordPointOrder: (points, amount, deviceName = '肉派派', channel = 'App Store', status = 'processing') => {
+        const now = new Date();
+        set((state) => ({
+          pointOrders: [
+            {
+              id: `points-${now.getTime()}`,
+              orderNo: `PT${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getTime()).slice(-6)}`,
+              deviceName,
+              points,
+              amount,
+              channel,
+              paidAt: formatPaymentTime(now),
+              status,
             },
             ...state.pointOrders,
           ],
