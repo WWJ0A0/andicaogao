@@ -1,12 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { usePetStore } from '../store/usePetStore';
 import BottomNav from '../components/BottomNav';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import pingjingAnimation from '@/assets/animations/pingjing.json';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 import DialogueEntryButton from '@/components/DialogueEntryButton';
 import { Check, X } from 'lucide-react';
+import { isTranslationCollarUnlocked } from '@/utils/translationCollar';
 
 const HomePage: React.FC = () => {
   const { pet, todaysInteractions, incrementInteraction } = usePetStore();
@@ -19,11 +20,14 @@ const HomePage: React.FC = () => {
     minorModeEnabled,
   } = useSubscriptionStore();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showDiaryModal, setShowDiaryModal] = useState(false);
   const [isDiaryChecked, setIsDiaryChecked] = useState(false);
   const [showDialogueConsent, setShowDialogueConsent] = useState(false);
   const [showDialogueTutorial, setShowDialogueTutorial] = useState(false);
   const [dialogueConsentChecked, setDialogueConsentChecked] = useState(false);
+  const translationCollarUnlocked = isTranslationCollarUnlocked(pet?.growth_stage);
+  const canUseDialogueFeature = !minorModeEnabled && translationCollarUnlocked;
 
   // 亮度和音量状态 (0 - 100)
   const [brightness, setBrightness] = useState(50);
@@ -96,13 +100,26 @@ const HomePage: React.FC = () => {
     };
   }, []);
 
+  React.useEffect(() => {
+    if (searchParams.get('dialogueConsent') !== '1' || !canUseDialogueFeature) return;
+
+    setSearchParams({});
+    if (voiceConsentGranted) {
+      navigate('/dialogue-mode');
+      return;
+    }
+    setDialogueConsentChecked(false);
+    setShowDialogueTutorial(false);
+    setShowDialogueConsent(true);
+  }, [canUseDialogueFeature, navigate, searchParams, setSearchParams, voiceConsentGranted]);
+
   const handlePetClick = () => {
     incrementInteraction();
     navigate('/pet-interact');
   };
 
   const openDialogueMode = () => {
-    if (minorModeEnabled) return;
+    if (!canUseDialogueFeature) return;
 
     if (voiceConsentGranted) {
       navigate('/dialogue-mode');
@@ -114,6 +131,7 @@ const HomePage: React.FC = () => {
   };
 
   const startFirstEntryDemo = () => {
+    if (!canUseDialogueFeature) return;
     resetPrototype();
     setDialogueConsentChecked(false);
     setShowDialogueTutorial(false);
@@ -176,7 +194,7 @@ const HomePage: React.FC = () => {
                 onClick={() => navigate('/settings')}
               />
 
-              {!minorModeEnabled && (
+              {canUseDialogueFeature && (
                 <DialogueEntryButton
                   enabled={dialogueEnabled}
                   className="absolute left-[203px] top-[4px] z-10"
@@ -418,7 +436,7 @@ const HomePage: React.FC = () => {
         {/* 底部导航栏 */}
         <BottomNav />
 
-        {!minorModeEnabled && (
+        {canUseDialogueFeature && (
           <button
             type="button"
             aria-label="体验首次进入"
@@ -429,7 +447,7 @@ const HomePage: React.FC = () => {
           </button>
         )}
 
-        {showDialogueConsent && (
+        {canUseDialogueFeature && showDialogueConsent && (
           <div
             className="absolute inset-0 z-[500] flex items-center justify-center bg-black/62 px-[24px]"
             onClick={() => setShowDialogueConsent(false)}
@@ -520,7 +538,7 @@ const HomePage: React.FC = () => {
           </div>
         )}
 
-        {showDialogueTutorial && (
+        {canUseDialogueFeature && showDialogueTutorial && (
           <div className="absolute inset-0 z-[510] flex flex-col bg-white text-left">
             <div className="flex h-11 items-center justify-between px-7 pt-2 text-[#19181f]">
               <span className="text-[15px] font-semibold">9:41</span>
@@ -562,20 +580,20 @@ const HomePage: React.FC = () => {
             <div className="px-[21px] pt-[26px]">
               {[
                 {
-                  title: '01. 在App打开「智能项环」开关',
-                  body: `打开开关，为${pet.name}带上智能项环，${pet.name}才能开启变声和你沟通哦。`,
+                  title: '01. 在App打开「翻译项圈」开关',
+                  body: `打开开关，为${pet.name}带上翻译项圈，${pet.name}才能开启变声和你沟通哦。`,
                 },
                 {
                   title: `02. 面对${pet.name}，随便和它聊聊`,
                   body: `和${pet.name}随便聊聊，好好的感受彼此的心意吧❤️`,
                 },
                 {
-                  title: '03.「智能项环」每天都会刷新免费的「项环电量」',
-                  body: '每天0：00刷新免费的 5 分钟项环电量。电量耗尽后，可以去小窝使用积分兑换变声电池哦👌',
+                  title: '03.「翻译项圈」每天都会刷新免费的「项圈电量」',
+                  body: '每天0：00刷新免费的 5 分钟项圈电量。电量耗尽后，可以去小窝使用积分兑换项环电池哦👌',
                 },
                 {
                   title: '04.如何退出「变声模式」？',
-                  body: `和${pet.name}说“不聊啦”或从App关闭「智能项环」开关，可暂停消耗「项环电量」。积分兑换的「变声电池」可保留，不会每日刷新。`,
+                  body: `和${pet.name}说“不聊啦”或从App关闭「翻译项圈」开关，可暂停消耗「项圈电量」。积分兑换的「项环电池」可保留，不会每日刷新。`,
                 },
               ].map((item, index) => (
                 <section key={item.title} className={index === 0 ? '' : 'mt-[25px]'}>

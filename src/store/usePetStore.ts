@@ -23,7 +23,7 @@ const mockPet: Pet = {
   user_id: 'user-1',
   name: '肉派派',
   personality: '暴躁狂',
-  growth_stage: '认知形成期',
+  growth_stage: '萌言萌语期',
   companionship_days: 360,
   daily_interactions: 280,
   created_at: new Date().toISOString(),

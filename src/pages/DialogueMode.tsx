@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, ChevronRight, Megaphone, Sparkles, Star, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PrototypePhone, PrototypeStatusBar } from '@/components/subscription/PrototypeUI';
 import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
+import { isTranslationCollarUnlocked } from '@/utils/translationCollar';
 
 const dialogueModeStyles = `
 .dm-bg {
@@ -418,6 +419,7 @@ const DialogueMode: React.FC = () => {
   const [batteryToast, setBatteryToast] = useState('');
   const { pet } = usePetStore();
   const deviceName = pet?.name || '肉派派';
+  const translationCollarUnlocked = isTranslationCollarUnlocked(pet?.growth_stage);
   const { dialogueEnabled, minorModeEnabled, setDialogueEnabled } = useSubscriptionStore();
   const {
     dialogueCards: itemBatteryCount,
@@ -428,6 +430,16 @@ const DialogueMode: React.FC = () => {
   const availableBatteryCount = Math.max(dialogueCardInventory?.[1] ?? 0, itemBatteryCount);
   const hasLoadedBattery = placedVoiceBatteries > 0;
   const activeBatteryLabel = hasLoadedBattery ? '100%' : '免费';
+
+  useEffect(() => {
+    if (minorModeEnabled) {
+      navigate('/');
+      return;
+    }
+    if (!translationCollarUnlocked) {
+      navigate('/growth');
+    }
+  }, [minorModeEnabled, navigate, translationCollarUnlocked]);
 
   const showBatteryToast = (message: string) => {
     setBatteryToast(message);
@@ -502,13 +514,13 @@ const DialogueMode: React.FC = () => {
           </div>
 
           <section className="dm-card">
-            <h2 className="dm-card-title">{dialogueEnabled ? '智能项环开关已开启' : '智能项环开关未开启'}</h2>
+            <h2 className="dm-card-title">{dialogueEnabled ? '翻译项圈开关已开启' : '翻译项圈开关未开启'}</h2>
             <p className="dm-card-copy">
-              靠近{deviceName}，面对着它，和它随便聊点什么吧。听到你的声音后，变声模式就会开启，并消耗今日项环电量。
+              靠近{deviceName}，面对着它，和它随便聊点什么吧。听到你的声音后，变声模式就会开启，并消耗今日项圈电量。
             </p>
             <button
               type="button"
-              aria-label={dialogueEnabled ? '关闭智能项环开关' : '开启智能项环开关'}
+              aria-label={dialogueEnabled ? '关闭翻译项圈开关' : '开启翻译项圈开关'}
               disabled={minorModeEnabled}
               onClick={() => setDialogueEnabled(!dialogueEnabled)}
               className={`dm-switch ${dialogueEnabled ? 'is-on' : 'is-off'}`}
@@ -521,8 +533,8 @@ const DialogueMode: React.FC = () => {
           </section>
 
           <section className="dm-card">
-            <h2 className="dm-card-title">今日项环电量</h2>
-            <p className="dm-card-copy">项环的电量越多{deviceName}能跟你聊的时间越长哦～最多一次加 4 块项环电池。</p>
+            <h2 className="dm-card-title">今日项圈电量</h2>
+            <p className="dm-card-copy">项圈的电量越多{deviceName}能跟你聊的时间越长哦～最多一次加 4 块项环电池。</p>
             <div className="dm-battery">
               <div className="dm-battery-shell">
                 <div className="dm-battery-inner">
@@ -618,20 +630,20 @@ const DialogueMode: React.FC = () => {
           <div className="px-[21px] pt-[26px]">
             {[
               {
-                title: '01. 在App打开「智能项环」开关',
-                body: `打开开关，为${deviceName}带上智能项环，${deviceName}才能开启变声和你沟通哦。`,
+                title: '01. 在App打开「翻译项圈」开关',
+                body: `打开开关，为${deviceName}带上翻译项圈，${deviceName}才能开启变声和你沟通哦。`,
               },
               {
                 title: `02. 面对${deviceName}，随便和它聊聊`,
                 body: `和${deviceName}随便聊聊，好好的感受彼此的心意吧❤️`,
               },
               {
-                title: '03.「智能项环」每天都会刷新免费的「项环电量」',
-                body: '每天0：00刷新免费的 5 分钟项环电量。电量耗尽后，可以点击空电池位添加已有的项环电池，最多一次加 4 块；没有库存时再去购买哦👌',
+                title: '03.「翻译项圈」每天都会刷新免费的「项圈电量」',
+                body: '每天0：00刷新免费的 5 分钟项圈电量。电量耗尽后，可以点击空电池位添加已有的项环电池，最多一次加 4 块；没有库存时再去购买哦👌',
               },
               {
                 title: '04.如何退出「变声模式」？',
-                body: `和${deviceName}说“不聊啦”或从App关闭「智能项环」开关，可暂停消耗「项环电量」。积分兑换的「项环电池」可保留，不会每日刷新。`,
+                body: `和${deviceName}说“不聊啦”或从App关闭「翻译项圈」开关，可暂停消耗「项圈电量」。积分兑换的「项环电池」可保留，不会每日刷新。`,
               },
             ].map((item, index) => (
               <section key={item.title} className={index === 0 ? '' : 'mt-[25px]'}>

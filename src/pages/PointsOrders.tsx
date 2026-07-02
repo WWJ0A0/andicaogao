@@ -303,7 +303,7 @@ const PointsOrders: React.FC = () => {
             <ReceiptText size={44} className="mx-auto text-[#d7d3dc]" />
             <h2 className="mt-4 text-[18px] font-semibold text-[#26232a]">暂无积分订单</h2>
             <p className="mt-2 text-[12px] leading-5 text-[#96919c]">
-              购买积分后的订单会展示在这里，变声电池兑换记录暂不放入订单。
+              购买积分后的订单会展示在这里，项环电池兑换记录暂不放入订单。
             </p>
             {!minorModeEnabled && (
               <button

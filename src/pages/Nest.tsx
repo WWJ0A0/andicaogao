@@ -5,6 +5,7 @@ import BottomNav from '@/components/BottomNav';
 import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
+import { isTranslationCollarUnlocked } from '@/utils/translationCollar';
 
 const WHISPER_CARD_PRODUCTS = [
   { days: 1, cost: 5000 },
@@ -88,6 +89,7 @@ const Nest: React.FC = () => {
     dialogueCardInventory,
     exchangeDialogueCard,
   } = useDialogueStore();
+  const translationCollarUnlocked = isTranslationCollarUnlocked(pet?.growth_stage);
   const initialCardDays = Number(searchParams.get('card')) || WHISPER_CARD_PRODUCTS[0].days;
   const [selectedCardDays, setSelectedCardDays] = useState(initialCardDays);
   const [exchangingCard, setExchangingCard] = useState(false);
@@ -97,10 +99,10 @@ const Nest: React.FC = () => {
   const [showUseSuccess, setShowUseSuccess] = useState(false);
   const [showInsufficientPoints, setShowInsufficientPoints] = useState(false);
   const [toast, setToast] = useState('');
-  const cardDetailOpen = !minorModeEnabled && (
+  const cardDetailOpen = !minorModeEnabled && translationCollarUnlocked && (
     searchParams.get('item') === 'dialogue-card' || searchParams.get('item') === 'trial-card'
   );
-  const collarDetailOpen = !minorModeEnabled && searchParams.get('item') === 'smart-collar';
+  const collarDetailOpen = !minorModeEnabled && translationCollarUnlocked && searchParams.get('item') === 'smart-collar';
   const selectedCard = WHISPER_CARD_PRODUCTS.find((card) => card.days === selectedCardDays)
     || WHISPER_CARD_PRODUCTS[0];
   const getOwnedCount = (days: number) => {
@@ -110,13 +112,13 @@ const Nest: React.FC = () => {
   const selectedOwnedCount = getOwnedCount(selectedCard.days);
 
   const openWhisperCardDetail = (days: number) => {
-    if (minorModeEnabled) return;
+    if (minorModeEnabled || !translationCollarUnlocked) return;
     setSelectedCardDays(days);
     setSearchParams({ item: 'dialogue-card', card: String(days) });
   };
 
   const openSmartCollarDetail = () => {
-    if (minorModeEnabled) return;
+    if (minorModeEnabled || !translationCollarUnlocked) return;
     setSearchParams({ item: 'smart-collar' });
   };
 
@@ -125,7 +127,7 @@ const Nest: React.FC = () => {
   };
 
   const exchangeSelectedCard = () => {
-    if (minorModeEnabled || exchangingCard) return;
+    if (minorModeEnabled || !translationCollarUnlocked || exchangingCard) return;
     setExchangeCount(1);
     setConfirmingExchange(true);
   };
@@ -136,7 +138,7 @@ const Nest: React.FC = () => {
   };
 
   const confirmExchangeSelectedCard = () => {
-    if (minorModeEnabled || exchangingCard) return;
+    if (minorModeEnabled || !translationCollarUnlocked || exchangingCard) return;
     const totalCost = selectedCard.cost * exchangeCount;
     if (points < totalCost) {
       setConfirmingExchange(false);
@@ -155,7 +157,7 @@ const Nest: React.FC = () => {
   };
 
   const useSelectedCard = () => {
-    if (!selectedOwnedCount || usingCard) return;
+    if (!translationCollarUnlocked || !selectedOwnedCount || usingCard) return;
     setUsingCard(true);
     window.setTimeout(() => {
       setUsingCard(false);
@@ -280,15 +282,15 @@ const Nest: React.FC = () => {
                 </div>
               </div>
 
-              {!minorModeEnabled && (
+              {!minorModeEnabled && translationCollarUnlocked && (
                 <>
                   {/* Vector 1 Separator */}
                   <img src="/images/mo1cw4a9-og2pxnl.svg" alt="Section Separator" className="w-[305px] h-[1px] mt-[14px]" />
 
-                  {/* Section 2: 变声 */}
+                  {/* Section 2: 翻译项圈 */}
                   <div className="w-full flex flex-col mt-[14px]">
                     <div className="flex items-center gap-[8px] relative">
-                      <h3 className="text-[16px] text-[#000000] font-medium tracking-[0.16px] leading-[22px]">变声</h3>
+                      <h3 className="text-[16px] text-[#000000] font-medium tracking-[0.16px] leading-[22px]">翻译项圈</h3>
                       <HelpCircle size={15} className="text-[#7c5ae0]" />
                     </div>
 
@@ -300,9 +302,11 @@ const Nest: React.FC = () => {
                       >
                         <SmartCollarVisual />
                         <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">
-                          智能项环
+                          翻译项圈
                         </span>
-                        <span className="mt-[3px] text-[11px] text-[#22222266] tracking-[0.11px] leading-[15px]">已拥有</span>
+                        <span className="mt-[3px] text-[11px] text-[#7c5ae0cc] tracking-[0.11px] leading-[15px]">
+                          已解锁
+                        </span>
                       </button>
                       {WHISPER_CARD_PRODUCTS.map((card) => (
                         <button
@@ -414,7 +418,7 @@ const Nest: React.FC = () => {
             >
               <button
                 type="button"
-                aria-label="关闭智能项环详情"
+                aria-label="关闭翻译项圈详情"
                 onClick={closeTrialCardDetail}
                 className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#eeeeef] text-[#5f5b64]"
               >
@@ -427,13 +431,15 @@ const Nest: React.FC = () => {
 
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-[18px] font-semibold leading-[25px] text-[#222127]">智能变声项环</h2>
+                  <h2 className="text-[18px] font-semibold leading-[25px] text-[#222127]">翻译项圈</h2>
                   <p className="mt-3 max-w-[280px] text-[13px] font-medium leading-[22px] text-[#8b8792]">
-                    经过两年的研发努力，何博士发明了一个能够帮助{deviceName}与人类更好沟通的变声项环。
+                    {translationCollarUnlocked
+                      ? `经过两年的研发努力，何博士发明了一个能够帮助${deviceName}与人类更好沟通的翻译项圈。`
+                      : `成长到第 4 阶段后，${deviceName}会解锁翻译项圈，开始尝试用更容易被你听懂的方式表达自己。`}
                   </p>
                 </div>
                 <span className="mt-1 rounded-full bg-[#f3f3f5] px-3 py-1 text-[11px] font-medium text-[#8b8792]">
-                  已拥有
+                  {translationCollarUnlocked ? '已解锁' : '未解锁'}
                 </span>
               </div>
             </section>

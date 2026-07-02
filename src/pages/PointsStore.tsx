@@ -263,7 +263,7 @@ const PointsStore: React.FC = () => {
                     </div>
                     <div className="ml-3">
                       <p className="text-[14px] font-semibold text-[#222127]">{payingProduct.points} 积分</p>
-                      <p className="mt-0.5 text-[11px] text-[#aaa6af]">用于兑换 Ropet 变声电池</p>
+                      <p className="mt-0.5 text-[11px] text-[#aaa6af]">用于兑换 Ropet 项环电池</p>
                     </div>
                   </div>
                   <div className="mt-4 border-t border-[#efedf2] pt-4">
