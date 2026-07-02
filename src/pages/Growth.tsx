@@ -4,6 +4,7 @@ import PageLayout from '../components/PageLayout';
 import { usePetStore } from '@/store/usePetStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 import {
+  GROWTH_STAGE_UNLOCK_NOTICE_KEY,
   TRANSLATION_COLLAR_STAGE,
   getGrowthStageIndex,
   isTranslationCollarUnlocked,
@@ -87,14 +88,18 @@ const Growth: React.FC = () => {
     setSelectedStageIndex(currentStageIndex);
   }, [currentStageIndex]);
 
-  const switchDemoStage = () => {
+  const demoUnlockStage = (stageIndex: number) => {
     if (!pet) return;
-    const nextStage = collarUnlocked ? '成熟期' : TRANSLATION_COLLAR_STAGE;
+    const nextStage = stageMeta[stageIndex]?.name ?? TRANSLATION_COLLAR_STAGE;
     setPet({
       ...pet,
       growth_stage: nextStage,
     });
-    setSelectedStageIndex(getGrowthStageIndex(nextStage));
+    window.localStorage.setItem(
+      GROWTH_STAGE_UNLOCK_NOTICE_KEY,
+      String(Math.max(0, getGrowthStageIndex(nextStage) - 1)),
+    );
+    setSelectedStageIndex(stageIndex);
   };
   const experienceTranslationCollar = () => {
     if (!collarUnlocked) return;
@@ -142,6 +147,15 @@ const Growth: React.FC = () => {
             <p className="mt-3 text-[13px] font-medium leading-[24px] text-[#77737d]">
               {activeStage.description}
             </p>
+            {selectedStageIndex > 0 && (
+              <button
+                type="button"
+                onClick={() => demoUnlockStage(selectedStageIndex)}
+                className="mt-4 h-[32px] rounded-full border border-[#dedbe3] bg-white px-4 text-[12px] font-semibold text-[#8b8792]"
+              >
+                演示解锁{activeStage.title}
+              </button>
+            )}
           </section>
 
           {!minorModeEnabled && selectedIsCollarStage && (
@@ -194,14 +208,6 @@ const Growth: React.FC = () => {
               </section>
             </div>
           )}
-
-          <button
-            type="button"
-            onClick={switchDemoStage}
-            className="mx-auto mt-6 flex h-[34px] items-center justify-center rounded-full border border-[#dedbe3] bg-white px-4 text-[12px] font-semibold text-[#8b8792]"
-          >
-            {collarUnlocked ? '演示未到第四阶段' : '演示到第四阶段'}
-          </button>
 
           <div className="mt-[120px] flex items-center justify-center gap-3 text-[12px] text-[#c1bdc8]">
             <span className="h-px w-[92px] bg-[#dedbe3]" />

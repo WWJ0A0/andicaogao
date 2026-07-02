@@ -6,6 +6,7 @@ export const GROWTH_STAGES = [
 ] as const;
 
 export const TRANSLATION_COLLAR_STAGE = '萌言萌语期';
+export const GROWTH_STAGE_UNLOCK_NOTICE_KEY = 'ropet-growth-stage-unlock-notice-index';
 
 export const getGrowthStageIndex = (stage?: string | null) => {
   const index = GROWTH_STAGES.findIndex((item) => item === stage);

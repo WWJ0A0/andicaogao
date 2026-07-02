@@ -7,7 +7,30 @@ import pingjingAnimation from '@/assets/animations/pingjing.json';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 import DialogueEntryButton from '@/components/DialogueEntryButton';
 import { Check, X } from 'lucide-react';
-import { isTranslationCollarUnlocked } from '@/utils/translationCollar';
+import {
+  GROWTH_STAGE_UNLOCK_NOTICE_KEY,
+  getGrowthStageIndex,
+  isTranslationCollarUnlocked,
+} from '@/utils/translationCollar';
+
+const growthUnlockCopies = [
+  null,
+  {
+    title: '成长阶段解锁',
+    stage: '探索成长阶段',
+    body: '它开始主动观察身边的小变化了。新的阶段会带来更多互动反应，去成长阶段看看它最近学会了什么吧。',
+  },
+  {
+    title: '成长阶段解锁',
+    stage: '成熟期',
+    body: '它的情绪表达更稳定，也更愿意回应你的陪伴。继续和它互动，会发现更多细腻的小反应。',
+  },
+  {
+    title: '恭喜解锁',
+    stage: '萌言萌语期',
+    body: '它终于开始用自己的方式表达心意啦。萌萌语和翻译项圈已解锁，可以去成长阶段查看新奖励。',
+  },
+];
 
 const HomePage: React.FC = () => {
   const { pet, todaysInteractions, incrementInteraction } = usePetStore();
@@ -26,6 +49,8 @@ const HomePage: React.FC = () => {
   const [showDialogueConsent, setShowDialogueConsent] = useState(false);
   const [showDialogueTutorial, setShowDialogueTutorial] = useState(false);
   const [dialogueConsentChecked, setDialogueConsentChecked] = useState(false);
+  const [unlockedStageNoticeIndex, setUnlockedStageNoticeIndex] = useState<number | null>(null);
+  const currentGrowthStageIndex = getGrowthStageIndex(pet?.growth_stage);
   const translationCollarUnlocked = isTranslationCollarUnlocked(pet?.growth_stage);
   const canUseDialogueFeature = !minorModeEnabled && translationCollarUnlocked;
 
@@ -112,6 +137,28 @@ const HomePage: React.FC = () => {
     setShowDialogueTutorial(false);
     setShowDialogueConsent(true);
   }, [canUseDialogueFeature, navigate, searchParams, setSearchParams, voiceConsentGranted]);
+
+  React.useEffect(() => {
+    if (!pet || searchParams.get('dialogueConsent') === '1' || showDialogueConsent || showDialogueTutorial) return;
+    if (currentGrowthStageIndex <= 0) return;
+
+    const lastNoticeIndex = Number(window.localStorage.getItem(GROWTH_STAGE_UNLOCK_NOTICE_KEY) ?? '0');
+    if (currentGrowthStageIndex > lastNoticeIndex) {
+      setUnlockedStageNoticeIndex(currentGrowthStageIndex);
+    }
+  }, [
+    currentGrowthStageIndex,
+    pet,
+    searchParams,
+    showDialogueConsent,
+    showDialogueTutorial,
+  ]);
+
+  const closeGrowthUnlockNotice = () => {
+    if (unlockedStageNoticeIndex === null) return;
+    window.localStorage.setItem(GROWTH_STAGE_UNLOCK_NOTICE_KEY, String(unlockedStageNoticeIndex));
+    setUnlockedStageNoticeIndex(null);
+  };
 
   const handlePetClick = () => {
     incrementInteraction();
@@ -445,6 +492,42 @@ const HomePage: React.FC = () => {
           >
             体验首次进入
           </button>
+        )}
+
+        {unlockedStageNoticeIndex !== null && growthUnlockCopies[unlockedStageNoticeIndex] && (
+          <div className="absolute inset-0 z-[490] flex items-center justify-center bg-black/70 px-[35px]">
+            <section className="relative mt-[18px] w-full pt-[108px] text-center">
+              <img
+                src="/images/growth-unlock-gaolengjun.png"
+                alt=""
+                aria-hidden="true"
+                className="absolute left-1/2 top-0 z-10 h-[178px] w-[214px] -translate-x-1/2 object-contain"
+              />
+              <div className="relative rounded-[22px] bg-white px-[24px] pb-[26px] pt-[118px] shadow-[0_18px_42px_rgba(70,57,87,0.22)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[104px] overflow-hidden rounded-t-[22px]">
+                  <div className="absolute left-[-36px] top-[-38px] h-[92px] w-[92px] rounded-full bg-[#f4efff]" />
+                  <div className="absolute right-[-36px] top-[-38px] h-[92px] w-[92px] rounded-full bg-[#f4efff]" />
+                  <div className="absolute left-[98px] top-[30px] h-[92px] w-[92px] rounded-full bg-[#f4efff]" />
+                </div>
+                <h2 className="relative text-[22px] font-bold leading-[30px] text-[#26232a]">
+                  {growthUnlockCopies[unlockedStageNoticeIndex]?.title}
+                </h2>
+                <h3 className="relative mt-2 text-[17px] font-semibold leading-[24px] text-[#26232a]">
+                  {growthUnlockCopies[unlockedStageNoticeIndex]?.stage}
+                </h3>
+                <p className="relative mt-[18px] text-[14px] font-medium leading-[26px] text-[#67636d]">
+                  {growthUnlockCopies[unlockedStageNoticeIndex]?.body}
+                </p>
+                <button
+                  type="button"
+                  onClick={closeGrowthUnlockNotice}
+                  className="relative mt-[24px] flex h-[48px] w-full items-center justify-center rounded-[14px] bg-[#8b66ef] text-[16px] font-bold text-white shadow-[0_10px_22px_rgba(139,102,239,0.22)]"
+                >
+                  知道了
+                </button>
+              </div>
+            </section>
+          </div>
         )}
 
         {canUseDialogueFeature && showDialogueConsent && (
