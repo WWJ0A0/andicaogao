@@ -102,7 +102,7 @@ const Nest: React.FC = () => {
   const cardDetailOpen = !minorModeEnabled && translationCollarUnlocked && (
     searchParams.get('item') === 'dialogue-card' || searchParams.get('item') === 'trial-card'
   );
-  const collarDetailOpen = !minorModeEnabled && translationCollarUnlocked && searchParams.get('item') === 'smart-collar';
+  const collarDetailOpen = !minorModeEnabled && searchParams.get('item') === 'smart-collar';
   const selectedCard = WHISPER_CARD_PRODUCTS.find((card) => card.days === selectedCardDays)
     || WHISPER_CARD_PRODUCTS[0];
   const getOwnedCount = (days: number) => {
@@ -118,7 +118,7 @@ const Nest: React.FC = () => {
   };
 
   const openSmartCollarDetail = () => {
-    if (minorModeEnabled || !translationCollarUnlocked) return;
+    if (minorModeEnabled) return;
     setSearchParams({ item: 'smart-collar' });
   };
 
@@ -282,7 +282,7 @@ const Nest: React.FC = () => {
                 </div>
               </div>
 
-              {!minorModeEnabled && translationCollarUnlocked && (
+              {!minorModeEnabled && (
                 <>
                   {/* Vector 1 Separator */}
                   <img src="/images/mo1cw4a9-og2pxnl.svg" alt="Section Separator" className="w-[305px] h-[1px] mt-[14px]" />
@@ -298,17 +298,25 @@ const Nest: React.FC = () => {
                       <button
                         type="button"
                         onClick={openSmartCollarDetail}
-                        className="flex shrink-0 flex-col items-center rounded-[8px] border border-[#2222220d] bg-[#22222208] px-[14px] pb-[12px] pt-[12px]"
+                        className={`flex shrink-0 flex-col items-center rounded-[8px] border px-[14px] pb-[12px] pt-[12px] ${
+                          translationCollarUnlocked
+                            ? 'border-[#2222220d] bg-[#22222208]'
+                            : 'border-dashed border-[#cfcbd5] bg-[#f4f3f6]'
+                        }`}
                       >
-                        <SmartCollarVisual />
+                        <div className={translationCollarUnlocked ? '' : 'opacity-45 grayscale'}>
+                          <SmartCollarVisual />
+                        </div>
                         <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">
                           翻译项圈
                         </span>
-                        <span className="mt-[3px] text-[11px] text-[#7c5ae0cc] tracking-[0.11px] leading-[15px]">
-                          已解锁
+                        <span className={`mt-[3px] text-[11px] tracking-[0.11px] leading-[15px] ${
+                          translationCollarUnlocked ? 'text-[#7c5ae0cc]' : 'text-[#22222266]'
+                        }`}>
+                          {translationCollarUnlocked ? '已解锁' : '第4阶段解锁'}
                         </span>
                       </button>
-                      {WHISPER_CARD_PRODUCTS.map((card) => (
+                      {translationCollarUnlocked && WHISPER_CARD_PRODUCTS.map((card) => (
                         <button
                           type="button"
                           key={card.days}
