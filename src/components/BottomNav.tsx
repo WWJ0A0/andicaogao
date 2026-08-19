@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const BottomNav: React.FC = () => {
+const BottomNav: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -12,8 +12,8 @@ const BottomNav: React.FC = () => {
   const isProfile = location.pathname === '/pet-profile';
 
   return (
-    <div className="absolute bottom-0 left-[50%] -translate-x-1/2 flex flex-col items-center w-[394px] h-[86px] bg-gradient-to-b from-transparent to-white backdrop-blur-[18px] z-50">
-      <div className="flex items-center justify-center gap-[52px] mt-[-7px] rounded-[40px] shadow-[0px_2px_4px_0px_rgba(0,0,0,0.05)] bg-[#ffffffcf] px-[50px] py-[8px] pl-[45px] w-[364px] h-[54px]">
+    <div className={`absolute bottom-0 left-[50%] -translate-x-1/2 flex flex-col items-center w-[394px] bg-gradient-to-b from-transparent to-white z-50 ${compact ? 'h-[70px] backdrop-blur-[10px]' : 'h-[86px] backdrop-blur-[18px]'}`}>
+      <div className={`flex items-center justify-center gap-[52px] rounded-[40px] bg-[#ffffffed] px-[50px] pl-[45px] w-[364px] ${compact ? 'mt-0 h-[46px] py-[6px] shadow-[0_1px_3px_rgba(0,0,0,0.035)]' : 'mt-[-7px] h-[54px] py-[8px] shadow-[0px_2px_4px_0px_rgba(0,0,0,0.05)]'}`}>
         
         {/* 首页 */}
         <div 
@@ -23,7 +23,7 @@ const BottomNav: React.FC = () => {
           <img
             src="/images/mo14hae4-eynnfqz.svg"
             alt="首页"
-            className={`w-[32px] h-[32px] shrink-0 transition-opacity duration-300 ${isHome ? 'opacity-100' : 'opacity-50'}`}
+            className={`${compact ? 'h-[28px] w-[28px]' : 'h-[32px] w-[32px]'} shrink-0 transition-opacity duration-300 ${isHome ? 'opacity-100' : 'opacity-50'}`}
           />
           {/* 选中态下划线 */}
           {isHome && (
@@ -31,15 +31,15 @@ const BottomNav: React.FC = () => {
           )}
         </div>
 
-        {/* 互动历史 */}
+        {/* 商城 */}
         <div 
           className="relative flex items-center justify-center cursor-pointer"
           onClick={() => navigate('/interaction-history')}
         >
           <img
             src="/images/mo14hae4-9xxewd9.svg"
-            alt="互动历史"
-            className={`w-[32px] h-[32px] shrink-0 overflow-hidden transition-opacity duration-300 ${isHistory ? 'opacity-100' : 'opacity-50'}`}
+            alt="商城"
+            className={`${compact ? 'h-[28px] w-[28px]' : 'h-[32px] w-[32px]'} shrink-0 overflow-hidden transition-opacity duration-300 ${isHistory ? 'opacity-100' : 'opacity-50'}`}
           />
           {isHistory && (
             <div className="absolute -bottom-[6px] w-[24px] h-[3px] bg-black rounded-full" />
@@ -54,7 +54,7 @@ const BottomNav: React.FC = () => {
           <img
             src="/images/mo14hae4-i9xy2ty.svg"
             alt="宠物互动"
-            className={`w-[32px] h-[32px] shrink-0 transition-opacity duration-300 ${isInteract ? 'opacity-100' : 'opacity-50'}`}
+            className={`${compact ? 'h-[28px] w-[28px]' : 'h-[32px] w-[32px]'} shrink-0 transition-opacity duration-300 ${isInteract ? 'opacity-100' : 'opacity-50'}`}
           />
           {isInteract && (
             <div className="absolute -bottom-[6px] w-[24px] h-[3px] bg-black rounded-full" />
@@ -63,7 +63,7 @@ const BottomNav: React.FC = () => {
 
         {/* 个人中心 */}
         <div 
-          className="relative flex items-start pt-[3px] pr-[1px] h-[32px] overflow-hidden shrink-0 cursor-pointer"
+          className={`relative flex items-start pt-[3px] pr-[1px] overflow-hidden shrink-0 cursor-pointer ${compact ? 'h-[28px]' : 'h-[32px]'}`}
           onClick={() => navigate('/pet-profile')}
         >
           <div 
@@ -71,8 +71,8 @@ const BottomNav: React.FC = () => {
             style={{ 
               backgroundImage: 'url(/images/mo14hae4-7jew9wc.svg)',
               opacity: isProfile ? 1 : 0.5,
-              width: '32px',
-              height: '32px'
+              width: compact ? '28px' : '32px',
+              height: compact ? '28px' : '32px'
             }}
           >
             {/* 红点 */}
@@ -85,7 +85,7 @@ const BottomNav: React.FC = () => {
       </div>
       
       {/* Home Indicator */}
-      <div className="flex items-start self-stretch mt-[5px] px-[131px] py-[21px] pl-[129px]">
+      <div className={`flex items-start self-stretch px-[131px] pl-[129px] ${compact ? 'mt-[3px] py-[12px]' : 'mt-[5px] py-[21px]'}`}>
         <div className="rounded-[100px] bg-black w-[134px] h-[5px]"></div>
       </div>
     </div>

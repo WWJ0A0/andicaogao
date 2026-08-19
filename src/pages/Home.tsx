@@ -237,31 +237,30 @@ const HomePage: React.FC = () => {
               <img 
                 src="/images/mo0uw8aq-a8dllvc.png" 
                 alt="设置" 
-                className="absolute top-3 left-[140px] shrink-0 rounded-[12px] w-6 h-6 -rotate-90 cursor-pointer"
+                className="absolute top-3 left-[122px] shrink-0 rounded-[12px] w-6 h-6 -rotate-90 cursor-pointer"
                 onClick={() => navigate('/settings')}
               />
 
               {canUseDialogueFeature && (
                 <DialogueEntryButton
                   enabled={dialogueEnabled}
-                  className="absolute left-[203px] top-[4px] z-10"
+                  className="absolute left-[239px] top-[4px] z-10"
                   onClick={openDialogueMode}
                 />
               )}
               
-              {/* 换眼睛按钮 */}
+              {/* 换装按钮 */}
               <div 
-                className="absolute top-[6px] left-[297px] shrink-0 flex items-center justify-between z-10 border border-[#ffffffcc] rounded-[12px] bg-[#ffffff99] px-[9px] py-[1px] w-[76px] h-9 cursor-pointer"
+                className="absolute top-[6px] left-[333px] shrink-0 flex items-center justify-center z-10 border border-[#ffffffcc] rounded-[12px] bg-[#ffffff99] w-10 h-9 cursor-pointer"
                 onClick={() => navigate('/eye-change')}
+                role="button"
+                aria-label="换装"
               >
-                <div className="flex items-center p-[3px]">
-                  <img 
-                    src="/images/mo0uw8aq-kotrwfu.svg" 
-                    alt="换装图标" 
-                    className="w-[18px] h-[18px]"
-                  />
-                </div>
-                <p className="leading-[32px] tracking-normal text-[#222222] text-[14px] font-medium">换装</p>
+                <img
+                  src="/images/mo0uw8aq-kotrwfu.svg"
+                  alt=""
+                  className="w-[18px] h-[18px]"
+                />
               </div>
             </div>
           </div>

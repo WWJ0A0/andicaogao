@@ -118,7 +118,7 @@ const PointsStore: React.FC = () => {
     setPaymentProcessing(false);
     setPaymentChannel(null);
     setPayingProduct(null);
-    navigate('/points-orders');
+    navigate('/points-purchase-orders');
   };
 
   const goBack = () => {
@@ -141,11 +141,11 @@ const PointsStore: React.FC = () => {
         >
           <ChevronLeft size={25} />
         </button>
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-[18px] font-medium text-[#19181f]">积分商城</h1>
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-[18px] font-medium text-[#19181f]">更多积分</h1>
         <button
           type="button"
           aria-label="查看积分订单"
-          onClick={() => navigate('/points-orders')}
+          onClick={() => navigate('/points-purchase-orders')}
           className="ml-auto h-9 rounded-full bg-white px-4 text-[12px] font-semibold text-[#6f4bd6] shadow-[0_8px_18px_rgba(70,58,96,0.08)]"
         >
           订单

@@ -275,13 +275,6 @@ const dialogueModeStyles = `
   font-weight: 900;
   box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.46), inset -5px 0 0 rgba(112, 82, 205, 0.55);
 }
-.dm-battery-stock {
-  margin: 10px 0 0;
-  color: #8c8990;
-  font-size: 12px;
-  line-height: 18px;
-  font-weight: 600;
-}
 .dm-battery-toast {
   position: absolute;
   left: 50%;
@@ -566,7 +559,6 @@ const DialogueMode: React.FC = () => {
                 );
               })}
             </div>
-            <p className="dm-battery-stock">当前剩余电池数：{availableBatteryCount} 块</p>
           </section>
 
           {batteryToast && <div className="dm-battery-toast">{batteryToast}</div>}

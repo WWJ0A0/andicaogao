@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 
 interface DialogueStore {
   points: number;
+  luckyDrawSrTotal: number;
+  luckyDrawSrCollected: number;
   dialogueCards: number;
   dialogueCardInventory: Record<string, number>;
   activeDialogueCard: {
@@ -10,6 +12,25 @@ interface DialogueStore {
     activatedAt: string;
   } | null;
   placedVoiceBatteries: number;
+  consumableInventory: {
+    aiPaper: number;
+    renameCard: number;
+  };
+  redeemedMallItems: Record<string, number>;
+  pointSpendRecords: {
+    id: string;
+    title: string;
+    type: 'lottery' | 'exchange';
+    points: number;
+    createdAt: string;
+  }[];
+  pointIncomeRecords: {
+    id: string;
+    title: string;
+    type: 'interaction' | 'activity';
+    points: number;
+    createdAt: string;
+  }[];
   pointOrders: {
     id: string;
     orderNo: string;
@@ -27,6 +48,8 @@ interface DialogueStore {
   useDialogueCard: (days: number) => boolean;
   addVoiceBatteryToSlot: () => boolean;
   consumePlacedVoiceBattery: () => boolean;
+  exchangeMallItem: (itemId: string, material: 'aiPaper' | 'renameCard', cost: number) => boolean;
+  spendPoints: (title: string, type: 'lottery' | 'exchange', points: number) => boolean;
   clearActiveDialogueCard: () => void;
   addPoints: (amount: number) => void;
   purchasePoints: (points: number, amount: number, deviceName?: string, channel?: string) => void;
@@ -54,10 +77,26 @@ export const useDialogueStore = create<DialogueStore>()(
   persist(
     (set, get) => ({
       points: 1300,
+      luckyDrawSrTotal: 30,
+      luckyDrawSrCollected: 30,
       dialogueCards: 0,
       dialogueCardInventory: {},
       activeDialogueCard: null,
       placedVoiceBatteries: 0,
+      consumableInventory: {
+        aiPaper: 999,
+        renameCard: 999,
+      },
+      redeemedMallItems: {},
+      pointSpendRecords: [
+        { id: 'demo-lottery', title: '幸运抽奖机', type: 'lottery', points: 160, createdAt: '2026.08.13 15:42' },
+        { id: 'demo-exchange', title: '兑换星河美瞳', type: 'exchange', points: 33600, createdAt: '2026.08.12 20:18' },
+      ],
+      pointIncomeRecords: [
+        { id: 'demo-growth-reward', title: '成长阶段奖励', type: 'activity', points: 500, createdAt: '2026.08.13 09:30' },
+        { id: 'demo-daily-interaction', title: '今日互动奖励', type: 'interaction', points: 120, createdAt: '2026.08.13 08:46' },
+        { id: 'demo-checkin-reward', title: '连续签到活动', type: 'activity', points: 300, createdAt: '2026.08.12 09:12' },
+      ],
       pointOrders: [],
       cardCost: 5000,
       exchangeCard: (count = 1) => {
@@ -154,8 +193,59 @@ export const useDialogueStore = create<DialogueStore>()(
         });
         return true;
       },
+      exchangeMallItem: (itemId, material, cost) => {
+        const state = get();
+        const inventory = state.consumableInventory ?? { aiPaper: 999, renameCard: 999 };
+        if ((inventory[material] ?? 0) < cost) return false;
+        const redeemedItems = state.redeemedMallItems ?? {};
+        set({
+          consumableInventory: {
+            ...inventory,
+            [material]: inventory[material] - cost,
+          },
+          redeemedMallItems: {
+            ...redeemedItems,
+            [itemId]: (redeemedItems[itemId] ?? 0) + 1,
+          },
+        });
+        return true;
+      },
+      spendPoints: (title, type, points) => {
+        const state = get();
+        if (points <= 0 || state.points < points) return false;
+        const now = new Date();
+        set({
+          points: state.points - points,
+          pointSpendRecords: [
+            {
+              id: `spend-${now.getTime()}`,
+              title,
+              type,
+              points,
+              createdAt: formatPaymentTime(now),
+            },
+            ...(state.pointSpendRecords ?? []),
+          ],
+        });
+        return true;
+      },
       clearActiveDialogueCard: () => set({ activeDialogueCard: null }),
-      addPoints: (amount) => set((state) => ({ points: state.points + amount })),
+      addPoints: (amount) => set((state) => {
+        const now = new Date();
+        return {
+          points: state.points + amount,
+          pointIncomeRecords: [
+            {
+              id: `income-${now.getTime()}`,
+              title: '互动获得积分',
+              type: 'interaction',
+              points: amount,
+              createdAt: formatPaymentTime(now),
+            },
+            ...(state.pointIncomeRecords ?? []),
+          ],
+        };
+      }),
       purchasePoints: (points, amount, deviceName = '肉派派', channel = 'App Store') => {
         const now = new Date();
         set((state) => ({

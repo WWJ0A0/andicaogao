@@ -201,12 +201,12 @@ const PointsOrders: React.FC = () => {
         <button
           type="button"
           aria-label="返回积分商城"
-          onClick={() => navigate('/points-store')}
+          onClick={() => navigate('/points-store?returnTo=/interaction-history')}
           className="flex h-11 w-11 items-center justify-center rounded-[14px] border border-[#ececf0] bg-white text-[#19181f]"
         >
           <ChevronLeft size={25} />
         </button>
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-[18px] font-medium text-[#19181f]">积分订单</h1>
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-[18px] font-medium text-[#19181f]">积分充值订单</h1>
       </div>
 
       <div className="h-[752px] overflow-y-auto px-5 pb-8 pt-3 scrollbar-hide">

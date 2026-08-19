@@ -130,6 +130,97 @@ html::-webkit-scrollbar {
     transform: translateX(120%);
   }
 }
+
+.mall-product-ropet {
+  transform-origin: 50% 90%;
+  animation: mall-product-ropet-idle 3.2s ease-in-out infinite;
+}
+
+.mall-product-ropet:nth-child(even) {
+  animation-delay: -1.1s;
+}
+
+.eyeshadow-blink {
+  border-top: 6px solid rgba(211, 101, 176, 0.92);
+  box-shadow: 0 -4px 10px rgba(226, 100, 166, 0.34), inset 0 3px 5px rgba(255, 185, 218, 0.5);
+  transform: rotate(-4deg);
+}
+
+.eyeshadow-blink-right {
+  transform: rotate(4deg);
+}
+
+.eyeshadow-blink::after {
+  content: "";
+  position: absolute;
+  inset: -1px 0 0;
+  border-radius: 50%;
+  transform-origin: 50% 0%;
+  transform: scaleY(0);
+  background: linear-gradient(180deg, rgba(239, 157, 201, 0.98) 0%, rgba(214, 113, 178, 0.96) 42%, rgba(156, 112, 222, 0.88) 72%, rgba(250, 226, 239, 0.96) 100%);
+  animation: ropet-eyeshadow-blink 3.6s ease-in-out infinite;
+}
+
+.eyeshadow-blink-right::after {
+  animation-delay: 0.04s;
+}
+
+@keyframes ropet-eyeshadow-blink {
+  0%, 40%, 50%, 100% {
+    transform: scaleY(0);
+  }
+  43%, 47% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes mall-product-ropet-idle {
+  0%, 100% {
+    transform: translateY(1px) rotate(-0.8deg) scale(0.985);
+  }
+  50% {
+    transform: translateY(-3px) rotate(0.8deg) scale(1.015);
+  }
+}
+
+@keyframes mall-new-breathe {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 3px 9px rgba(223, 69, 105, 0.22);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 5px 14px rgba(223, 69, 105, 0.38);
+  }
+}
+
+.mall-new-badge {
+  animation: mall-new-breathe 2.2s ease-in-out infinite;
+}
+
+.mall-new-badge::after {
+  content: "";
+  position: absolute;
+  inset: -30% auto -30% -45%;
+  width: 35%;
+  transform: skewX(-18deg);
+  background: rgba(255, 255, 255, 0.62);
+  animation: mall-new-shine 2.2s ease-in-out infinite;
+}
+
+@keyframes mall-new-shine {
+  0%, 35% {
+    left: -45%;
+    opacity: 0;
+  }
+  48% {
+    opacity: 0.8;
+  }
+  65%, 100% {
+    left: 120%;
+    opacity: 0;
+  }
+}
 :root {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }

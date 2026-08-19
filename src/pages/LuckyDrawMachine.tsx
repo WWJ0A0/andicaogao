@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { CreditCard, Sparkles, Star, X } from 'lucide-react';
+import { ChevronLeft, CreditCard, Sparkles, Star, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import BottomNav from '@/components/BottomNav';
 import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
@@ -49,7 +48,8 @@ const LuckyDrawMachine: React.FC = () => {
   const navigate = useNavigate();
   const { pet } = usePetStore();
   const deviceName = pet?.name || '肉派派';
-  const { points, purchasePoints } = useDialogueStore();
+  const { points, luckyDrawSrTotal, luckyDrawSrCollected, purchasePoints } = useDialogueStore();
+  const remainingSrRewards = Math.max(0, luckyDrawSrTotal - luckyDrawSrCollected);
   const { minorModeEnabled } = useSubscriptionStore();
   const [showChannels, setShowChannels] = useState(false);
   const [showRecharge, setShowRecharge] = useState(false);
@@ -81,20 +81,35 @@ const LuckyDrawMachine: React.FC = () => {
           alt="抽奖机界面"
         />
 
+        <button
+          type="button"
+          aria-label="返回商城"
+          onClick={() => navigate('/interaction-history')}
+          className="absolute left-[18px] top-[58px] z-30 flex h-11 w-11 items-center justify-center rounded-[16px] border border-white bg-white/85 text-[#25222a] shadow-[0_7px_20px_rgba(94,65,135,0.12)] backdrop-blur-sm"
+        >
+          <ChevronLeft size={29} strokeWidth={2.4} />
+        </button>
+
         {!minorModeEnabled && (
           <button
             type="button"
             aria-label="获取更多积分"
             onClick={() => navigate('/points-store?returnTo=/interaction-history')}
-            className="absolute left-[145px] top-[63px] z-30 flex h-[42px] w-[118px] items-center justify-end rounded-full pr-1"
+            className="absolute left-1/2 top-[63px] z-30 flex h-10 -translate-x-1/2 items-center rounded-[14px] border border-white bg-white/90 px-3 text-[17px] font-bold text-[#38333f] shadow-[0_7px_18px_rgba(80,58,130,0.10)] backdrop-blur-sm"
           >
-            <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#8b66ef] text-[18px] font-bold leading-none text-white shadow-[0_4px_10px_rgba(86,56,168,0.25)]">
-              +
+            <span className="mr-2 flex h-6 w-6 items-center justify-center rounded-[7px] bg-[#4e91ff]">
+              <Star size={16} fill="#ffe641" className="text-[#ffe641]" />
             </span>
+            {points.toLocaleString()}
+            <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#8b66ef] text-[16px] leading-none text-white">+</span>
           </button>
         )}
 
-        <BottomNav />
+        <div className="absolute inset-x-0 bottom-0 z-20 h-[86px] bg-gradient-to-b from-[#ffe4a0] via-[#ffe09a] to-[#ffdc8e]" />
+        <div className="absolute bottom-[91px] left-1/2 z-30 -translate-x-1/2 rounded-full bg-[#ffe1a0]/92 px-4 py-1 text-[11px] font-bold text-[#7759c9] backdrop-blur-sm">
+          {remainingSrRewards === 0 ? 'SR 奖励已全收集' : `还剩 ${remainingSrRewards} 个 SR 奖励`}
+        </div>
+        <div className="absolute bottom-[8px] left-1/2 z-30 h-[5px] w-[134px] -translate-x-1/2 rounded-full bg-black" />
 
         {showChannels && (
           <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/55">

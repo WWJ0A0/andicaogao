@@ -87,6 +87,7 @@ const Nest: React.FC = () => {
     points,
     dialogueCards,
     dialogueCardInventory,
+    consumableInventory,
     exchangeDialogueCard,
   } = useDialogueStore();
   const translationCollarUnlocked = isTranslationCollarUnlocked(pet?.growth_stage);
@@ -192,14 +193,8 @@ const Nest: React.FC = () => {
 
         {/* Header */}
         <div className="flex items-center justify-between w-full px-[16px] py-[8px] z-50 relative">
-          <div 
-            className="flex items-center justify-center w-[40px] h-[40px] rounded-[12px] border border-[#ffffff66] bg-[#ffffff33] cursor-pointer"
-            onClick={() => navigate('/')}
-          >
-            <img src="/images/mo1bj519-siuv727.svg" alt="Back" className="w-[40px] h-[40px]" />
-          </div>
           <h1 className="text-[18px] text-[#222222] font-medium absolute left-1/2 -translate-x-1/2">小窝</h1>
-          <div className="flex items-center justify-center w-[40px] h-[40px] rounded-[13px] border border-[#ffffff66] bg-[#ffffff33]">
+          <div className="ml-auto flex items-center justify-center w-[40px] h-[40px] rounded-[13px] border border-[#ffffff66] bg-[#ffffff33]">
             <img src="/images/mo1bj519-vh3whbv.svg" alt="Profile Card" className="w-[24px] h-[24px]" />
           </div>
         </div>
@@ -378,7 +373,7 @@ const Nest: React.FC = () => {
                   <div className="flex flex-col items-center border border-[#2222220d] rounded-[8px] bg-[#22222208] pt-[12px] px-[14px] pb-[9px] pl-[13px] overflow-hidden shrink-0">
                     <img src="/images/mo1bj519-pv62wly.png" alt="Item" className="w-[58px] h-[58px] object-contain drop-shadow-sm" />
                     <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">AI画纸</span>
-                    <span className="mt-[3px] text-[11px] text-[#22222266] tracking-[0.11px] leading-[15px]">拥有 999 张</span>
+                    <span className="mt-[3px] text-[11px] text-[#22222266] tracking-[0.11px] leading-[15px]">拥有 {consumableInventory?.aiPaper ?? 999} 张</span>
                   </div>
 
                   {/* Card 2: 改名卡 */}
@@ -387,7 +382,7 @@ const Nest: React.FC = () => {
                       <img src="/images/mo1bj51c-ftijsui.png" alt="Item" className="w-[52px] h-[58px] object-contain drop-shadow-sm" />
                     </div>
                     <span className="mt-[5px] text-[13px] text-[#000000] tracking-[0.13px] leading-[18px]">改名卡</span>
-                    <span className="mt-[3px] text-[11px] text-[#22222266] tracking-[0.11px] leading-[15px]">拥有 999 张</span>
+                    <span className="mt-[3px] text-[11px] text-[#22222266] tracking-[0.11px] leading-[15px]">拥有 {consumableInventory?.renameCard ?? 999} 张</span>
                   </div>
                 </div>
               </div>
