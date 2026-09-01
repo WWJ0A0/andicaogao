@@ -6,6 +6,7 @@ import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 import { isTranslationCollarUnlocked } from '@/utils/translationCollar';
+import PointsBalancePill from '@/components/PointsBalancePill';
 
 const WHISPER_CARD_PRODUCTS = [
   { days: 1, cost: 5000 },
@@ -409,11 +410,8 @@ const Nest: React.FC = () => {
             className="absolute inset-0 z-[90] flex items-end bg-black/55"
             onClick={closeTrialCardDetail}
           >
-            <div className="absolute left-1/2 top-[146px] z-[95] flex h-10 -translate-x-1/2 items-center rounded-full border border-black/20 bg-[#f1f1f3] px-4 shadow-[0_8px_18px_rgba(0,0,0,0.18)]">
-              <span className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#ffe49a] text-[12px] shadow-inner">
-                ◉
-              </span>
-              <span className="text-[18px] font-medium tracking-normal text-[#222127]">{points}</span>
+            <div className="absolute left-1/2 top-[146px] z-[95] -translate-x-1/2" onClick={(event) => event.stopPropagation()}>
+              <PointsBalancePill points={points} onAdd={() => navigate('/points-store?returnTo=/nest')} />
             </div>
             <section
               className="relative min-h-[590px] w-full rounded-t-[10px] bg-[#fafafa] px-4 pb-8 pt-9 shadow-[0_-14px_40px_rgba(0,0,0,0.16)]"
@@ -454,11 +452,8 @@ const Nest: React.FC = () => {
             className="absolute inset-0 z-[90] flex items-end bg-black/55"
             onClick={closeTrialCardDetail}
           >
-            <div className="absolute left-1/2 top-[146px] z-[95] flex h-10 -translate-x-1/2 items-center rounded-full border border-black/20 bg-[#f1f1f3] px-4 shadow-[0_8px_18px_rgba(0,0,0,0.18)]">
-              <span className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#ffe49a] text-[12px] shadow-inner">
-                ◉
-              </span>
-              <span className="text-[18px] font-medium tracking-normal text-[#222127]">{points}</span>
+            <div className="absolute left-1/2 top-[146px] z-[95] -translate-x-1/2" onClick={(event) => event.stopPropagation()}>
+              <PointsBalancePill points={points} onAdd={() => navigate('/points-store?returnTo=/nest')} />
             </div>
             <section
               className="relative w-full rounded-t-[28px] bg-[#fafafa] px-5 pb-8 pt-5 shadow-[0_-14px_40px_rgba(0,0,0,0.16)]"

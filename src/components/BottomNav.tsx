@@ -37,9 +37,9 @@ const BottomNav: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
           onClick={() => navigate('/interaction-history')}
         >
           <img
-            src="/images/mo14hae4-9xxewd9.svg"
+            src="/images/mall-nav-icon.png"
             alt="商城"
-            className={`${compact ? 'h-[28px] w-[28px]' : 'h-[32px] w-[32px]'} shrink-0 overflow-hidden transition-opacity duration-300 ${isHistory ? 'opacity-100' : 'opacity-50'}`}
+            className={`${compact ? 'h-[28px] w-[28px]' : 'h-[32px] w-[32px]'} shrink-0 object-contain transition-opacity duration-300 ${isHistory ? 'opacity-100' : 'opacity-50'}`}
           />
           {isHistory && (
             <div className="absolute -bottom-[6px] w-[24px] h-[3px] bg-black rounded-full" />

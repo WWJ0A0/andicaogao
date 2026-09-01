@@ -26,25 +26,26 @@ const InteractionHistory: React.FC = () => {
           <ChevronLeft size={28} strokeWidth={2.4} />
         </button>
 
-        <button
-          type="button"
-          aria-label="获取更多积分"
-          onClick={() => navigate('/points-store?returnTo=/interaction-score')}
-          className="absolute left-[114px] top-[50px] z-30 flex h-10 w-[164px] items-center justify-center rounded-[14px] border border-white bg-white/95 px-3 text-[17px] font-bold text-[#38333f] shadow-[0_7px_18px_rgba(80,58,130,0.10)] backdrop-blur-sm"
-        >
-          <span className="mr-2 flex h-6 w-6 items-center justify-center rounded-[7px] bg-[#4e91ff]">
-            <Star size={16} fill="#ffe641" className="text-[#ffe641]" />
-          </span>
-          {points.toLocaleString()}
-          <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#8b66ef] text-[16px] leading-none text-white">+</span>
-        </button>
+        <div className="absolute left-[114px] top-[50px] z-30 flex h-10 w-[164px] items-center rounded-[14px] border border-white bg-white/95 p-1 shadow-[0_7px_18px_rgba(80,58,130,0.10)] backdrop-blur-sm">
+          <div aria-label="当前总积分" className="flex h-8 min-w-0 flex-1 items-center justify-center pl-1 text-[17px] font-bold text-[#38333f]">
+            <span className="mr-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] bg-[#4e91ff]">
+              <Star size={16} fill="#ffe641" className="text-[#ffe641]" />
+            </span>
+            <span className="truncate">{points.toLocaleString()}</span>
+          </div>
+          <span className="mx-1 h-5 w-px bg-[#e3ddea]" />
+          <button type="button" aria-label="获取更多积分" onClick={() => navigate('/points-store?returnTo=/interaction-score')} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#8b66ef] text-[17px] leading-none text-white">+</button>
+        </div>
+
+        <button type="button" aria-label="查看互动积分规则" onClick={() => setShowRules(true)} className="absolute right-[17px] top-[50px] z-30 h-[42px] w-[56px] rounded-[16px]" />
 
         <button
           type="button"
-          aria-label="查看互动积分规则"
-          onClick={() => setShowRules(true)}
-          className="absolute right-[17px] top-[50px] z-30 h-[42px] w-[56px] rounded-[16px]"
-        />
+          onClick={() => navigate('/points-orders')}
+          className="absolute right-[17px] top-[104px] z-30 flex h-[42px] w-[56px] items-center justify-center rounded-[16px] border border-white bg-white/90 text-[12px] font-bold text-[#26222b] shadow-[0_7px_18px_rgba(71,53,108,0.10)] backdrop-blur-sm"
+        >
+          明细
+        </button>
 
         {showRules && (
           <div className="absolute inset-0 z-50 flex items-end bg-black/55" onClick={() => setShowRules(false)}>

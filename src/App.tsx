@@ -32,6 +32,7 @@ import PointsStore from "@/pages/PointsStore";
 import PointsOrders from "@/pages/PointsOrders";
 import PointSpendRecords from "@/pages/PointSpendRecords";
 import PlushDesignCampaign from "@/pages/PlushDesignCampaign";
+import BrainCoCreation from "@/pages/BrainCoCreation";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -63,6 +64,7 @@ export default function App() {
         <Route path="/plush-design" element={<PlushDesignCampaign screen="home" />} />
         <Route path="/plush-design/submit" element={<PlushDesignCampaign screen="submit" />} />
         <Route path="/plush-design/results" element={<PlushDesignCampaign screen="results" />} />
+        <Route path="/brain-co-creation" element={<BrainCoCreation />} />
         <Route path="/personality" element={<Personality />} />
         <Route path="/growth" element={<Growth />} />
         <Route path="/settings" element={<Settings />} />

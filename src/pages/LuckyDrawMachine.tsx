@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
+import PointsBalancePill from '@/components/PointsBalancePill';
 
 const pointProducts = [
   { points: 1000, price: 6, stars: 1 },
@@ -48,8 +49,9 @@ const LuckyDrawMachine: React.FC = () => {
   const navigate = useNavigate();
   const { pet } = usePetStore();
   const deviceName = pet?.name || '肉派派';
-  const { points, luckyDrawSrTotal, luckyDrawSrCollected, purchasePoints } = useDialogueStore();
-  const remainingSrRewards = Math.max(0, luckyDrawSrTotal - luckyDrawSrCollected);
+  const { points, purchasePoints } = useDialogueStore();
+  const srGuaranteeRemaining = 20;
+  const srGuaranteeTotal = 30;
   const { minorModeEnabled } = useSubscriptionStore();
   const [showChannels, setShowChannels] = useState(false);
   const [showRecharge, setShowRecharge] = useState(false);
@@ -91,23 +93,16 @@ const LuckyDrawMachine: React.FC = () => {
         </button>
 
         {!minorModeEnabled && (
-          <button
-            type="button"
-            aria-label="获取更多积分"
-            onClick={() => navigate('/points-store?returnTo=/interaction-history')}
-            className="absolute left-1/2 top-[63px] z-30 flex h-10 -translate-x-1/2 items-center rounded-[14px] border border-white bg-white/90 px-3 text-[17px] font-bold text-[#38333f] shadow-[0_7px_18px_rgba(80,58,130,0.10)] backdrop-blur-sm"
-          >
-            <span className="mr-2 flex h-6 w-6 items-center justify-center rounded-[7px] bg-[#4e91ff]">
-              <Star size={16} fill="#ffe641" className="text-[#ffe641]" />
-            </span>
-            {points.toLocaleString()}
-            <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#8b66ef] text-[16px] leading-none text-white">+</span>
-          </button>
+          <PointsBalancePill
+            points={points}
+            onAdd={() => navigate('/points-store?returnTo=/lucky-draw-2')}
+            className="absolute left-1/2 top-[63px] z-30 -translate-x-1/2"
+          />
         )}
 
         <div className="absolute inset-x-0 bottom-0 z-20 h-[86px] bg-gradient-to-b from-[#ffe4a0] via-[#ffe09a] to-[#ffdc8e]" />
         <div className="absolute bottom-[91px] left-1/2 z-30 -translate-x-1/2 rounded-full bg-[#ffe1a0]/92 px-4 py-1 text-[11px] font-bold text-[#7759c9] backdrop-blur-sm">
-          {remainingSrRewards === 0 ? 'SR 奖励已全收集' : `还剩 ${remainingSrRewards} 个 SR 奖励`}
+          距下一个 SR 还有 {srGuaranteeRemaining}/{srGuaranteeTotal} 抽
         </div>
         <div className="absolute bottom-[8px] left-1/2 z-30 h-[5px] w-[134px] -translate-x-1/2 rounded-full bg-black" />
 

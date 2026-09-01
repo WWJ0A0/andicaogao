@@ -49,7 +49,7 @@ const CampaignHome: React.FC = () => {
       <div className="absolute inset-0 opacity-[0.13]" style={{ backgroundImage: 'radial-gradient(#000 1.3px,transparent 1.3px)', backgroundSize: '7px 7px' }} />
       <div className="absolute -left-24 top-28 h-80 w-[145%] -rotate-6 bg-[#e60012]" />
       <div className="absolute -right-24 top-[410px] h-24 w-72 rotate-12 bg-black" />
-      <TopBar title="ROPET DESIGN HEIST" onBack={() => navigate('/interaction-history')} action={<button type="button" onClick={() => navigate('/plush-design/results')} className="-rotate-2 border-[3px] border-black bg-[#ffe632] px-3 py-2 text-[10px] font-black shadow-[4px_4px_0_#000]">RESULT<br /><span className="text-[12px]">入选名单</span></button>} />
+      <TopBar title="ROPET DESIGN HEIST" onBack={() => navigate(-1)} action={<button type="button" onClick={() => navigate('/plush-design/results')} className="-rotate-2 border-[3px] border-black bg-[#ffe632] px-3 py-2 text-[10px] font-black shadow-[4px_4px_0_#000]">RESULT<br /><span className="text-[12px]">入选名单</span></button>} />
       <main className="relative z-10 mx-auto max-w-[430px] px-4 pb-10 sm:px-5">
         <section className="relative min-h-[500px] overflow-hidden border-[4px] border-black bg-[#f5eddd] px-5 pb-5 pt-6 shadow-[8px_8px_0_#000] [clip-path:polygon(0_0,94%_0,100%_8%,96%_100%,4%_97%)]">
           <span className="inline-block -rotate-3 border-[3px] border-black bg-[#ffe632] px-4 py-2 text-[11px] font-black tracking-[1.5px] shadow-[4px_4px_0_#000]">LIMITED MISSION</span>

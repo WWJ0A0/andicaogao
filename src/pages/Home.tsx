@@ -7,6 +7,7 @@ import pingjingAnimation from '@/assets/animations/pingjing.json';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 import DialogueEntryButton from '@/components/DialogueEntryButton';
 import { Check, X } from 'lucide-react';
+import { useDialogueStore } from '@/store/useDialogueStore';
 import {
   GROWTH_STAGE_UNLOCK_NOTICE_KEY,
   getGrowthStageIndex,
@@ -33,7 +34,8 @@ const growthUnlockCopies = [
 ];
 
 const HomePage: React.FC = () => {
-  const { pet, todaysInteractions, incrementInteraction } = usePetStore();
+  const { pet, incrementInteraction } = usePetStore();
+  const points = useDialogueStore((state) => state.points);
   const {
     dialogueEnabled,
     voiceConsentGranted,
@@ -318,14 +320,15 @@ const HomePage: React.FC = () => {
               className="mt-[11px] ml-[44px] w-[2px] h-10"
             />
 
-            {/* 今日互动 */}
+            {/* 积分中心 */}
             <button
               type="button"
               className="ml-[31px] flex flex-col items-center justify-center gap-1 rounded-[16px] px-2 transition-colors hover:bg-white/50"
               onClick={() => navigate('/interaction-score')}
             >
-              <p className="shrink-0 opacity-80 leading-[22px] tracking-normal text-[#3f3f6099] text-[16px]">今日互动</p>
-              <p className="shrink-0 self-stretch text-center tracking-[-0.84px] text-[#222222] text-[28px] font-semibold">{todaysInteractions}</p>
+              <p className="shrink-0 opacity-80 leading-[22px] tracking-normal text-[#3f3f6099] text-[16px]">积分中心</p>
+              <p className="shrink-0 self-stretch text-center tracking-[-0.84px] text-[#222222] text-[28px] font-semibold">{points.toLocaleString()}</p>
+              <span className="sr-only">总积分</span>
             </button>
           </div>
 
