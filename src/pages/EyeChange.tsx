@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Check, Coins, EyeOff, Heart, LockKeyhole, Pause, Play, RotateCcw, Sparkles, Star, Volume2, X } from 'lucide-react';
+import { ArrowLeft, Backpack, Cat, Check, Coins, EyeOff, Heart, LockKeyhole, Pause, Play, RotateCcw, Sparkles, Star, Volume2, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PointsBalancePill from '@/components/PointsBalancePill';
 import { useDialogueStore } from '@/store/useDialogueStore';
@@ -128,7 +128,7 @@ const getEyePointPrice = (eye: EyeItem) => (
       : 3000
 );
 
-const eyeThemes = ['水果硬糖', '火焰微光', '绿色乐园', '节日限定', '赛博小猫', '梦境星球', '商城精选'];
+const eyeThemes = ['蜡笔画', '次元漫画', '糖心蛋', '夏日气泡', '光感果冻'];
 
 const badgeStyle = {
   gold: 'bg-[#ffe1a1] text-[#ff9e19]',
@@ -195,11 +195,12 @@ const EyeChange: React.FC = () => {
   const [selectedVoiceId, setSelectedVoiceId] = useState(1);
   const [appliedVoiceId, setAppliedVoiceId] = useState(1);
   const [playingVoiceId, setPlayingVoiceId] = useState<number | null>(null);
-  const [activeEyeTheme, setActiveEyeTheme] = useState('水果硬糖');
-  const [myCollectionTab, setMyCollectionTab] = useState<'all' | 'pure'>('all');
+  const [activeEyeTheme, setActiveEyeTheme] = useState('MY');
+  const [myCollectionTab, setMyCollectionTab] = useState<'all' | 'pure' | 'favorite'>('all');
   const [demoEmptyPure, setDemoEmptyPure] = useState(false);
   const [unlockTarget, setUnlockTarget] = useState<UnlockTarget | null>(null);
   const [outfitCheckoutOpen, setOutfitCheckoutOpen] = useState(false);
+  const [outfitPointsInsufficientOpen, setOutfitPointsInsufficientOpen] = useState(false);
   const [outfitRedemptionSuccess, setOutfitRedemptionSuccess] = useState<{ items: EyeItem[]; total: number } | null>(null);
   const [checkoutSelectedProductIds, setCheckoutSelectedProductIds] = useState<string[]>([]);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -232,12 +233,9 @@ const EyeChange: React.FC = () => {
     : activeEyeTheme === 'MY'
       ? myCollectionTab === 'pure'
         ? demoEmptyPure ? [] : ownedMallEyes
-        : [...nativeEyes.filter((eye) => !eye.locked), ...ownedMallEyes]
-      : activeEyeTheme === '商城精选'
-        ? mallEyeOptions.map((eye) => ({
-          ...eye,
-          locked: eye.productId && (redeemedMallItems?.[eye.productId] ?? 0) > 0 ? false : eye.locked,
-        }))
+        : myCollectionTab === 'favorite'
+          ? nativeEyes.filter((eye) => !eye.locked).slice(0, 3)
+          : [...nativeEyes.filter((eye) => !eye.locked), ...ownedMallEyes]
       : nativeEyes;
   const displayedVoices = voiceOptions
     .filter((voice) => voice.source === 'native' || voice.source === 'lottery' || Boolean(voice.productId && (redeemedMallItems?.[voice.productId] ?? 0) > 0))
@@ -489,11 +487,7 @@ const EyeChange: React.FC = () => {
   const confirmOutfitRedemption = () => {
     if (isPurchasing || checkoutSelectedItems.length === 0) return;
     if (points < checkoutPointTotal) {
-      const productIds = selectedOutfitItems.map((item) => item.productId).filter(Boolean).join(',');
-      const returnPath = isMallPreview
-        ? `/eye-change?source=mall&product=${mallProductId ?? ''}&outfit=${productIds}&returnTo=${encodeURIComponent(mallReturnTo)}`
-        : `/eye-change?outfit=${productIds}`;
-      navigate(`/points-store?returnTo=${encodeURIComponent(returnPath)}`);
+      setOutfitPointsInsufficientOpen(true);
       return;
     }
 
@@ -680,13 +674,14 @@ const EyeChange: React.FC = () => {
 
         <div className="absolute left-0 right-0 z-40 rounded-t-[30px] bg-white shadow-[0_-10px_32px_rgba(25,24,31,0.06)]" style={{ top: 409, height: 443 }}>
           {!isMallPreview && !isEyeshadowPreview && (
-          <div className="relative h-16 border-b border-[#19181f0d]">
+          <div className="border-b border-[#19181f0d] bg-white">
+            <div className="relative h-[62px] border-b border-[#19181f0a]">
             <button
               type="button"
               aria-pressed={activeEyeTheme === 'MY'}
               onClick={() => {
                 if (activeEyeTheme === 'MY') {
-                  setActiveEyeTheme('水果硬糖');
+                  setActiveEyeTheme(eyeThemes[0]);
                   if (nativeEyes[0]) setSelectedEyeId(nativeEyes[0].id);
                   return;
                 }
@@ -696,47 +691,12 @@ const EyeChange: React.FC = () => {
                   : [...nativeEyes.filter((eye) => !eye.locked), ...ownedMallEyes][0];
                 if (firstOwnedEye) setSelectedEyeId(firstOwnedEye.id);
               }}
-              className={`absolute left-5 top-[18px] flex h-7 items-center justify-center rounded-full border px-2 text-[10px] font-bold transition-colors focus:outline-none ${activeEyeTheme === 'MY' ? 'border-[#19181f] bg-[#19181f] text-white' : 'border-[#b9b5bf] text-[#9c98a3]'}`}
+              className={`absolute left-5 top-[15px] flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-black transition-all focus:outline-none ${activeEyeTheme === 'MY' ? 'bg-[#19181f] text-white shadow-[0_5px_12px_rgba(25,24,31,.18)]' : 'bg-[#f4f2f5] text-[#77717c]'}`}
             >
               MY
             </button>
-            <div className="absolute bottom-0 left-[62px] right-0 top-0 flex items-center gap-5 overflow-x-auto pr-4 scrollbar-hide">
-              {activeEyeTheme === 'MY' ? (
-                <>
-                  <div className="flex h-9 shrink-0 items-center rounded-full bg-[#f2eff5] p-1">
-                  {([
-                    { id: 'all', label: '全部' },
-                    { id: 'pure', label: '商城' },
-                  ] as const).map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      aria-pressed={myCollectionTab === tab.id}
-                      onClick={() => {
-                        setMyCollectionTab(tab.id);
-                        const firstEye = tab.id === 'pure'
-                          ? ownedMallEyes[0]
-                          : [...nativeEyes.filter((eye) => !eye.locked), ...ownedMallEyes][0];
-                        if (firstEye) setSelectedEyeId(firstEye.id);
-                      }}
-                      className={`h-7 rounded-full px-4 text-[12px] font-bold transition-colors ${myCollectionTab === tab.id ? 'bg-white text-[#19181f] shadow-sm' : 'text-[#aaa4af]'}`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                  </div>
-                  {myCollectionTab === 'pure' && (
-                    <button
-                      type="button"
-                      onClick={() => setDemoEmptyPure((current) => !current)}
-                      className={`flex h-8 shrink-0 items-center rounded-full border px-3 text-[10px] font-bold transition-colors ${demoEmptyPure ? 'border-[#8d66ef] bg-[#f1ecff] text-[#7655cf]' : 'border-dashed border-[#c8c2ce] text-[#8e8793]'}`}
-                    >
-                      {demoEmptyPure ? <RotateCcw size={12} className="mr-1" /> : <EyeOff size={12} className="mr-1" />}
-                      {demoEmptyPure ? '恢复商品' : '演示空态'}
-                    </button>
-                  )}
-                </>
-              ) : eyeThemes.map((theme) => (
+            <div className="absolute bottom-0 left-[66px] right-0 top-0 flex items-center gap-6 overflow-x-auto pr-5 scrollbar-hide">
+              {eyeThemes.map((theme) => (
                 <button
                   key={theme}
                   type="button"
@@ -745,17 +705,60 @@ const EyeChange: React.FC = () => {
                     const firstEye = theme === '商城精选' ? mallEyeOptions[0] : nativeEyes[0];
                     if (firstEye) setSelectedEyeId(firstEye.id);
                   }}
-                  className={`relative h-full shrink-0 whitespace-nowrap text-[15px] focus:outline-none ${activeEyeTheme === theme ? 'font-bold text-[#19181f]' : 'font-medium text-[#aaa4af]'}`}
+                  className={`relative h-full shrink-0 whitespace-nowrap text-[14px] focus:outline-none ${activeEyeTheme === theme ? 'font-bold text-[#19181f]' : 'font-medium text-[#aaa4af]'}`}
                 >
                   {theme}
                   {activeEyeTheme === theme && <span className="absolute inset-x-0 bottom-0 h-[3px] rounded-full bg-[#19181f]" />}
                 </button>
               ))}
             </div>
+            </div>
+
+            <div className="flex h-[58px] items-center gap-4 px-5">
+              {([
+                { id: 'all', label: '全部装扮', icon: Cat },
+                { id: 'pure', label: '已拥有', icon: Backpack },
+                { id: 'favorite', label: '我的收藏', icon: Heart },
+              ] as const).map((tab) => {
+                const Icon = tab.icon;
+                const selected = activeEyeTheme === 'MY' && myCollectionTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    aria-label={tab.label}
+                    aria-pressed={selected}
+                    onClick={() => {
+                      setActiveEyeTheme('MY');
+                      setMyCollectionTab(tab.id);
+                      const firstEye = tab.id === 'pure'
+                        ? ownedMallEyes[0]
+                        : tab.id === 'favorite'
+                          ? nativeEyes.filter((eye) => !eye.locked)[0]
+                          : [...nativeEyes.filter((eye) => !eye.locked), ...ownedMallEyes][0];
+                      if (firstEye) setSelectedEyeId(firstEye.id);
+                    }}
+                    className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${selected ? 'bg-[#f2eff5] text-[#242129]' : 'text-[#aaa5ae]'}`}
+                  >
+                    <Icon size={22} strokeWidth={selected ? 2.3 : 2} fill={tab.id === 'favorite' && selected ? 'currentColor' : 'none'} />
+                  </button>
+                );
+              })}
+              {activeEyeTheme === 'MY' && myCollectionTab === 'pure' && (
+                <button
+                  type="button"
+                  onClick={() => setDemoEmptyPure((current) => !current)}
+                  className="ml-auto flex h-7 items-center rounded-full border border-dashed border-[#d2cdd6] px-2.5 text-[9px] font-bold text-[#9a939f]"
+                >
+                  {demoEmptyPure ? <RotateCcw size={11} className="mr-1" /> : <EyeOff size={11} className="mr-1" />}
+                  {demoEmptyPure ? '恢复' : '空态'}
+                </button>
+              )}
+            </div>
           </div>
           )}
 
-          <div className="overflow-y-auto scrollbar-hide px-4 pt-4 pb-10" style={{ height: isMallPreview || isEyeshadowPreview ? 443 : 379 }}>
+          <div className="overflow-y-auto scrollbar-hide px-4 pt-4 pb-10" style={{ height: isMallPreview || isEyeshadowPreview ? 443 : 321 }}>
             <div className="grid grid-cols-3 gap-x-[16px] gap-y-[18px]">
               {displayedEyes.map((eye) => (
                 <button
@@ -836,7 +839,11 @@ const EyeChange: React.FC = () => {
         )}
 
         {outfitCheckoutOpen && (
-          <div className="absolute inset-0 z-[85] flex items-end bg-black/48" onClick={() => !isPurchasing && setOutfitCheckoutOpen(false)}>
+          <div className="absolute inset-0 z-[85] flex items-end bg-black/48" onClick={() => {
+            if (isPurchasing) return;
+            setOutfitCheckoutOpen(false);
+            setOutfitPointsInsufficientOpen(false);
+          }}>
             <div className="absolute left-1/2 top-[76px] z-10 -translate-x-1/2" onClick={(event) => event.stopPropagation()}>
               <PointsBalancePill
                 points={points}
@@ -853,9 +860,8 @@ const EyeChange: React.FC = () => {
             <section className="w-full rounded-t-[28px] bg-white px-5 pb-8 pt-5 shadow-[0_-18px_45px_rgba(32,25,38,0.18)]" onClick={(event) => event.stopPropagation()}>
               <div className="mx-auto h-1 w-10 rounded-full bg-[#ddd8e1]" />
               <h2 className="mt-5 text-[21px] font-black text-[#29252d]">兑换当前搭配</h2>
-              <p className="mt-1 text-[12px] text-[#918a96]">仅计算尚未拥有的装扮</p>
 
-              <div className="mt-5 divide-y divide-[#eeeaf1] border-y border-[#eeeaf1]">
+              <div className="mt-4 divide-y divide-[#eeeaf1] border-y border-[#eeeaf1]">
                 {unownedOutfitItems.map((item) => {
                   const selected = Boolean(item.productId && checkoutSelectedProductIds.includes(item.productId));
                   return (
@@ -883,7 +889,6 @@ const EyeChange: React.FC = () => {
                     </span>
                     <span className="min-w-0 flex-1">
                       <strong className="block truncate text-[14px] text-[#312c35]">{item.name}</strong>
-                      <span className="mt-1 block text-[11px] text-[#9a929f]">{item.source === 'lottery' ? '抽奖款 · 积分直接兑换' : `${item.previewType === 'eyeshadow' ? '眼影' : '美瞳'} · 永久拥有`}</span>
                     </span>
                     <strong className="flex items-center text-[14px] text-[#6d50c7]"><span className="mr-1 text-[#ffc52e]">★</span>{getEyePointPrice(item).toLocaleString()}</strong>
                   </button>
@@ -891,8 +896,7 @@ const EyeChange: React.FC = () => {
                 })}
               </div>
 
-              <div className="mt-4 flex items-end justify-between">
-                <span className="text-[12px] text-[#8f8894]">已选 {checkoutSelectedItems.length} 件 · 当前积分 {points.toLocaleString()}</span>
+              <div className="mt-4 flex items-end justify-end">
                 <span className="text-right">
                   <span className="block text-[10px] text-[#9a929f]">合计</span>
                   <strong className="text-[22px] font-black text-[#6d50c7]">★ {checkoutPointTotal.toLocaleString()}</strong>
@@ -910,18 +914,23 @@ const EyeChange: React.FC = () => {
               {unownedOutfitItems.some((item) => item.source === 'lottery') && (
                 <button type="button" onClick={() => navigate('/lucky-draw-2')} className="mt-3 flex h-11 w-full items-center justify-center rounded-[14px] border border-[#dcd3f3] bg-white text-[14px] font-bold text-[#7656ce]">
                   <Sparkles size={17} className="mr-2" />
-                  去抽奖
+                  抽奖碰运气
                 </button>
               )}
               <button type="button" onClick={confirmOutfitRedemption} disabled={isPurchasing || checkoutSelectedItems.length === 0} className="mt-5 flex h-12 w-full items-center justify-center rounded-[15px] bg-[#7c5ae0] text-[15px] font-bold text-white disabled:bg-[#bbb5c4] disabled:opacity-70">
                 <Coins size={18} className="mr-2" />
-                {checkoutSelectedItems.length === 0
-                  ? '请选择要兑换的装扮'
-                  : points >= checkoutPointTotal
-                    ? `确认兑换 ${checkoutSelectedItems.length} 件`
-                    : `积分不足 · 还差 ${(checkoutPointTotal - points).toLocaleString()}`}
+                积分兑换
               </button>
-              <button type="button" onClick={() => setOutfitCheckoutOpen(false)} disabled={isPurchasing} className="mt-2 h-10 w-full text-[13px] font-semibold text-[#928b99] disabled:opacity-50">继续搭配</button>
+            </section>
+          </div>
+        )}
+
+        {outfitPointsInsufficientOpen && (
+          <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/35 px-8" onClick={() => setOutfitPointsInsufficientOpen(false)}>
+            <section className="w-full rounded-[22px] bg-white px-6 py-6 text-center shadow-[0_18px_50px_rgba(31,24,38,0.22)]" onClick={(event) => event.stopPropagation()}>
+              <h2 className="text-[19px] font-black text-[#29252d]">积分不足</h2>
+              <p className="mt-2 text-[13px] text-[#8f8894]">还差 {(checkoutPointTotal - points).toLocaleString()} 积分</p>
+              <button type="button" onClick={() => setOutfitPointsInsufficientOpen(false)} className="mt-5 h-11 w-full rounded-[14px] bg-[#7c5ae0] text-[14px] font-bold text-white">知道了</button>
             </section>
           </div>
         )}
