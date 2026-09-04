@@ -29,6 +29,7 @@ import TrialExperience from "@/pages/TrialExperience";
 import VoiceConsent from "@/pages/VoiceConsent";
 import PolicyDocument from "@/pages/PolicyDocument";
 import PointsStore from "@/pages/PointsStore";
+import RedeemCode from "@/pages/RedeemCode";
 import PointsOrders from "@/pages/PointsOrders";
 import PointSpendRecords from "@/pages/PointSpendRecords";
 import PlushDesignCampaign from "@/pages/PlushDesignCampaign";
@@ -69,6 +70,7 @@ export default function App() {
         <Route path="/growth" element={<Growth />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/pet-basic-settings" element={<PetBasicSettings />} />
+        <Route path="/redeem-code" element={<RedeemCode />} />
         <Route path="/help-center" element={<ProfileSubPage title="帮助中心" />} />
         <Route path="/after-sales" element={<ProfileSubPage title="售后服务" />} />
         <Route path="/about-us" element={<ProfileSubPage title="关于我们" />} />

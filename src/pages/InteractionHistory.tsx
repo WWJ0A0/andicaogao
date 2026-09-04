@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { ChevronLeft, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDialogueStore } from '@/store/useDialogueStore';
+import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
 const InteractionHistory: React.FC = () => {
   const navigate = useNavigate();
   const { points } = useDialogueStore();
+  const { minorModeEnabled } = useSubscriptionStore();
   const [showRules, setShowRules] = useState(false);
 
   return (
@@ -33,8 +35,7 @@ const InteractionHistory: React.FC = () => {
             </span>
             <span className="truncate">{points.toLocaleString()}</span>
           </div>
-          <span className="mx-1 h-5 w-px bg-[#e3ddea]" />
-          <button type="button" aria-label="获取更多积分" onClick={() => navigate('/points-store?returnTo=/interaction-score')} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#8b66ef] text-[17px] leading-none text-white">+</button>
+          {!minorModeEnabled && <><span className="mx-1 h-5 w-px bg-[#e3ddea]" /><button type="button" aria-label="获取更多积分" onClick={() => navigate('/points-store?returnTo=/interaction-score')} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#8b66ef] text-[17px] leading-none text-white">+</button></>}
         </div>
 
         <button type="button" aria-label="查看互动积分规则" onClick={() => setShowRules(true)} className="absolute right-[17px] top-[50px] z-30 h-[42px] w-[56px] rounded-[16px]" />

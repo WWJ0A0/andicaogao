@@ -60,7 +60,7 @@ interface DialogueStore {
     amount: number;
     channel?: string;
     paidAt: string;
-    status: 'creating' | 'unpaid' | 'failed' | 'cancelled' | 'paid' | 'processing' | 'timeout';
+    status: 'unpaid' | 'paid' | 'closed' | 'processing';
   }[];
   cardCost: number;
   exchangeCard: (count?: number) => boolean;
@@ -104,7 +104,7 @@ interface DialogueStore {
     amount: number,
     deviceName?: string,
     channel?: string,
-    status?: 'creating' | 'unpaid' | 'failed' | 'cancelled' | 'paid' | 'processing' | 'timeout',
+    status?: 'unpaid' | 'paid' | 'closed' | 'processing',
   ) => void;
 }
 
@@ -517,9 +517,9 @@ export const useDialogueStore = create<DialogueStore>()(
     }),
     {
       name: 'ropet-dialogue-prototype',
-      version: 1,
+      version: 2,
       migrate: (persistedState, version) => (
-        version < 1
+        version < 2
           ? { ...(persistedState as DialogueStore), points: 1000 }
           : persistedState as DialogueStore
       ),

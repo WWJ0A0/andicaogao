@@ -9,7 +9,7 @@ import {
 import { useDialogueStore } from '@/store/useDialogueStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
-type PointOrderStatus = 'creating' | 'unpaid' | 'failed' | 'cancelled' | 'paid' | 'processing' | 'timeout' | 'refunding' | 'refunded';
+type PointOrderStatus = 'unpaid' | 'paid' | 'closed' | 'processing' | 'refunding' | 'refunded' | 'refund-failed';
 
 type DisplayPointOrder = {
   id: string;
@@ -36,17 +36,6 @@ const DEMO_POINT_ORDERS: DisplayPointOrder[] = [
     status: 'processing',
   },
   {
-    id: 'demo-creating',
-    orderNo: 'PT20260622100421',
-    deviceName: '肉派派',
-    points: 10000,
-    amount: 25,
-    channel: 'App Store',
-    time: '2026.06.22 10:04',
-    timeLabel: '创建时间',
-    status: 'creating',
-  },
-  {
     id: 'demo-unpaid',
     orderNo: 'PT20260622095218',
     deviceName: '肉派派',
@@ -58,18 +47,18 @@ const DEMO_POINT_ORDERS: DisplayPointOrder[] = [
     status: 'unpaid',
   },
   {
-    id: 'demo-failed',
-    orderNo: 'PT20260621193802',
+    id: 'demo-paid',
+    orderNo: 'PT20260622093846',
     deviceName: '肉派派',
-    points: 100000,
-    amount: 289,
+    points: 6000,
+    amount: 25,
     channel: 'App Store',
-    time: '2026.06.21 19:38',
+    time: '2026.06.22 09:38',
     timeLabel: '支付时间',
-    status: 'failed',
+    status: 'paid',
   },
   {
-    id: 'demo-cancelled',
+    id: 'demo-closed',
     orderNo: 'PT20260621182145',
     deviceName: '肉派派',
     points: 10000,
@@ -77,7 +66,7 @@ const DEMO_POINT_ORDERS: DisplayPointOrder[] = [
     channel: 'App Store',
     time: '2026.06.21 18:21',
     timeLabel: '创建时间',
-    status: 'cancelled',
+    status: 'closed',
   },
   {
     id: 'demo-refunding',
@@ -101,36 +90,33 @@ const DEMO_POINT_ORDERS: DisplayPointOrder[] = [
     timeLabel: '退款时间',
     status: 'refunded',
   },
+  {
+    id: 'demo-refund-failed',
+    orderNo: 'PT20260618164208',
+    deviceName: '肉派派',
+    points: 6000,
+    amount: 25,
+    channel: 'App Store',
+    time: '2026.06.18 16:42',
+    timeLabel: '退款时间',
+    status: 'refund-failed',
+  },
 ];
 
 const STATUS_META: Record<PointOrderStatus, {
   label: string;
   className: string;
   note?: string;
-  action?: string;
 }> = {
-  creating: {
-    label: '创建中',
-    className: 'bg-[#eef3ff] text-[#4c72c9]',
-    note: '正在创建订单，请稍候。',
-  },
   unpaid: {
     label: '未支付',
     className: 'bg-[#fff5dc] text-[#a36a12]',
-    note: '订单已创建，等待用户完成支付。',
-    action: '继续支付',
+    note: '请在30分钟内完成支付。',
   },
-  failed: {
-    label: '支付失败',
+  closed: {
+    label: '已关闭',
     className: 'bg-[#ffe9e9] text-[#bc4949]',
-    note: '支付未完成，未发放积分。',
-    action: '重新支付',
-  },
-  cancelled: {
-    label: '取消付款',
-    className: 'bg-[#f0eef2] text-[#77717e]',
-    note: '用户已取消本次付款。',
-    action: '重新购买',
+    note: '支付未完成，订单已关闭。',
   },
   paid: {
     label: '支付成功',
@@ -140,13 +126,7 @@ const STATUS_META: Record<PointOrderStatus, {
   processing: {
     label: '处理中',
     className: 'bg-[#eef3ff] text-[#4c72c9]',
-    note: '支付成功但积分暂未到账，请联系客服处理。',
-  },
-  timeout: {
-    label: '已超时',
-    className: 'bg-[#f0eef2] text-[#77717e]',
-    note: '订单已超时，请重新下单。',
-    action: '重新支付',
+    note: '订单处理中',
   },
   refunding: {
     label: '退款中',
@@ -157,6 +137,11 @@ const STATUS_META: Record<PointOrderStatus, {
     label: '已退款',
     className: 'bg-[#eeeeef] text-[#77717e]',
     note: '退款已完成，对应积分已扣回。',
+  },
+  'refund-failed': {
+    label: '退款失败',
+    className: 'bg-[#ffe9e9] text-[#bc4949]',
+    note: '请联系客服',
   },
 };
 
@@ -178,7 +163,7 @@ const PointsOrders: React.FC = () => {
       channel: order.channel || 'App Store',
       time: order.paidAt,
       timeLabel: '支付时间',
-      status: order.status,
+      status: (['creating', 'failed', 'cancelled', 'timeout'].includes(order.status) ? 'closed' : order.status) as PointOrderStatus,
     }));
     return [...realOrders, ...DEMO_POINT_ORDERS];
   }, [pointOrders]);
@@ -187,11 +172,6 @@ const PointsOrders: React.FC = () => {
     void navigator.clipboard?.writeText(orderNo);
     setCopiedOrderNo(orderNo);
     window.setTimeout(() => setCopiedOrderNo(''), 1400);
-  };
-
-  const handleDemoAction = (label: string) => {
-    setToast(`${label}：这里模拟调起支付渠道`);
-    window.setTimeout(() => setToast(''), 1400);
   };
 
   return (
@@ -219,15 +199,7 @@ const PointsOrders: React.FC = () => {
           积分权益跟随当前设备；订单记录仅展示当前账号自己的支付订单。
         </section>
         {displayOrders.length > 0 ? (
-          <>
-            <section className="mb-3 rounded-[16px] border border-[#ece9f1] bg-white px-4 py-3">
-              <p className="text-[13px] font-semibold text-[#26232a]">状态演示</p>
-              <p className="mt-1 text-[11px] leading-5 text-[#96919c]">
-                包含创建中、未支付、支付失败、取消付款、处理中、超时、退款中、已退款和支付成功等状态。
-              </p>
-            </section>
-
-            <div className="space-y-3">
+          <div className="space-y-3">
             {displayOrders.map((order) => {
               const statusMeta = STATUS_META[order.status];
               return (
@@ -269,20 +241,9 @@ const PointsOrders: React.FC = () => {
                   <span className="text-[#96919c]">实付金额</span>
                   <strong className="text-right text-[#4d4852]">￥{order.amount}.00</strong>
                 </div>
-                {(statusMeta.note || statusMeta.action) && (
-                  <div className="mt-3 flex items-center justify-between gap-3 rounded-[14px] bg-[#faf9fc] px-3 py-2">
-                    {statusMeta.note && (
-                      <p className="min-w-0 flex-1 text-[11px] leading-4 text-[#8f8a94]">{statusMeta.note}</p>
-                    )}
-                    {statusMeta.action && (
-                      <button
-                        type="button"
-                        onClick={() => handleDemoAction(statusMeta.action as string)}
-                        className="h-8 shrink-0 rounded-full bg-[#8b66ef] px-3 text-[11px] font-semibold text-white"
-                      >
-                        {statusMeta.action}
-                      </button>
-                    )}
+                {statusMeta.note && (
+                  <div className="mt-3 rounded-[14px] bg-[#faf9fc] px-3 py-2">
+                    <p className="text-[11px] leading-4 text-[#8f8a94]">{statusMeta.note}</p>
                   </div>
                 )}
                 <button
@@ -296,8 +257,7 @@ const PointsOrders: React.FC = () => {
               </section>
               );
             })}
-            </div>
-          </>
+          </div>
         ) : (
           <div className="pt-24 text-center">
             <ReceiptText size={44} className="mx-auto text-[#d7d3dc]" />

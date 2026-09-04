@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { ChevronLeft, LoaderCircle, RefreshCw, Star, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Check, LoaderCircle, RefreshCw, Star, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ModalOverlay,
@@ -21,14 +21,14 @@ const paymentChannels = [
   { id: 'appstore', label: 'App Store', desc: '模拟 Apple 内购确认' },
   { id: 'alipay', label: '支付宝', desc: '模拟支付宝支付成功' },
   { id: 'googleplay', label: 'Google Play', desc: '模拟 Google Play 付款' },
-  { id: 'paypal', label: 'PayPal', desc: '模拟 PayPal 付款' },
+  { id: 'webstore', label: 'Ropet 官网', desc: '前往浏览器购买兑换码' },
 ];
 
 const paymentChannelStyles = {
   appstore: { mark: 'A', bg: 'bg-[#f4f4f5]', fg: 'text-[#222127]', accent: 'bg-[#222127]' },
   alipay: { mark: '支', bg: 'bg-[#e9f3ff]', fg: 'text-[#1677ff]', accent: 'bg-[#1677ff]' },
   googleplay: { mark: 'G', bg: 'bg-[#e9f7ef]', fg: 'text-[#18a957]', accent: 'bg-[#18a957]' },
-  paypal: { mark: 'P', bg: 'bg-[#edf3ff]', fg: 'text-[#003087]', accent: 'bg-[#003087]' },
+  webstore: { mark: 'R', bg: 'bg-[#f0ebff]', fg: 'text-[#7652df]', accent: 'bg-[#7652df]' },
 };
 
 const PointsStore: React.FC = () => {
@@ -39,11 +39,17 @@ const PointsStore: React.FC = () => {
   const { points, purchasePoints, recordPointOrder } = useDialogueStore();
   const { minorModeEnabled } = useSubscriptionStore();
   const [productLoadState, setProductLoadState] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const [selectedProduct, setSelectedProduct] = useState<typeof pointProducts[number]>(pointProducts[0]);
   const [payingProduct, setPayingProduct] = useState<typeof pointProducts[number] | null>(null);
   const [paymentChannel, setPaymentChannel] = useState<typeof paymentChannels[number] | null>(null);
   const [message, setMessage] = useState('');
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [agreementChecked, setAgreementChecked] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const pullStartY = useRef<number | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const productRequestTimer = useRef<number | null>(null);
   const returnTo = searchParams.get('returnTo');
   const pointsStorePath = `/points-store${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`;
 
@@ -53,12 +59,46 @@ const PointsStore: React.FC = () => {
   };
 
   const loadProducts = (fail = false) => {
+    if (productRequestTimer.current !== null) {
+      window.clearTimeout(productRequestTimer.current);
+    }
     setProductLoadState('loading');
-    window.setTimeout(() => setProductLoadState(fail ? 'failed' : 'ready'), 450);
+    setPullDistance(0);
+    productRequestTimer.current = window.setTimeout(() => {
+      setProductLoadState(fail ? 'failed' : 'ready');
+      productRequestTimer.current = null;
+    }, 450);
+  };
+
+  const startPull = (clientY: number) => {
+    if (productLoadState === 'failed' && (scrollContainerRef.current?.scrollTop ?? 0) <= 0) {
+      pullStartY.current = clientY;
+    }
+  };
+
+  const movePull = (clientY: number) => {
+    if (pullStartY.current === null) return;
+    setPullDistance(Math.min(76, Math.max(0, (clientY - pullStartY.current) * 0.55)));
+  };
+
+  const finishPull = () => {
+    if (pullStartY.current === null) return;
+    pullStartY.current = null;
+    if (pullDistance >= 52) {
+      loadProducts(false);
+      return;
+    }
+    setPullDistance(0);
   };
 
   useEffect(() => {
     loadProducts(searchParams.get('loadFail') === '1');
+    return () => {
+      if (productRequestTimer.current !== null) {
+        window.clearTimeout(productRequestTimer.current);
+        productRequestTimer.current = null;
+      }
+    };
   }, [searchParams]);
 
   const closePayment = () => {
@@ -84,11 +124,25 @@ const PointsStore: React.FC = () => {
 
   const selectProduct = (item: typeof pointProducts[number]) => {
     if (minorModeEnabled || productLoadState !== 'ready') return;
-    setPayingProduct(item);
+    setSelectedProduct(item);
+  };
+
+  const beginPurchase = () => {
+    if (!agreementChecked) {
+      showToast('请勾选协议');
+      return;
+    }
+    if (productLoadState !== 'ready') return;
+    setPayingProduct(selectedProduct);
   };
 
   const startPayment = (channel: typeof paymentChannels[number]) => {
     if (creatingOrder || paymentProcessing) return;
+    if (channel.id === 'webstore') {
+      window.open('https://ropetai.com/products/dream-sketch-canvas', '_blank', 'noopener,noreferrer');
+      setPayingProduct(null);
+      return;
+    }
     setCreatingOrder(true);
     window.setTimeout(() => {
       setPaymentChannel(channel);
@@ -96,15 +150,23 @@ const PointsStore: React.FC = () => {
     }, 500);
   };
 
-  const failAndClose = (text: string, status?: 'failed' | 'cancelled' | 'timeout') => {
-    if (payingProduct && paymentChannel && status) {
-      recordPointOrder(payingProduct.points, payingProduct.price, deviceName, paymentChannel.label, status);
+  const failAndClose = (text: string, shouldRecord = false) => {
+    if (payingProduct && paymentChannel && shouldRecord) {
+      recordPointOrder(payingProduct.points, payingProduct.price, deviceName, paymentChannel.label, 'closed');
     }
     setPaymentProcessing(false);
     setCreatingOrder(false);
     setPaymentChannel(null);
     setPayingProduct(null);
     showToast(text);
+  };
+
+  const showNetworkError = () => {
+    setPaymentProcessing(false);
+    setCreatingOrder(false);
+    setPaymentChannel(null);
+    setPayingProduct(null);
+    window.setTimeout(() => showToast('网络异常，请稍后重试'), 120);
   };
 
   const showProcessing = () => {
@@ -130,18 +192,18 @@ const PointsStore: React.FC = () => {
   };
 
   return (
-    <PrototypePhone className="bg-[#fbf9ff]">
+    <PrototypePhone className="bg-[linear-gradient(155deg,#eadcff_0%,#fff7d8_48%,#fffdf5_100%)]">
       <PrototypeStatusBar />
       <div className="relative flex h-[62px] items-center px-4">
         <button
           type="button"
-          aria-label="返回上一级"
+          aria-label="关闭积分充值"
           onClick={goBack}
           className="flex h-11 w-11 items-center justify-center rounded-[14px] border border-[#ececf0] bg-white text-[#19181f]"
         >
-          <ChevronLeft size={25} />
+          <X size={25} />
         </button>
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-[18px] font-medium text-[#19181f]">更多积分</h1>
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-[18px] font-medium text-[#19181f]">积分充值</h1>
         <button
           type="button"
           aria-label="查看积分订单"
@@ -152,84 +214,112 @@ const PointsStore: React.FC = () => {
         </button>
       </div>
 
-      <div className="relative h-[752px] overflow-y-auto px-5 pb-8 scrollbar-hide">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[230px] bg-[radial-gradient(circle_at_25%_25%,rgba(139,102,239,0.16),transparent_25%),radial-gradient(circle_at_70%_10%,rgba(255,226,119,0.24),transparent_20%)]" />
-
-        <section className="relative z-10 pt-3 text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[26px] bg-gradient-to-b from-[#ffe875] to-[#f2b827] shadow-[0_12px_24px_rgba(198,147,22,0.24)]">
-            <Star size={44} className="text-white" fill="white" />
+      <div
+        ref={scrollContainerRef}
+        className="relative h-[752px] touch-pan-y overflow-y-auto pb-8 scrollbar-hide"
+        onPointerDown={(event) => startPull(event.clientY)}
+        onPointerMove={(event) => movePull(event.clientY)}
+        onPointerUp={finishPull}
+        onPointerCancel={finishPull}
+      >
+        {productLoadState === 'failed' && (
+          <div
+            className="absolute left-0 right-0 top-0 z-20 flex items-center justify-center text-[11px] font-medium text-[#817a8a] transition-transform"
+            style={{ height: 48, transform: `translateY(${pullDistance - 48}px)` }}
+          >
+            <RefreshCw size={14} className={`mr-1.5 ${pullDistance >= 52 ? 'rotate-180' : ''} transition-transform`} />
+            {pullDistance >= 52 ? '松开刷新' : '下拉刷新'}
           </div>
-          <p className="mt-4 text-[12px] text-[#a09aa8]">累计剩余积分</p>
-          <h2 className="text-[34px] font-bold text-[#8b66ef]">{points}</h2>
+        )}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[300px] bg-[radial-gradient(circle_at_24%_18%,rgba(163,113,255,0.18),transparent_34%),radial-gradient(circle_at_70%_56%,rgba(255,222,91,0.30),transparent_38%)]" />
+
+        <section className="relative z-10 pb-7 pt-4 text-center">
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border-[7px] border-[#ffdf69] bg-gradient-to-br from-[#fff8ad] via-[#ffc62f] to-[#f3a400] shadow-[0_14px_28px_rgba(196,139,14,0.26),inset_0_0_0_3px_rgba(255,255,255,0.55)]">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#f4a400]/40 bg-gradient-to-br from-[#fff172] to-[#ffb411] shadow-inner">
+              <Star size={39} className="text-[#fff9d2] drop-shadow-[0_2px_1px_rgba(196,111,0,0.3)]" fill="#fff9d2" />
+            </div>
+          </div>
+          <h2 className="mt-4 text-[36px] font-bold leading-none text-[#8759ee]">{points}</h2>
         </section>
 
-        <section className="relative z-10 mt-5 rounded-[20px] bg-[#cbbdff] px-4 pb-5 pt-4">
-          <h2 className="text-[17px] font-semibold text-[#4b3b7c]">积分特惠</h2>
-          {minorModeEnabled && (
-            <p className="mt-2 rounded-[12px] bg-white/70 px-3 py-2 text-[12px] font-medium leading-5 text-[#7c728d]">
-              未成年模式下暂不开放购买
-            </p>
-          )}
+        {!minorModeEnabled && <section className="relative z-10 mx-3 rounded-t-[30px] bg-white px-4 pb-5 pt-7 shadow-[0_-8px_30px_rgba(73,54,104,0.10)]">
+          <div className="absolute left-1/2 top-2 h-1.5 w-16 -translate-x-1/2 rounded-full bg-[#29272c]" />
+          <h2 className="text-[18px] font-semibold text-[#26232a]">积分特惠</h2>
           {productLoadState === 'loading' && (
-            <div className="mt-4 flex min-h-[210px] items-center justify-center rounded-[16px] bg-white/72 text-[13px] font-semibold text-[#7c728d]">
+            <div className="mt-4 flex min-h-[330px] items-center justify-center rounded-[18px] bg-[#f7f6f8] text-[13px] font-semibold text-[#7c728d]">
               <LoaderCircle size={18} className="mr-2 animate-spin" />
               商品加载中
             </div>
           )}
           {productLoadState === 'failed' && (
-            <div className="mt-4 rounded-[16px] bg-white/80 px-4 py-8 text-center">
+            <div className="mt-4 rounded-[18px] bg-[#f7f6f8] px-4 py-16 text-center">
               <p className="text-[14px] font-semibold text-[#4b3b7c]">商品列表加载失败</p>
-              <button
-                type="button"
-                onClick={() => loadProducts(false)}
-                className="mx-auto mt-4 flex h-10 items-center justify-center rounded-full bg-[#8b66ef] px-5 text-[13px] font-semibold text-white"
-              >
-                <RefreshCw size={14} className="mr-1.5" />
-                重试
-              </button>
+              <p className="mt-3 text-[12px] text-[#8e8795]">下拉刷新</p>
             </div>
           )}
           {productLoadState === 'ready' && (
-            <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="mt-4 grid grid-cols-2 gap-3">
               {pointProducts.map((item) => (
                 <button
                   key={item.points}
                   type="button"
                   aria-label={`购买 ${item.points} 积分`}
-                  disabled={minorModeEnabled}
                   onClick={() => selectProduct(item)}
-                  className={`rounded-[10px] bg-white px-3 pb-4 pt-5 text-center shadow-[0_8px_20px_rgba(68,52,116,0.10)] ${
-                    minorModeEnabled ? 'opacity-45 grayscale' : ''
+                  className={`relative min-h-[154px] rounded-[14px] border-2 px-3 pb-4 pt-4 text-center transition-colors ${
+                    selectedProduct.points === item.points
+                      ? 'border-[#8559eb] bg-[#fbf9ff] shadow-[0_6px_16px_rgba(101,71,178,0.12)]'
+                      : 'border-[#eeecef] bg-[#f8f8f9]'
                   }`}
                 >
-                  <div className="mx-auto flex h-16 w-20 items-center justify-center">
-                    <Star size={34} className="text-[#ffd943]" fill="#ffd943" />
-                    <Star size={26} className="-ml-2 mt-4 text-[#ffd943]" fill="#ffd943" />
+                  <div className="mx-auto flex h-20 w-24 items-center justify-center">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full border-[4px] border-[#ffdc62] bg-gradient-to-br from-[#fff4a1] to-[#f6ab00] shadow-[0_6px_10px_rgba(196,139,14,0.18)]">
+                      <Star size={30} className="text-[#fff7c6]" fill="#fff7c6" />
+                    </span>
+                    {item.points > 6000 && (
+                      <span className="-ml-4 mt-7 flex h-9 w-9 items-center justify-center rounded-full border-[3px] border-[#ffdc62] bg-gradient-to-br from-[#fff4a1] to-[#f6ab00]">
+                        <Star size={18} className="text-[#fff7c6]" fill="#fff7c6" />
+                      </span>
+                    )}
                   </div>
-                  <div className="mt-2 flex items-center justify-center text-[14px] font-semibold text-[#27232d]">
-                    <Star size={14} className="mr-1 text-[#ffd943]" fill="#ffd943" />
+                  <div className="mt-2 flex items-center justify-center text-[16px] font-semibold text-[#27232d]">
+                    <span className="mr-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#ffc72c] text-[9px] text-white">★</span>
                     {item.points}
                   </div>
                   {item.discount && (
-                    <div className="mt-2 text-[11px] font-semibold text-[#8b66ef]">{item.discount}</div>
+                    <div className="mt-1 text-[11px] font-semibold text-[#8b66ef]">{item.discount}</div>
                   )}
-                  <span className={`${item.discount ? 'mt-3' : 'mt-4'} inline-flex h-9 min-w-[92px] items-center justify-center rounded-[9px] bg-[#8b66ef] text-[15px] font-semibold text-white`}>
-                    ￥{item.price}
-                  </span>
+                  <span className="absolute right-3 top-3 text-[11px] font-semibold text-[#9b95a1]">￥{item.price}</span>
                 </button>
               ))}
             </div>
           )}
-        </section>
-
-        <section className="relative z-10 mt-5 rounded-[20px] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(58,49,75,0.06)]">
-          <h2 className="text-[17px] font-semibold text-[#26232a]">不花钱也能拿积分</h2>
-          <div className="mt-4 space-y-3">
-            <p className="rounded-[14px] bg-[#f8f6fe] px-4 py-3 text-[12px] leading-5 text-[#6d6573]">
-              积分可以通过日常互动获得，也可以在这里购买补充。购买的积分会归属当前设备。
-            </p>
-          </div>
-        </section>
+          <button
+            type="button"
+            onClick={beginPurchase}
+            className="mt-5 flex h-12 w-full items-center justify-center rounded-[16px] bg-[#7d50e8] text-[15px] font-semibold text-white shadow-[0_8px_18px_rgba(92,61,176,0.22)]"
+          >
+            ￥{selectedProduct.price}
+          </button>
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={agreementChecked}
+            aria-label={agreementChecked ? '取消同意积分充值协议' : '同意积分充值协议'}
+            onClick={() => setAgreementChecked((checked) => !checked)}
+            className="mt-4 flex w-full items-center justify-center text-left"
+          >
+            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border transition-colors ${
+              agreementChecked
+                ? 'border-[#8b66ef] bg-[#8b66ef] text-white'
+                : 'border-[#c9c4d0] bg-white text-transparent'
+            }`}>
+              <Check size={14} strokeWidth={3} />
+            </span>
+            <span className="ml-2 text-[12px] leading-5 text-[#6d6573]">
+              我已阅读并同意<span className="font-semibold text-[#7652df]">《积分充值协议》</span>
+            </span>
+          </button>
+        </section>}
 
         {message && (
           <div className="fixed left-1/2 top-[116px] z-50 -translate-x-1/2 rounded-full bg-[#27232d] px-4 py-2 text-[12px] font-semibold text-white">
@@ -372,10 +462,10 @@ const PointsStore: React.FC = () => {
                   )}
                 </button>
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => failAndClose('网络异常，请稍后重试')} className="h-9 rounded-[12px] bg-[#f4f3f5] text-[12px] font-semibold text-[#5f5a66]">网络异常</button>
-                  <button type="button" onClick={() => failAndClose('支付失败，请重新支付', 'failed')} className="h-9 rounded-[12px] bg-[#f4f3f5] text-[12px] font-semibold text-[#5f5a66]">支付失败</button>
-                  <button type="button" onClick={() => failAndClose('支付已取消', 'cancelled')} className="h-9 rounded-[12px] bg-[#f4f3f5] text-[12px] font-semibold text-[#5f5a66]">取消支付</button>
-                  <button type="button" onClick={() => failAndClose('订单已超时，请重新下单', 'timeout')} className="h-9 rounded-[12px] bg-[#f4f3f5] text-[12px] font-semibold text-[#5f5a66]">订单超时</button>
+                  <button type="button" onClick={showNetworkError} className="h-9 rounded-[12px] bg-[#f4f3f5] text-[12px] font-semibold text-[#5f5a66]">网络异常</button>
+                  <button type="button" onClick={() => failAndClose('支付失败，请重新支付', true)} className="h-9 rounded-[12px] bg-[#f4f3f5] text-[12px] font-semibold text-[#5f5a66]">支付失败</button>
+                  <button type="button" onClick={() => failAndClose('支付已取消', true)} className="h-9 rounded-[12px] bg-[#f4f3f5] text-[12px] font-semibold text-[#5f5a66]">取消支付</button>
+                  <button type="button" onClick={() => failAndClose('订单已超时，请重新下单', true)} className="h-9 rounded-[12px] bg-[#f4f3f5] text-[12px] font-semibold text-[#5f5a66]">订单超时</button>
                   <button type="button" onClick={showProcessing} className="h-9 rounded-[12px] bg-[#f4f3f5] text-[12px] font-semibold text-[#5f5a66]">支付处理中</button>
                   <button type="button" onClick={showPointsMissing} className="h-9 rounded-[12px] bg-[#f4f3f5] text-[12px] font-semibold text-[#5f5a66]">积分未到账</button>
                 </div>

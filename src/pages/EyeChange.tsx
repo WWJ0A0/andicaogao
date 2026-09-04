@@ -926,11 +926,30 @@ const EyeChange: React.FC = () => {
         )}
 
         {outfitPointsInsufficientOpen && (
-          <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/35 px-8" onClick={() => setOutfitPointsInsufficientOpen(false)}>
-            <section className="w-full rounded-[22px] bg-white px-6 py-6 text-center shadow-[0_18px_50px_rgba(31,24,38,0.22)]" onClick={(event) => event.stopPropagation()}>
-              <h2 className="text-[19px] font-black text-[#29252d]">积分不足</h2>
-              <p className="mt-2 text-[13px] text-[#8f8894]">还差 {(checkoutPointTotal - points).toLocaleString()} 积分</p>
-              <button type="button" onClick={() => setOutfitPointsInsufficientOpen(false)} className="mt-5 h-11 w-full rounded-[14px] bg-[#7c5ae0] text-[14px] font-bold text-white">知道了</button>
+          <div className="absolute inset-0 z-[120] flex items-center justify-center bg-black/45 px-8">
+            <section className="w-full rounded-[24px] bg-white px-6 py-7 text-center shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
+              <h2 className="text-[18px] font-semibold text-[#222127]">当前积分不足</h2>
+              <p className="mt-3 text-[15px] leading-6 text-[#6f6875]">去购买更多积分</p>
+              <button
+                type="button"
+                onClick={() => {
+                  const productIds = selectedOutfitItems.map((item) => item.productId).filter(Boolean).join(',');
+                  const returnPath = isMallPreview
+                    ? `/eye-change?source=mall&product=${mallProductId ?? ''}&outfit=${productIds}&returnTo=${encodeURIComponent(mallReturnTo)}`
+                    : `/eye-change?outfit=${productIds}`;
+                  navigate(`/points-store?returnTo=${encodeURIComponent(returnPath)}`);
+                }}
+                className="mt-6 h-12 w-full rounded-[16px] bg-[#8b66ef] text-[15px] font-semibold text-white"
+              >
+                去购买
+              </button>
+              <button
+                type="button"
+                onClick={() => setOutfitPointsInsufficientOpen(false)}
+                className="mt-3 h-11 w-full rounded-[16px] border border-[#e6e1ed] bg-white text-[14px] font-semibold text-[#4f4a55]"
+              >
+                算了
+              </button>
             </section>
           </div>
         )}

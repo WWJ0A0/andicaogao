@@ -39,9 +39,14 @@ const PetBasicSettings: React.FC = () => {
               <p className="absolute top-[22px] left-[246px] w-[95px] h-[22px] leading-[22px] text-[#19181f66] text-[16px]">23:30-08:00</p>
               <img src="/images/mo9sq26i-53fvpjs.png" className="absolute top-5 left-[349px] w-6 h-6 rotate-180" alt="chevron" />
             </div>
+
+            <div className="relative w-[393px] h-[65px] cursor-pointer" onClick={() => navigate('/redeem-code')}>
+              <p className="absolute top-5 left-5 w-[353px] h-[25px] tracking-[-0.3px] text-[#19181fcc] text-[18px]">兑换码</p>
+              <img src="/images/mo9sq26i-53fvpjs.png" className="absolute top-5 left-[349px] w-6 h-6 rotate-180" alt="chevron" />
+            </div>
           </div>
 
-          <div className="flex items-start self-stretch mt-[560px] mr-[-1px] ml-[1px] pt-[21px] pr-[130px] pb-[8px] pl-[129px]">
+          <div className="flex items-start self-stretch mt-[495px] mr-[-1px] ml-[1px] pt-[21px] pr-[130px] pb-[8px] pl-[129px]">
             <div className="rounded-[100px] bg-[#19181f] w-[134px] h-[5px]" />
           </div>
         </div>
