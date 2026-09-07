@@ -36,7 +36,7 @@ const BrainCoCreation: React.FC = () => {
     const earnsReward = !rewardClaimed;
     setSubmissionRewarded(earnsReward);
     if (earnsReward) {
-      addPoints(160);
+      addPoints(160, { title: '大脑共创计划', category: '运营活动' });
       setRewardClaimed(true);
     }
     setSubmitted(true);

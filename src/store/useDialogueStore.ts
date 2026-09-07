@@ -1,7 +1,29 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type MallRedemptionStatus = 'processing' | 'success' | 'refunded';
+export type MallRedemptionStatus = 'processing' | 'success' | 'refunded' | 'refund-exception';
+export type PointSpendCategory = '抽奖' | '小窝物品兑换' | '商城物品兑换' | '零食兑换' | '药品兑换' | '生成日记';
+export type PointIncomeCategory = '充值' | '更新奖励' | '运营活动' | '每日互动' | '抽奖获得' | '新零食解锁' | '成就徽章' | '养派秘籍' | '礼品兑换';
+
+export interface PointSpendRecord {
+  id: string;
+  title: string;
+  type: 'lottery' | 'exchange';
+  category?: PointSpendCategory;
+  quantity?: number;
+  points: number;
+  createdAt: string;
+}
+
+export interface PointIncomeRecord {
+  id: string;
+  title: string;
+  type: 'interaction' | 'activity';
+  category?: PointIncomeCategory;
+  quantity?: number;
+  points: number;
+  createdAt: string;
+}
 
 export interface MallRedemptionOrder {
   id: string;
@@ -38,20 +60,8 @@ interface DialogueStore {
   equippedMallEyeshadowId: string | null;
   equippedMallVoiceId: string | null;
   mallRedemptionOrders: MallRedemptionOrder[];
-  pointSpendRecords: {
-    id: string;
-    title: string;
-    type: 'lottery' | 'exchange';
-    points: number;
-    createdAt: string;
-  }[];
-  pointIncomeRecords: {
-    id: string;
-    title: string;
-    type: 'interaction' | 'activity';
-    points: number;
-    createdAt: string;
-  }[];
+  pointSpendRecords: PointSpendRecord[];
+  pointIncomeRecords: PointIncomeRecord[];
   pointOrders: {
     id: string;
     orderNo: string;
@@ -92,12 +102,13 @@ interface DialogueStore {
   markMallRedemptionRetry: (orderId: string, attempt: number) => void;
   completeMallRedemption: (orderId: string) => void;
   refundMallRedemption: (orderId: string) => void;
+  markMallRedemptionRefundException: (orderId: string) => void;
   equipMallItem: (itemId: string, kind: 'eye' | 'eyeshadow' | 'voice') => void;
-  spendPoints: (title: string, type: 'lottery' | 'exchange', points: number) => boolean;
+  spendPoints: (title: string, type: 'lottery' | 'exchange', points: number, options?: { category?: PointSpendCategory; quantity?: number }) => boolean;
   clearActiveDialogueCard: () => void;
   resetMallState: () => void;
   resetMallRedemptions: () => void;
-  addPoints: (amount: number) => void;
+  addPoints: (amount: number, options?: { title?: string; category?: PointIncomeCategory; quantity?: number }) => void;
   purchasePoints: (points: number, amount: number, deviceName?: string, channel?: string) => void;
   recordPointOrder: (
     points: number,
@@ -139,13 +150,13 @@ export const useDialogueStore = create<DialogueStore>()(
       equippedMallVoiceId: null,
       mallRedemptionOrders: [],
       pointSpendRecords: [
-        { id: 'demo-lottery', title: '幸运抽奖机', type: 'lottery', points: 160, createdAt: '2026.08.13 15:42' },
-        { id: 'demo-exchange', title: '兑换星河美瞳', type: 'exchange', points: 33600, createdAt: '2026.08.12 20:18' },
+        { id: 'demo-lottery', title: '幸运抽奖机', type: 'lottery', category: '抽奖', quantity: 1, points: 160, createdAt: '2026.08.13 15:42' },
+        { id: 'demo-exchange', title: '星河美瞳', type: 'exchange', category: '商城物品兑换', quantity: 1, points: 33600, createdAt: '2026.08.12 20:18' },
       ],
       pointIncomeRecords: [
-        { id: 'demo-growth-reward', title: '成长阶段奖励', type: 'activity', points: 500, createdAt: '2026.08.13 09:30' },
-        { id: 'demo-daily-interaction', title: '互动奖励', type: 'interaction', points: 120, createdAt: '2026.08.13 08:46' },
-        { id: 'demo-checkin-reward', title: '运营活动', type: 'activity', points: 300, createdAt: '2026.08.12 09:12' },
+        { id: 'demo-growth-reward', title: '成长阶段奖励', type: 'activity', category: '成就徽章', points: 500, createdAt: '2026.08.13 09:30' },
+        { id: 'demo-daily-interaction', title: '今日互动得分', type: 'interaction', category: '每日互动', points: 120, createdAt: '2026.08.13 08:46' },
+        { id: 'demo-checkin-reward', title: '签到奖励', type: 'activity', category: '运营活动', points: 300, createdAt: '2026.08.12 09:12' },
       ],
       pointOrders: [],
       cardCost: 5000,
@@ -177,6 +188,18 @@ export const useDialogueStore = create<DialogueStore>()(
             [key]: (inventory[key] ?? 0) + count,
           },
           dialogueCards: state.dialogueCards + count,
+          pointSpendRecords: [
+            {
+              id: `spend-${Date.now()}-dialogue-card`,
+              title: '翻译项圈电池',
+              type: 'exchange',
+              category: '小窝物品兑换',
+              quantity: count,
+              points: totalCost,
+              createdAt: formatPaymentTime(new Date()),
+            },
+            ...(state.pointSpendRecords ?? []),
+          ],
         });
         return true;
       },
@@ -282,6 +305,8 @@ export const useDialogueStore = create<DialogueStore>()(
               id: `spend-${now.getTime()}-${itemId}-${(state.pointSpendRecords ?? []).length}`,
               title: `兑换${title}`,
               type: 'exchange',
+              category: '商城物品兑换',
+              quantity: 1,
               points: cost,
               createdAt: formatPaymentTime(now),
             },
@@ -347,6 +372,8 @@ export const useDialogueStore = create<DialogueStore>()(
               id: `spend-${orderId}`,
               title: `兑换${title}`,
               type: 'exchange',
+              category: '商城物品兑换',
+              quantity: 1,
               points: cost,
               createdAt: formatPaymentTime(now),
             },
@@ -403,12 +430,19 @@ export const useDialogueStore = create<DialogueStore>()(
           pointIncomeRecords: (state.pointIncomeRecords ?? []).filter((record) => record.id !== `refund-${order.id}`),
         });
       },
+      markMallRedemptionRefundException: (orderId) => set((state) => ({
+        mallRedemptionOrders: (state.mallRedemptionOrders ?? []).map((order) => (
+          order.id === orderId && order.status === 'processing'
+            ? { ...order, status: 'refund-exception', updatedAtMs: Date.now() }
+            : order
+        )),
+      })),
       equipMallItem: (itemId, kind) => set(kind === 'eye'
         ? { equippedMallEyeId: itemId }
         : kind === 'eyeshadow'
           ? { equippedMallEyeshadowId: itemId }
           : { equippedMallVoiceId: itemId }),
-      spendPoints: (title, type, points) => {
+      spendPoints: (title, type, points, options = {}) => {
         const state = get();
         if (points <= 0 || state.points < points) return false;
         const now = new Date();
@@ -419,6 +453,8 @@ export const useDialogueStore = create<DialogueStore>()(
               id: `spend-${now.getTime()}`,
               title,
               type,
+              category: options.category ?? (type === 'lottery' ? '抽奖' : '商城物品兑换'),
+              quantity: Math.max(1, options.quantity ?? 1),
               points,
               createdAt: formatPaymentTime(now),
             },
@@ -461,15 +497,17 @@ export const useDialogueStore = create<DialogueStore>()(
           pointIncomeRecords: (state.pointIncomeRecords ?? []).filter((record) => !record.id.startsWith('refund-')),
         };
       }),
-      addPoints: (amount) => set((state) => {
+      addPoints: (amount, options = {}) => set((state) => {
         const now = new Date();
         return {
           points: state.points + amount,
           pointIncomeRecords: [
             {
               id: `income-${now.getTime()}`,
-              title: '互动获得积分',
-              type: 'interaction',
+              title: options.title ?? '今日互动得分',
+              type: options.category === '每日互动' ? 'interaction' : 'activity',
+              category: options.category ?? '每日互动',
+              quantity: Math.max(1, options.quantity ?? 1),
               points: amount,
               createdAt: formatPaymentTime(now),
             },
@@ -481,6 +519,18 @@ export const useDialogueStore = create<DialogueStore>()(
         const now = new Date();
         set((state) => ({
           points: state.points + points,
+          pointIncomeRecords: [
+            {
+              id: `income-${now.getTime()}-purchase`,
+              title: `${points.toLocaleString()}积分充值`,
+              type: 'activity',
+              category: '充值',
+              quantity: 1,
+              points,
+              createdAt: formatPaymentTime(now),
+            },
+            ...(state.pointIncomeRecords ?? []),
+          ],
           pointOrders: [
             {
               id: `points-${now.getTime()}`,

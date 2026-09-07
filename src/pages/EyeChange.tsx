@@ -605,7 +605,7 @@ const EyeChange: React.FC = () => {
             className="h-10 min-w-[68px] rounded-full bg-[#8d66ef] px-4 text-[16px] font-semibold text-white shadow-[0_8px_18px_rgba(141,102,239,0.28)] transition-all active:scale-95 disabled:cursor-default disabled:bg-[#b8b2bd] disabled:shadow-none disabled:active:scale-100"
           >
             {unownedOutfitItems.length > 0
-              ? `兑换${unownedOutfitItems.length > 1 ? unownedOutfitItems.length : ''}`
+              ? `使用${unownedOutfitItems.length > 1 ? unownedOutfitItems.length : ''}`
               : fullSelectionApplied ? '使用中' : '使用'}
           </button>
         </div>
@@ -859,7 +859,7 @@ const EyeChange: React.FC = () => {
             </div>
             <section className="w-full rounded-t-[28px] bg-white px-5 pb-8 pt-5 shadow-[0_-18px_45px_rgba(32,25,38,0.18)]" onClick={(event) => event.stopPropagation()}>
               <div className="mx-auto h-1 w-10 rounded-full bg-[#ddd8e1]" />
-              <h2 className="mt-5 text-[21px] font-black text-[#29252d]">兑换当前搭配</h2>
+              <h2 className="mt-5 text-[21px] font-black text-[#29252d]">积分兑换</h2>
 
               <div className="mt-4 divide-y divide-[#eeeaf1] border-y border-[#eeeaf1]">
                 {unownedOutfitItems.map((item) => {
