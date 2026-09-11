@@ -267,10 +267,6 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="absolute top-[103px] left-[21px] z-[220] cursor-pointer" onClick={() => navigate('/home-lost')}>
-            <img src="/images/mo8l3k70-hwl1w86.svg" className="w-[52px] h-[52px] animate-[spin_8s_linear_infinite]" alt="Polkadot (DOT)" />
-          </div>
-
           {/* 宠物点击提示区域 */}
           <div
             className="inline-flex absolute top-[171px] right-[37px] items-center gap-1 z-[120] animate-bounce [animation-duration:1s]"

@@ -1,56 +1,221 @@
-import React, { useState } from 'react';
-import { ChevronLeft, Star } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Coins, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDialogueStore } from '@/store/useDialogueStore';
-import { useSubscriptionStore } from '@/store/useSubscriptionStore';
+
+const interactionClaims = [
+  { id: 'binding', label: '首次绑定', amount: 160, left: 65, top: 581 },
+  { id: 'touch', label: '抚摸', amount: 5, left: 237, top: 581 },
+  { id: 'heart', label: '比心', amount: 5, left: 65, top: 790 },
+  { id: 'praise', label: '夸夸TA', amount: 160, left: 237, top: 790 },
+  { id: 'smile', label: '对TA笑', amount: 160, left: 65, top: 999 },
+  { id: 'gaze', label: '注视', amount: 160, left: 237, top: 999 },
+  { id: 'dance', label: '跳舞', amount: 160, left: 65, top: 1208 },
+  { id: 'feed', label: '喂食', amount: 160, left: 237, top: 1208 },
+  { id: 'like', label: '给TA点赞', amount: 160, left: 65, top: 1417 },
+] as const;
 
 const InteractionHistory: React.FC = () => {
   const navigate = useNavigate();
-  const { points } = useDialogueStore();
-  const { minorModeEnabled } = useSubscriptionStore();
+  const { points, addPoints } = useDialogueStore();
   const [showRules, setShowRules] = useState(false);
+  const [claimedIds, setClaimedIds] = useState<string[]>([]);
+  const [claimEffect, setClaimEffect] = useState<{ key: number; amount: number; left: number; top: number; burst: boolean } | null>(null);
+  const effectTimerRef = useRef<number | null>(null);
+  const pendingPoints = useMemo(() => interactionClaims.reduce(
+    (total, claim) => total + (claimedIds.includes(claim.id) ? 0 : claim.amount),
+    0,
+  ), [claimedIds]);
+
+  useEffect(() => () => {
+    if (effectTimerRef.current !== null) window.clearTimeout(effectTimerRef.current);
+  }, []);
+
+  const playClaimEffect = (amount: number, left: number, top: number, burst = false) => {
+    setClaimEffect({ key: Date.now(), amount, left, top, burst });
+    if (effectTimerRef.current !== null) window.clearTimeout(effectTimerRef.current);
+    effectTimerRef.current = window.setTimeout(() => {
+      setClaimEffect(null);
+      effectTimerRef.current = null;
+    }, burst ? 1700 : 1100);
+  };
+
+  const playRewardSound = (burst = false) => {
+    try {
+      const audio = new AudioContext();
+      const master = audio.createGain();
+      master.gain.setValueAtTime(0.0001, audio.currentTime);
+      master.gain.exponentialRampToValueAtTime(burst ? 0.18 : 0.12, audio.currentTime + 0.025);
+      master.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + (burst ? 0.9 : 0.42));
+      master.connect(audio.destination);
+
+      const notes = burst ? [392, 523.25, 659.25, 1046.5] : [659.25, 987.77];
+      notes.forEach((frequency, index) => {
+        const oscillator = audio.createOscillator();
+        const gain = audio.createGain();
+        const start = audio.currentTime + index * (burst ? 0.11 : 0.07);
+        oscillator.type = index === notes.length - 1 ? 'sine' : 'triangle';
+        oscillator.frequency.setValueAtTime(frequency, start);
+        oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.08, start + 0.18);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.8, start + 0.018);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + (burst ? 0.5 : 0.25));
+        oscillator.connect(gain);
+        gain.connect(master);
+        oscillator.start(start);
+        oscillator.stop(start + (burst ? 0.55 : 0.3));
+      });
+      window.setTimeout(() => void audio.close(), burst ? 1200 : 650);
+    } catch {
+      // Browsers without Web Audio still retain the visual feedback.
+    }
+  };
+
+  const claimOne = (claim: typeof interactionClaims[number]) => {
+    if (claimedIds.includes(claim.id)) return;
+    playRewardSound();
+    addPoints(claim.amount, { title: claim.label, category: '每日互动' });
+    setClaimedIds((current) => [...current, claim.id]);
+    playClaimEffect(claim.amount, claim.left + 46, claim.top);
+  };
+
+  const claimAll = () => {
+    if (pendingPoints <= 0) return;
+    const amount = pendingPoints;
+    playRewardSound(true);
+    addPoints(amount, { title: '一键领取互动积分', category: '每日互动' });
+    setClaimedIds((current) => Array.from(new Set([
+      ...current,
+      ...interactionClaims.map((claim) => claim.id),
+    ])));
+    playClaimEffect(amount, 306, 378, true);
+  };
 
   return (
     <div className="relative flex min-h-screen w-full justify-center overflow-hidden bg-[#d8deea] py-4">
-      <div className="relative h-[852px] w-[393px] overflow-hidden rounded-[28px] border border-white/70 bg-[#fffafa] shadow-[0_20px_50px_rgba(15,23,42,0.22)]">
-        <img
-          src="/images/interaction-score-designed.png"
-          className="absolute inset-0 h-full w-full object-cover"
-          alt="今日互动积分界面"
-        />
+      <div className={`relative h-[852px] w-[393px] overflow-hidden rounded-[28px] border border-white/70 bg-[#fffafa] shadow-[0_20px_50px_rgba(15,23,42,0.22)] ${claimEffect?.burst ? 'interaction-screen-burst' : ''}`}>
+        <div className="relative h-full overflow-y-auto scrollbar-hide">
+          <div className="relative h-[1493px] w-full">
+            <img
+              src="/images/interaction-score-center.png"
+              className="absolute inset-0 h-[1493px] w-[393px] max-w-none"
+              alt="积分中心"
+            />
 
-        <button
-          type="button"
-          aria-label="返回首页"
-          onClick={() => navigate('/')}
-          className="absolute left-[18px] top-[52px] z-20 flex h-11 w-11 items-center justify-center rounded-[15px] border border-white bg-white/90 text-[#26222b] shadow-[0_7px_18px_rgba(71,53,108,0.10)] backdrop-blur-sm"
-        >
-          <ChevronLeft size={28} strokeWidth={2.4} />
-        </button>
+            <div className={`pointer-events-none absolute left-1/2 top-[126px] z-10 h-[150px] w-[184px] -translate-x-1/2 ${claimEffect ? 'interaction-jar-react' : ''}`} aria-hidden="true">
+              <div className="interaction-jar-aura absolute inset-0 rounded-full" />
+              <div className="interaction-idle-glint absolute left-[27px] top-[18px] text-[20px] text-[#ffe16b]">✦</div>
+              <div className="interaction-idle-glint interaction-idle-glint-delay absolute right-[24px] top-[58px] text-[15px] text-[#fff2a7]">✦</div>
+            </div>
 
-        <div className="absolute left-[114px] top-[50px] z-30 flex h-10 w-[164px] items-center rounded-[14px] border border-white bg-white/95 p-1 shadow-[0_7px_18px_rgba(80,58,130,0.10)] backdrop-blur-sm">
-          <div aria-label="当前总积分" className="flex h-8 min-w-0 flex-1 items-center justify-center pl-1 text-[17px] font-bold text-[#38333f]">
-            <span className="mr-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] bg-[#4e91ff]">
-              <Star size={16} fill="#ffe641" className="text-[#ffe641]" />
-            </span>
-            <span className="truncate">{points.toLocaleString()}</span>
+            <div
+              aria-label={`当前总积分 ${points.toLocaleString()}，每日互动分获取上限850`}
+              className="absolute left-1/2 top-[278px] z-20 flex h-[68px] w-[250px] -translate-x-1/2 flex-col items-center justify-center bg-[#fffafa]"
+            >
+              <span className="bg-gradient-to-r from-[#c650f3] to-[#42a7ed] bg-clip-text text-[32px] font-extrabold leading-none text-transparent">
+                {points.toLocaleString()}
+              </span>
+              <span className="mt-1.5 text-[11px] font-medium leading-none text-[#9b96a1]">每日互动分获取上限850</span>
+            </div>
+
+            <div className="absolute left-[43px] top-[374px] z-20 flex h-[37px] w-[105px] items-center bg-[#fffdfd] px-1 text-[24px] font-semibold text-[#252229]">
+              <Coins size={17} className="mr-1.5 text-[#f2c832]" strokeWidth={2.2} />
+              {pendingPoints}
+            </div>
+            <button
+              type="button"
+              onClick={claimAll}
+              disabled={pendingPoints <= 0}
+              className="absolute left-[265px] top-[378px] z-30 flex h-[33px] w-[82px] items-center justify-center rounded-[10px] bg-gradient-to-b from-[#9e73f4] to-[#7952df] text-[13px] font-semibold text-white shadow-[0_5px_10px_rgba(112,78,211,0.2)] transition active:scale-95 disabled:bg-none disabled:bg-[#c9c8cc] disabled:shadow-none"
+            >
+              {pendingPoints > 0 ? '一键领取' : '已领取'}
+            </button>
+
+            {interactionClaims.map((claim) => {
+              const claimed = claimedIds.includes(claim.id);
+              return (
+                <button
+                  key={claim.id}
+                  type="button"
+                  aria-label={`领取${claim.label}${claim.amount}积分`}
+                  onClick={() => claimOne(claim)}
+                  disabled={claimed}
+                  className="absolute z-30 flex h-[37px] w-[92px] items-center justify-center rounded-[11px] bg-gradient-to-b from-[#9e73f4] to-[#7952df] text-[13px] font-semibold text-white shadow-[0_5px_10px_rgba(112,78,211,0.18)] transition active:scale-95 disabled:bg-none disabled:bg-[#c9c8cc] disabled:text-white disabled:shadow-none"
+                  style={{ left: claim.left, top: claim.top }}
+                >
+                  {claimed ? '已领取' : <><Coins size={14} className="mr-1 text-[#ffe06b]" strokeWidth={2.2} />{claim.amount}</>}
+                </button>
+              );
+            })}
+
+            {claimEffect && (
+              <React.Fragment key={claimEffect.key}>
+                <div
+                  className="interaction-energy-orb pointer-events-none absolute z-40"
+                  style={{
+                    left: claimEffect.left,
+                    top: claimEffect.top,
+                    '--interaction-flight-x': `${196 - claimEffect.left}px`,
+                    '--interaction-flight-y': `${205 - claimEffect.top}px`,
+                  } as React.CSSProperties}
+                >
+                  <span className="interaction-energy-tail" />
+                  <Star size={38} strokeWidth={1.5} className="relative text-[#ffd42a]" fill="currentColor" />
+                </div>
+                {claimEffect.burst && (
+                  <div className="pointer-events-none absolute inset-x-0 top-0 z-[45] h-[430px] overflow-hidden" aria-hidden="true">
+                    <div className="interaction-energy-beam absolute left-1/2 top-0 h-[276px] w-[92px] -translate-x-1/2" />
+                    <div className="interaction-shockwave absolute left-1/2 top-[205px] h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-[5px] border-[#ffe16b]" />
+                    <div className="interaction-flash absolute inset-0" />
+                    <div className="score-claim-mega absolute left-1/2 top-[266px] z-[46] flex items-center gap-1 whitespace-nowrap text-[17px] font-extrabold text-[#8056e5]">
+                      <Star size={19} className="text-[#ffc928]" fill="currentColor" />+{claimEffect.amount}
+                    </div>
+                    {Array.from({ length: 18 }, (_, index) => (
+                      <Star
+                        key={index}
+                        size={index % 3 === 0 ? 22 : 14}
+                        fill="currentColor"
+                        className="interaction-star-rain absolute text-[#ffd429]"
+                        style={{
+                          left: `${6 + ((index * 29) % 88)}%`,
+                          top: `${-8 - ((index * 17) % 42)}px`,
+                          animationDelay: `${(index % 7) * 55}ms`,
+                          animationDuration: `${780 + (index % 5) * 110}ms`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </React.Fragment>
+            )}
+
+            <button
+              type="button"
+              aria-label="返回首页"
+              onClick={() => navigate('/')}
+              className="absolute left-[16px] top-[53px] z-30 h-10 w-10 rounded-[12px]"
+            />
+            <button
+              type="button"
+              aria-label="查看积分明细"
+              onClick={() => navigate('/points-orders')}
+              className="absolute right-[16px] top-[53px] z-30 h-10 w-[69px] rounded-[12px]"
+            />
+            <button
+              type="button"
+              aria-label="查看互动积分规则"
+              onClick={() => setShowRules(true)}
+              className="absolute right-0 top-[181px] z-30 h-10 w-[57px] rounded-l-[12px]"
+            />
           </div>
-          {!minorModeEnabled && <><span className="mx-1 h-5 w-px bg-[#e3ddea]" /><button type="button" aria-label="获取更多积分" onClick={() => navigate('/points-store?returnTo=/interaction-score')} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#8b66ef] text-[17px] leading-none text-white">+</button></>}
         </div>
-
-        <button type="button" aria-label="查看互动积分规则" onClick={() => setShowRules(true)} className="absolute right-[17px] top-[50px] z-30 h-[42px] w-[56px] rounded-[16px]" />
-
-        <button
-          type="button"
-          onClick={() => navigate('/points-orders')}
-          className="absolute right-[17px] top-[104px] z-30 flex h-[42px] w-[56px] items-center justify-center rounded-[16px] border border-white bg-white/90 text-[12px] font-bold text-[#26222b] shadow-[0_7px_18px_rgba(71,53,108,0.10)] backdrop-blur-sm"
-        >
-          明细
-        </button>
 
         {showRules && (
           <div className="absolute inset-0 z-50 flex items-end bg-black/55" onClick={() => setShowRules(false)}>
-            <section className="max-h-[690px] w-full rounded-t-[30px] bg-white px-5 pb-7 pt-6 shadow-[0_-16px_40px_rgba(0,0,0,0.18)]" onClick={(event) => event.stopPropagation()}>
+            <section
+              className="max-h-[690px] w-full rounded-t-[30px] bg-white px-5 pb-7 pt-6 shadow-[0_-16px_40px_rgba(0,0,0,0.18)]"
+              onClick={(event) => event.stopPropagation()}
+            >
               <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-[#e1dfe5]" />
               <h2 className="text-center text-[22px] font-semibold text-[#22242a]">互动积分规则</h2>
               <div className="mt-6 max-h-[510px] overflow-y-auto rounded-[18px] bg-[#f7f3ff] px-5 py-5 text-[14px] leading-7 text-[#4f4d55] scrollbar-hide">
@@ -67,6 +232,7 @@ const InteractionHistory: React.FC = () => {
             </section>
           </div>
         )}
+
       </div>
     </div>
   );

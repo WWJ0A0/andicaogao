@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { Award, BrainCircuit, ChevronRight, Scissors, X } from 'lucide-react';
 
-const menuItems = ['ropet 基础设置', '设置', '帮助中心', '售后服务', '关于我们'];
+const menuItems = ['ropet 基础设置', '设置', '帮助与客服', '售后服务', '关于我们'];
 const DESIGNER_BADGE_EQUIPPED_KEY = 'ropet-designer-badge-equipped';
 
 const activitySlides = [
@@ -20,7 +20,7 @@ const PetProfile: React.FC = () => {
   const menuPathMap: Record<string, string> = {
     'ropet 基础设置': '/pet-basic-settings',
     '设置': '/settings',
-    '帮助中心': '/help-center',
+    '帮助与客服': '/help-center',
     '售后服务': '/after-sales',
     '关于我们': '/about-us',
   };

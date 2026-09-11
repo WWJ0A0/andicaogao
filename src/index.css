@@ -29,6 +29,155 @@ body,
   display: none;
 }
 
+.interaction-idle-glint {
+  filter: drop-shadow(0 0 7px rgba(255, 210, 42, 0.8));
+  animation: interaction-idle-glint 2.8s ease-in-out infinite;
+}
+
+.interaction-idle-glint-delay {
+  animation-delay: -1.35s;
+}
+
+.interaction-jar-aura {
+  background: radial-gradient(circle, rgba(255, 222, 77, 0.2), rgba(255, 207, 31, 0.05) 45%, transparent 72%);
+  animation: interaction-aura-breathe 3.2s ease-in-out infinite;
+}
+
+.interaction-jar-react {
+  transform-origin: 50% 72%;
+  animation: interaction-jar-catch 0.54s cubic-bezier(0.2, 1.55, 0.4, 1);
+}
+
+.interaction-energy-orb {
+  width: 38px;
+  height: 38px;
+  margin: -8px 0 0 -8px;
+  filter: drop-shadow(0 0 7px #fff) drop-shadow(0 0 15px rgba(255, 196, 18, 0.98));
+  animation: interaction-energy-flight 0.92s cubic-bezier(0.18, 0.74, 0.18, 1) forwards;
+}
+
+.interaction-energy-tail {
+  position: absolute;
+  left: -30px;
+  top: 16px;
+  width: 42px;
+  height: 7px;
+  border-radius: 999px;
+  transform-origin: right center;
+  background: linear-gradient(90deg, transparent, rgba(255, 223, 75, 0.95));
+  filter: blur(2px);
+}
+
+.interaction-screen-burst {
+  animation: interaction-screen-impact 1.25s ease-out;
+}
+
+.interaction-energy-beam {
+  opacity: 0;
+  background: linear-gradient(180deg, transparent, rgba(255, 242, 165, 0.75) 28%, rgba(255, 202, 34, 0.92) 68%, transparent);
+  filter: blur(8px) drop-shadow(0 0 22px rgba(255, 200, 22, 0.9));
+  animation: interaction-beam-strike 0.95s ease-out forwards;
+}
+
+.interaction-shockwave {
+  opacity: 0;
+  box-shadow: 0 0 18px rgba(255, 210, 40, 0.85), inset 0 0 12px rgba(255, 255, 255, 0.85);
+  animation: interaction-shockwave 0.95s 0.18s ease-out forwards;
+}
+
+.interaction-flash {
+  opacity: 0;
+  background: radial-gradient(circle at 50% 47%, rgba(255, 255, 255, 0.96), rgba(255, 221, 93, 0.38) 23%, transparent 62%);
+  animation: interaction-flash 0.78s 0.12s ease-out forwards;
+}
+
+.interaction-star-rain {
+  opacity: 0;
+  filter: drop-shadow(0 0 7px rgba(255, 202, 24, 0.85));
+  animation-name: interaction-star-rain;
+  animation-timing-function: cubic-bezier(0.18, 0.72, 0.24, 1);
+  animation-fill-mode: forwards;
+}
+
+.score-claim-mega {
+  color: #8056e5;
+  filter: drop-shadow(0 5px 10px rgba(128, 86, 229, 0.28));
+  animation: interaction-score-mega 1.2s 0.28s cubic-bezier(0.18, 1.35, 0.35, 1) both;
+}
+
+@keyframes interaction-idle-glint {
+  0%, 100% { opacity: 0.28; transform: scale(0.72) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.22) rotate(18deg); }
+}
+
+@keyframes interaction-aura-breathe {
+  0%, 100% { opacity: 0.38; transform: scale(0.86); }
+  50% { opacity: 0.9; transform: scale(1.08); }
+}
+
+@keyframes interaction-jar-catch {
+  0%, 100% { transform: translateX(-50%) scale(1) rotate(0); }
+  45% { transform: translateX(-50%) scale(1.08) rotate(-2deg); }
+  68% { transform: translateX(-50%) scale(0.97) rotate(1deg); }
+}
+
+@keyframes interaction-energy-flight {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.55) rotate(0deg); }
+  18% { opacity: 1; transform: translate(-15px, -30px) scale(1.15) rotate(38deg); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--interaction-flight-x), var(--interaction-flight-y)) scale(0.16) rotate(290deg); }
+}
+
+@keyframes interaction-screen-impact {
+  0%, 100% { filter: none; }
+  18% { filter: brightness(1.18) saturate(1.24); }
+}
+
+@keyframes interaction-beam-strike {
+  0% { opacity: 0; transform: translateX(-50%) scaleX(0.16) translateY(-30px); }
+  24% { opacity: 1; transform: translateX(-50%) scaleX(1.3) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) scaleX(0.38) translateY(24px); }
+}
+
+@keyframes interaction-shockwave {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.35); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(8.5); }
+}
+
+@keyframes interaction-flash {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  34% { opacity: 1; transform: scale(1.12); }
+}
+
+@keyframes interaction-star-rain {
+  0% { opacity: 0; transform: translateY(-25px) scale(0.35) rotate(0deg); }
+  18% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(430px) scale(1.15) rotate(310deg); }
+}
+
+@keyframes interaction-score-mega {
+  0% { opacity: 0; transform: translate(-50%, 18px) scale(0.35); }
+  45% { opacity: 1; transform: translate(-50%, -20px) scale(1.75); }
+  68% { transform: translate(-50%, -15px) scale(1.4); }
+  100% { opacity: 0; transform: translate(-50%, -46px) scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interaction-idle-glint,
+  .interaction-jar-aura,
+  .interaction-jar-react,
+  .interaction-energy-orb,
+  .interaction-screen-burst,
+  .interaction-energy-beam,
+  .interaction-shockwave,
+  .interaction-flash,
+  .interaction-star-rain,
+  .score-claim-mega {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 /* 全局隐藏滚动条，保留滚动功能 */
 html {
   -ms-overflow-style: none;
@@ -140,6 +289,72 @@ html::-webkit-scrollbar {
   animation-delay: -1.1s;
 }
 
+.mall-banner-enter {
+  z-index: 1;
+  will-change: transform, opacity, filter;
+  animation: mall-banner-enter-right 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mall-banner-enter-left {
+  animation-name: mall-banner-enter-left;
+}
+
+.mall-banner-exit {
+  z-index: 0;
+  will-change: transform, opacity, filter;
+  animation: mall-banner-exit-left 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mall-banner-exit-right {
+  animation-name: mall-banner-exit-right;
+}
+
+.mall-banner-copy-enter > span {
+  animation: mall-banner-copy-enter 0.52s 0.16s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mall-banner-copy-enter > span:nth-child(2) {
+  animation-delay: 0.21s;
+}
+
+.mall-banner-copy-enter > span:nth-child(3) {
+  animation-delay: 0.27s;
+}
+
+@keyframes mall-banner-enter-right {
+  0% { opacity: 0; transform: translateX(16%) scale(1.08); filter: blur(7px) saturate(1.18); }
+  100% { opacity: 1; transform: translateX(0) scale(1); filter: blur(0) saturate(1); }
+}
+
+@keyframes mall-banner-enter-left {
+  0% { opacity: 0; transform: translateX(-16%) scale(1.08); filter: blur(7px) saturate(1.18); }
+  100% { opacity: 1; transform: translateX(0) scale(1); filter: blur(0) saturate(1); }
+}
+
+@keyframes mall-banner-exit-left {
+  0% { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: translateX(-10%) scale(0.94); filter: blur(5px); }
+}
+
+@keyframes mall-banner-exit-right {
+  0% { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: translateX(10%) scale(0.94); filter: blur(5px); }
+}
+
+@keyframes mall-banner-copy-enter {
+  0% { opacity: 0; transform: translateY(12px); filter: blur(3px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mall-banner-enter,
+  .mall-banner-exit,
+  .mall-banner-copy-enter > span {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 .eye-preview-blink {
   overflow: hidden;
   transform: rotate(-4deg);
@@ -247,6 +462,25 @@ html::-webkit-scrollbar {
   }
 }
 
+@keyframes score-claim-fly {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.72);
+  }
+  24% {
+    opacity: 1;
+    transform: translate(-50%, -8px) scale(1.12);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -72px) scale(0.9);
+  }
+}
+
+.score-claim-fly {
+  animation: score-claim-fly 1.05s cubic-bezier(0.2, 0.72, 0.22, 1) forwards;
+}
+
 @keyframes mall-new-breathe {
   0%, 100% {
     transform: scale(1);
@@ -287,4 +521,34 @@ html::-webkit-scrollbar {
 }
 :root {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+@keyframes growth-stage-slide-next {
+  from {
+    opacity: 0.55;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes growth-stage-slide-previous {
+  from {
+    opacity: 0.55;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.growth-stage-slide-next {
+  animation: growth-stage-slide-next 240ms ease-out;
+}
+
+.growth-stage-slide-previous {
+  animation: growth-stage-slide-previous 240ms ease-out;
 }

@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Backpack, Cat, Check, Coins, EyeOff, Heart, LockKeyhole, Pause, Play, RotateCcw, Sparkles, Star, Volume2, X } from 'lucide-react';
+import { ArrowLeft, AudioWaveform, Backpack, Check, CircleChevronRight, Coins, Eye, EyeClosed, EyeOff, Heart, RotateCcw, ShoppingBag, Sparkles, Star, Volume2, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PointsBalancePill from '@/components/PointsBalancePill';
 import { useDialogueStore } from '@/store/useDialogueStore';
+import { usePetStore } from '@/store/usePetStore';
+import { getGrowthStageIndex, TRANSLATION_COLLAR_STAGE } from '@/utils/translationCollar';
 
 interface EyeItem {
   id: number;
@@ -15,6 +17,7 @@ interface EyeItem {
   productId?: string;
   previewType?: 'eye' | 'eyeshadow';
   eyelidStyle?: 'default' | 'gentle' | 'sleepy';
+  eyelidTone?: 'aqua' | 'violet';
 }
 
 const eyeOptions: EyeItem[] = [
@@ -69,32 +72,64 @@ const defaultEyeshadowOptions: EyeItem[] = [
     id: 200,
     previewImg: '/images/moiedap1-khtkfqv.png',
     badge: null,
-    name: '默认眼皮',
+    name: '默认眼影',
     locked: false,
     previewType: 'eyeshadow',
     eyelidStyle: 'default',
+    eyelidTone: 'aqua',
   },
   {
     id: 203,
     previewImg: '/images/moiedap1-khtkfqv.png',
     badge: null,
-    name: '温柔眼皮',
-    locked: true,
-    source: 'lottery',
-    productId: 'gentle-eyelids',
+    name: '温柔眼影',
+    locked: false,
     previewType: 'eyeshadow',
     eyelidStyle: 'gentle',
+    eyelidTone: 'violet',
   },
   {
     id: 204,
     previewImg: '/images/moiedap1-khtkfqv.png',
     badge: null,
-    name: '困困眼皮',
-    locked: true,
-    source: 'lottery',
-    productId: 'sleepy-eyelids',
+    name: '困困眼影',
+    locked: false,
     previewType: 'eyeshadow',
     eyelidStyle: 'sleepy',
+    eyelidTone: 'aqua',
+  },
+  {
+    id: 205,
+    previewImg: '/images/moiedap1-khtkfqv.png',
+    badge: null,
+    name: '清晨眼影',
+    locked: true,
+    productId: 'morning-eyelids',
+    previewType: 'eyeshadow',
+    eyelidStyle: 'default',
+    eyelidTone: 'aqua',
+  },
+  {
+    id: 206,
+    previewImg: '/images/moiedap1-khtkfqv.png',
+    badge: null,
+    name: '星夜眼影',
+    locked: true,
+    productId: 'starlight-eyelids',
+    previewType: 'eyeshadow',
+    eyelidStyle: 'gentle',
+    eyelidTone: 'violet',
+  },
+  {
+    id: 207,
+    previewImg: '/images/moiedap1-khtkfqv.png',
+    badge: null,
+    name: '晴空眼影',
+    locked: true,
+    productId: 'clear-sky-eyelids',
+    previewType: 'eyeshadow',
+    eyelidStyle: 'sleepy',
+    eyelidTone: 'aqua',
   },
 ];
 
@@ -108,10 +143,13 @@ const mallPointPrices: Record<string, number> = {
   'moon-pixel-eyes': 3000,
   'sunset-pixel-eyes': 2400,
   'mint-eyes': 3000,
-  'vitality-eyelids': 48000,
-  'sunset-eyelids': 48000,
-  'gentle-eyelids': 10000,
-  'sleepy-eyelids': 10000,
+  'vitality-eyelids': 4000,
+  'sunset-eyelids': 4000,
+  'gentle-eyelids': 4000,
+  'sleepy-eyelids': 4000,
+  'morning-eyelids': 4000,
+  'starlight-eyelids': 4000,
+  'clear-sky-eyelids': 4000,
 };
 
 const eyePointPrices = {
@@ -139,19 +177,20 @@ const badgeStyle = {
 interface VoiceItem {
   id: number;
   name: string;
+  gridImagePosition: string;
+  detailImagePosition: string;
   description: string;
-  imagePosition: string;
   productId: string | null;
   price: number;
+  originalPrice?: number;
   source: 'native' | 'shop' | 'lottery' | 'growth';
 }
 
 const voiceOptions: VoiceItem[] = [
-  { id: 1, name: '原生声线', description: '来自 Ropet 星球的原生语言，\n轻轻哼唱，也会撒娇地小声回应。', imagePosition: '-260px -162px', productId: null, price: 0, source: 'native' },
-  { id: 2, name: '豚豚语', description: '呜喂～呜喂～\nRopet 听一次就学会的小豚语言。', imagePosition: '-245px -314px', productId: 'cavy-talk', price: 6000, source: 'shop' },
-  { id: 3, name: '咩咩语', description: '咩～咩～今天也想为你唱一首歌。', imagePosition: '-249px -474px', productId: 'little-lamb', price: 6000, source: 'shop' },
-  { id: 4, name: '萌萌语', description: '只有最聪明的 Ropet 才能掌握的秘密语言。', imagePosition: '-261px -636px', productId: 'moe-language', price: 6000, source: 'growth' },
-  { id: 5, name: '猫猫语', description: '喵呜～喵呜～\n从幸运抽奖机学会的猫猫语言。', imagePosition: '-260px -162px', productId: 'cat-talk', price: 6000, source: 'lottery' },
+  { id: 1, name: '原声', gridImagePosition: '-24px -129px', detailImagePosition: '-57px -309px', description: '来自 Ropet 星球的原生语言，轻轻哼唱，也会撒娇地小声回应。', productId: null, price: 0, source: 'native' },
+  { id: 2, name: '萌萌语(ropiropi)', gridImagePosition: '-205px -129px', detailImagePosition: '-491px -309px', description: 'ropiropi～只有最聪明的 Ropet 才能掌握的秘密语言，听起来轻快又可爱。', productId: 'moe-language', price: 2000, originalPrice: 3200, source: 'growth' },
+  { id: 3, name: '豚鼠语', gridImagePosition: '-24px -403px', detailImagePosition: '-57px -966px', description: 'uwei～uwei～豚鼠怎么叫？Ropet 自从听了一次后就潜心钻研，终于掌握了这门外语！', productId: 'cavy-talk', price: 6000, source: 'shop' },
+  { id: 4, name: '修猫语', gridImagePosition: '-205px -403px', detailImagePosition: '-491px -966px', description: '喵呜～喵呜～从幸运抽奖机学会的猫猫语言，每一声都像在悄悄撒娇。', productId: 'cat-talk', price: 6000, source: 'lottery' },
 ];
 
 type UnlockTarget =
@@ -163,6 +202,14 @@ function EyeBadge({ type }: { type: NonNullable<EyeItem['badge']> }) {
     <div className={`absolute left-[8px] top-[8px] w-6 h-6 rounded-full ${badgeStyle[type]} flex items-center justify-center text-[13px] font-black shadow-[0_4px_10px_rgba(96,80,150,0.16)]`}>
       ◆
     </div>
+  );
+}
+
+function ShopSourceBadge() {
+  return (
+    <span className="pointer-events-none absolute left-0 top-0 z-10 flex h-9 w-11 items-center justify-center rounded-[13px] bg-[#f4f3f5]">
+      <img src="/images/shop-source-badge.png" alt="商城" className="h-8 w-8" />
+    </span>
   );
 }
 
@@ -178,6 +225,7 @@ const EyeChange: React.FC = () => {
   );
   const isEyeshadowPreview = mallPreviewType === 'eyeshadow';
   const redeemedMallItems = useDialogueStore((state) => state.redeemedMallItems);
+  const pet = usePetStore((state) => state.pet);
   const points = useDialogueStore((state) => state.points);
   const startMallRedemption = useDialogueStore((state) => state.startMallRedemption);
   const completeMallRedemption = useDialogueStore((state) => state.completeMallRedemption);
@@ -194,7 +242,7 @@ const EyeChange: React.FC = () => {
   const [activeMode, setActiveMode] = useState<'eyes' | 'voice'>('eyes');
   const [selectedVoiceId, setSelectedVoiceId] = useState(1);
   const [appliedVoiceId, setAppliedVoiceId] = useState(1);
-  const [playingVoiceId, setPlayingVoiceId] = useState<number | null>(null);
+  const [previewingVoiceId, setPreviewingVoiceId] = useState<number | null>(null);
   const [activeEyeTheme, setActiveEyeTheme] = useState('MY');
   const [myCollectionTab, setMyCollectionTab] = useState<'all' | 'pure' | 'favorite'>('all');
   const [demoEmptyPure, setDemoEmptyPure] = useState(false);
@@ -214,11 +262,8 @@ const EyeChange: React.FC = () => {
   const ownedMallEyes = mallEyeOptions
     .filter((eye) => eye.productId && (redeemedMallItems?.[eye.productId] ?? 0) > 0)
     .map((eye) => ({ ...eye, locked: false }));
-  const ownedMallEyeshadows = mallEyeshadowOptions
-    .filter((eye) => eye.productId && (redeemedMallItems?.[eye.productId] ?? 0) > 0)
-    .map((eye) => ({ ...eye, locked: false }));
   const previewOptions = isEyeshadowPreview
-    ? isMallPreview ? mallEyeshadowOptions : [...defaultEyeshadowOptions, ...ownedMallEyeshadows]
+    ? isMallPreview ? mallEyeshadowOptions : defaultEyeshadowOptions
     : mallEyeOptions;
   const displayedEyes = isEyeshadowPreview
     ? previewOptions.map((eye) => ({
@@ -237,12 +282,15 @@ const EyeChange: React.FC = () => {
           ? nativeEyes.filter((eye) => !eye.locked).slice(0, 3)
           : [...nativeEyes.filter((eye) => !eye.locked), ...ownedMallEyes]
       : nativeEyes;
-  const displayedVoices = voiceOptions
-    .filter((voice) => voice.source === 'native' || voice.source === 'lottery' || Boolean(voice.productId && (redeemedMallItems?.[voice.productId] ?? 0) > 0))
-    .map((voice) => ({
-      ...voice,
-      locked: Boolean(voice.productId && (redeemedMallItems?.[voice.productId] ?? 0) <= 0),
-    }));
+  const growthVoiceUnlocked = getGrowthStageIndex(pet?.growth_stage) >= getGrowthStageIndex(TRANSLATION_COLLAR_STAGE);
+  const displayedVoices = voiceOptions.map((voice) => ({
+    ...voice,
+    locked: voice.source === 'native'
+      ? false
+      : voice.source === 'growth'
+        ? !growthVoiceUnlocked
+        : Boolean(voice.productId && (redeemedMallItems?.[voice.productId] ?? 0) <= 0),
+  }));
   const selectedEye = displayedEyes.find((eye) => eye.id === selectedEyeId) || displayedEyes[0] || nativeEyes[0];
   const currentOutfitEye = [...eyeOptions, ...mallEyeOptions]
     .find((eye) => eye.id === (isEyeshadowPreview ? eyeSelectionRef.current : selectedEyeId));
@@ -264,9 +312,17 @@ const EyeChange: React.FC = () => {
     && (currentOutfitEyeshadow?.productId ? equippedMallEyeshadowId === currentOutfitEyeshadow.productId : appliedEyeshadowId === currentOutfitEyeshadow?.id);
   const selectedVoiceApplied = appliedVoiceId === selectedVoiceId;
   const fullSelectionApplied = selectedOutfitApplied && selectedVoiceApplied;
+  const outfitActionLabel = unownedOutfitItems.length > 0
+    ? `兑换${unownedOutfitItems.length > 1 ? unownedOutfitItems.length : ''}`
+    : fullSelectionApplied ? '使用中' : '使用';
   const unlockRequiresMall = Boolean(unlockTarget && (
     (unlockTarget.kind === 'voice' && unlockTarget.item.source === 'shop')
     || (unlockTarget.kind === 'eye' && unlockTarget.item.source === 'shop')
+  ));
+  const voiceDetailOwned = Boolean(unlockTarget?.kind === 'voice' && (
+    !unlockTarget.item.productId
+    || (unlockTarget.item.source === 'growth' && growthVoiceUnlocked)
+    || (redeemedMallItems?.[unlockTarget.item.productId] ?? 0) > 0
   ));
 
   useEffect(() => {
@@ -537,7 +593,7 @@ const EyeChange: React.FC = () => {
   return (
     <div className="relative w-full min-h-screen bg-[#d8deea] overflow-hidden flex justify-center py-4">
       <div className="relative w-[393px] h-[852px] mx-auto overflow-hidden rounded-[28px] border border-white/70 shadow-[0_20px_50px_rgba(15,23,42,0.22)] bg-white">
-        <div className="absolute inset-x-0 top-0 bg-cover bg-center" style={{ height: activeMode === 'eyes' ? 452 : 852, backgroundImage: "url('/images/moiedap1-dbc8fds.png')" }} />
+        <div className="absolute inset-x-0 top-0 bg-[#f3eef4]" style={{ height: activeMode === 'eyes' ? 452 : 852 }} />
 
         <div className="relative z-20 flex items-center justify-between px-[28px] pt-[18px] text-[#19181f]">
           <div className="text-[16px] font-semibold">9:41</div>
@@ -565,7 +621,7 @@ const EyeChange: React.FC = () => {
               }
               navigate(pageReturnTo || (isMallPreview ? mallReturnTo : '/'), { replace: Boolean(pageReturnTo) });
             }}
-            className={`flex w-10 h-10 items-center justify-center active:scale-95 transition-transform ${activeMode === 'eyes' ? 'text-white' : 'text-[#2f2b33]'}`}
+            className="flex h-10 w-10 items-center justify-center text-[#2f2b33] transition-transform active:scale-95"
             aria-label="返回"
           >
             <ArrowLeft size={30} strokeWidth={2.2} />
@@ -604,9 +660,7 @@ const EyeChange: React.FC = () => {
             disabled={unownedOutfitItems.length === 0 && fullSelectionApplied}
             className="h-10 min-w-[68px] rounded-full bg-[#8d66ef] px-4 text-[16px] font-semibold text-white shadow-[0_8px_18px_rgba(141,102,239,0.28)] transition-all active:scale-95 disabled:cursor-default disabled:bg-[#b8b2bd] disabled:shadow-none disabled:active:scale-100"
           >
-            {unownedOutfitItems.length > 0
-              ? `使用${unownedOutfitItems.length > 1 ? unownedOutfitItems.length : ''}`
-              : fullSelectionApplied ? '使用中' : '使用'}
+            {outfitActionLabel}
           </button>
         </div>
 
@@ -632,31 +686,17 @@ const EyeChange: React.FC = () => {
             type="button"
             aria-label="切换到试美瞳"
             onClick={() => switchMallPreviewType('eye')}
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-[20px] transition-all ${isEyeshadowPreview ? 'bg-white/75 opacity-55 shadow-[0_4px_10px_rgba(20,16,32,0.06)]' : 'bg-white shadow-[0_6px_14px_rgba(20,16,32,0.12)] ring-2 ring-[#8d66ef]'}`}
+            className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${isEyeshadowPreview ? 'bg-white/75 opacity-70 shadow-[0_4px_10px_rgba(20,16,32,0.06)]' : 'bg-white text-[#29262d] shadow-[0_6px_14px_rgba(20,16,32,0.12)] ring-[3px] ring-[#8d66ef]'}`}
           >
-            <span className="relative block w-7 h-4">
-              <span className="absolute left-0 top-0 w-4 h-4 rounded-full border-2 border-[#19181f] bg-white">
-                <span className="absolute left-[5px] top-[5px] w-[5px] h-[5px] rounded-full bg-[#19181f]" />
-              </span>
-              <span className="absolute right-0 top-0 w-4 h-4 rounded-full border-2 border-[#19181f] bg-white">
-                <span className="absolute left-[5px] top-[5px] w-[5px] h-[5px] rounded-full bg-[#19181f]" />
-              </span>
-            </span>
+            <Eye size={30} strokeWidth={2.8} />
           </button>
           <button
             type="button"
             aria-label="切换到试眼影"
             onClick={() => switchMallPreviewType('eyeshadow')}
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-[18px] transition-all ${isEyeshadowPreview ? 'bg-white opacity-100 shadow-[0_6px_14px_rgba(20,16,32,0.14)] ring-2 ring-[#8d66ef]' : 'bg-white/85 opacity-70 shadow-[0_6px_14px_rgba(20,16,32,0.08)]'}`}
+            className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${isEyeshadowPreview ? 'bg-white text-[#29262d] shadow-[0_6px_14px_rgba(20,16,32,0.14)] ring-[3px] ring-[#8d66ef]' : 'bg-white/85 text-[#29262d] opacity-80 shadow-[0_6px_14px_rgba(20,16,32,0.08)]'}`}
           >
-            <span className="relative block w-7 h-4">
-              <span className={`absolute left-0 top-0 w-4 h-4 rounded-full border-2 bg-white ${isEyeshadowPreview ? 'border-[#8d66ef]' : 'border-[#a3a0aa]'}`}>
-                <span className={`absolute left-[4px] top-[6px] w-[6px] h-[2px] rounded-full ${isEyeshadowPreview ? 'bg-[#8d66ef]' : 'bg-[#a3a0aa]'}`} />
-              </span>
-              <span className={`absolute right-0 top-0 w-4 h-4 rounded-full border-2 bg-white ${isEyeshadowPreview ? 'border-[#8d66ef]' : 'border-[#a3a0aa]'}`}>
-                <span className={`absolute left-[4px] top-[6px] w-[6px] h-[2px] rounded-full ${isEyeshadowPreview ? 'bg-[#8d66ef]' : 'bg-[#a3a0aa]'}`} />
-              </span>
-            </span>
+            <EyeClosed size={31} strokeWidth={2.8} />
           </button>
         </div>
 
@@ -716,8 +756,8 @@ const EyeChange: React.FC = () => {
 
             <div className="flex h-[58px] items-center gap-4 px-5">
               {([
-                { id: 'all', label: '全部装扮', icon: Cat },
-                { id: 'pure', label: '已拥有', icon: Backpack },
+                { id: 'all', label: '全部装扮', icon: Backpack },
+                { id: 'pure', label: '已拥有', icon: ShoppingBag },
                 { id: 'favorite', label: '我的收藏', icon: Heart },
               ] as const).map((tab) => {
                 const Icon = tab.icon;
@@ -759,29 +799,32 @@ const EyeChange: React.FC = () => {
           )}
 
           <div className="overflow-y-auto scrollbar-hide px-4 pt-4 pb-10" style={{ height: isMallPreview || isEyeshadowPreview ? 443 : 321 }}>
-            <div className="grid grid-cols-3 gap-x-[16px] gap-y-[18px]">
+            {isEyeshadowPreview && !isMallPreview && (
+              <h2 className="mb-5 px-1 text-[18px] font-semibold text-[#29252d]">眼影</h2>
+            )}
+            <div className="grid grid-cols-3 gap-x-[16px] gap-y-[10px]">
               {displayedEyes.map((eye) => (
                 <button
                   key={eye.id}
                   type="button"
                   onClick={() => handleEyeSelect(eye)}
-                  className="relative flex items-center justify-center overflow-hidden transition-transform active:scale-95"
-                  style={{
-                    width: 108,
-                    height: 108,
-                    borderRadius: 20,
-                    background: eye.locked ? '#858589' : '#f6f5f7',
-                    border: selectedEye.id === eye.id ? '3px solid #8d66ef' : '3px solid transparent',
-                  }}
+                  aria-label={`${eye.name}${eye.locked ? `，${getEyePointPrice(eye).toLocaleString()}积分` : '，已拥有'}`}
+                  className="relative flex h-[132px] w-[108px] flex-col items-center justify-start transition-transform active:scale-95"
                 >
-                  {eye.previewType === 'eyeshadow' ? (
-                    <span className={`relative h-[96px] w-[96px] overflow-hidden rounded-[17px] bg-gradient-to-b from-[#f6e6f1] to-white ${eye.locked ? 'opacity-55' : ''}`}>
+                  <span className={`relative flex h-[96px] w-[96px] shrink-0 items-center justify-center overflow-hidden rounded-[17px] bg-[#f6f5f7] ${selectedEye.id === eye.id ? 'ring-[3px] ring-[#8d66ef]' : ''}`}>
+                    {eye.previewType === 'eyeshadow' ? (
+                    <span className="relative h-[96px] w-[96px] overflow-hidden rounded-[17px] bg-[#f3f3f3]">
                       {eye.eyelidStyle ? (
-                        <>
-                          <img src={eye.previewImg} alt={eye.name} className="absolute inset-0 h-full w-full scale-[1.34] object-contain object-center" />
-                          <span className={`absolute left-[27px] top-[39px] h-[17px] w-[18px] rounded-full border-t-[4px] ${eye.eyelidStyle === 'gentle' ? '-rotate-[8deg] border-[#b47b83] bg-[#f3dfe2]' : eye.eyelidStyle === 'sleepy' ? 'rotate-[3deg] border-t-[6px] border-[#6f6670] bg-[#ddd9e0]' : 'border-[#8f7e79] bg-[#e8ddd8]'}`} />
-                          <span className={`absolute right-[27px] top-[39px] h-[17px] w-[18px] rounded-full border-t-[4px] ${eye.eyelidStyle === 'gentle' ? 'rotate-[8deg] border-[#b47b83] bg-[#f3dfe2]' : eye.eyelidStyle === 'sleepy' ? '-rotate-[3deg] border-t-[6px] border-[#6f6670] bg-[#ddd9e0]' : 'border-[#8f7e79] bg-[#e8ddd8]'}`} />
-                        </>
+                        <span className="flex h-full w-full items-center justify-center gap-4">
+                          {[0, 1].map((side) => (
+                            <span
+                              key={side}
+                              className={`relative h-[30px] w-[30px] rounded-full border shadow-[inset_0_5px_8px_rgba(255ავის,255,255,0.45),0_3px_8px_rgba(80,100,160,0.14)] ${eye.eyelidTone === 'violet' ? 'border-[#8175e4] bg-gradient-to-b from-[#b9b5ff] via-[#9996ee] to-[#7779df]' : 'border-[#56b9cc] bg-gradient-to-b from-[#9be9f2] via-[#78cfdf] to-[#55b7cc]'}`}
+                            >
+                              <span className={`absolute inset-x-[3px] bottom-[8px] h-px rounded-full ${eye.eyelidTone === 'violet' ? 'bg-[#655dce]' : 'bg-[#429caf]'}`} />
+                            </span>
+                          ))}
+                        </span>
                       ) : (
                         <img src={eye.previewImg} alt={eye.name} className="absolute inset-0 h-full w-full object-cover" />
                       )}
@@ -790,42 +833,43 @@ const EyeChange: React.FC = () => {
                     <span
                       role="img"
                       aria-label={eye.name}
-                      className={`h-[96px] w-[96px] bg-white bg-no-repeat ${eye.locked ? 'opacity-50' : ''}`}
+                      className="h-[96px] w-[96px] bg-no-repeat mix-blend-multiply"
                       style={{ backgroundImage: `url('${eye.previewImg}')`, backgroundPosition: eye.spritePosition, backgroundSize: '300% 300%' }}
                     />
                   ) : (
                     <img
                       src={eye.previewImg}
                       alt={eye.name}
-                      className={`object-contain ${eye.locked ? 'opacity-40 grayscale-[25%]' : ''}`}
+                      className="object-contain"
                       style={{ width: 96, height: 96 }}
                     />
                   )}
-                  {eye.badge && <EyeBadge type={eye.badge} />}
-                  {(eye.previewType === 'eyeshadow' ? appliedEyeshadowId : appliedEyeId) === eye.id && (
-                    <span className="absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#8d66ef] text-white shadow-md">
-                      <Check size={15} strokeWidth={3} />
-                    </span>
-                  )}
-                  {eye.locked && (
-                    <span className="absolute inset-0 flex items-center justify-center rounded-[18px] bg-[#3f3f45]/25 text-white">
-                      <LockKeyhole size={31} fill="white" className="drop-shadow-[0_4px_7px_rgba(0,0,0,0.38)]" />
-                    </span>
-                  )}
-                  {eye.locked && eye.productId && (
-                    <span className="absolute bottom-2 left-1/2 z-20 flex h-6 -translate-x-1/2 items-center rounded-full bg-[#27212c]/88 px-2.5 text-[10px] font-black text-white shadow-md backdrop-blur-sm">
-                      ★ {getEyePointPrice(eye).toLocaleString()}
-                    </span>
-                  )}
+                  </span>
+                  {eye.source === 'shop'
+                    ? <ShopSourceBadge />
+                    : eye.badge && !eye.spritePosition && <EyeBadge type={eye.badge} />}
+                  <span className="mt-2 flex h-5 items-center justify-center text-[12px] font-medium text-[#242129]">
+                    {eye.locked ? (
+                      <><Coins size={14} className="mr-1 text-[#f2b52d]" strokeWidth={2.2} />{getEyePointPrice(eye).toLocaleString()}</>
+                    ) : (
+                      <span className="text-[#aaa6ac]">已拥有</span>
+                    )}
+                  </span>
                 </button>
               ))}
             </div>
             {displayedEyes.length === 0 && (
-              <div className="flex h-[230px] flex-col items-center justify-center text-[#9a92a0]">
-                <Sparkles size={25} strokeWidth={1.8} />
-                <p className="mt-3 text-[15px] font-bold text-[#5f5963]">空空如也</p>
-                <p className="mt-1 text-[11px] text-[#aaa4af]">还没有商城美瞳</p>
-              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/interaction-history?shop=eyes')}
+                className="flex h-[250px] w-full flex-col items-center justify-center text-[#8d66ef] transition-transform active:scale-[0.98]"
+              >
+                <img src="/images/shop-source-badge.png" alt="" className="h-[112px] w-[112px]" />
+                <span className="mt-4 flex items-center text-[16px] font-medium">
+                  去商城购买
+                  <CircleChevronRight size={18} className="ml-1" fill="#8d66ef" color="white" />
+                </span>
+              </button>
             )}
           </div>
 
@@ -844,24 +888,14 @@ const EyeChange: React.FC = () => {
             setOutfitCheckoutOpen(false);
             setOutfitPointsInsufficientOpen(false);
           }}>
-            <div className="absolute left-1/2 top-[76px] z-10 -translate-x-1/2" onClick={(event) => event.stopPropagation()}>
-              <PointsBalancePill
-                points={points}
-                onAdd={() => {
-                  const productIds = selectedOutfitItems.map((item) => item.productId).filter(Boolean).join(',');
-                  const returnPath = isMallPreview
-                    ? `/eye-change?source=mall&product=${mallProductId ?? ''}&outfit=${productIds}&returnTo=${encodeURIComponent(mallReturnTo)}`
-                    : `/eye-change?outfit=${productIds}`;
-                  navigate(`/points-store?returnTo=${encodeURIComponent(returnPath)}`);
-                }}
-                className="max-w-[176px]"
-              />
+            <div className="absolute left-1/2 top-[275px] z-10 flex h-[36px] min-w-[88px] -translate-x-1/2 items-center justify-center gap-1.5 rounded-full bg-white/85 px-3 text-[17px] font-semibold text-[#242129] shadow-[0_5px_15px_rgba(35,29,43,0.14)] backdrop-blur-md" onClick={(event) => event.stopPropagation()}>
+              <Coins size={18} className="text-[#f6b91d]" fill="#fff2b1" />
+              {points.toLocaleString()}
             </div>
-            <section className="w-full rounded-t-[28px] bg-white px-5 pb-8 pt-5 shadow-[0_-18px_45px_rgba(32,25,38,0.18)]" onClick={(event) => event.stopPropagation()}>
-              <div className="mx-auto h-1 w-10 rounded-full bg-[#ddd8e1]" />
-              <h2 className="mt-5 text-[21px] font-black text-[#29252d]">积分兑换</h2>
+            <section className="flex h-[531px] w-full flex-col rounded-t-[14px] bg-white pt-5 shadow-[0_-18px_45px_rgba(32,25,38,0.18)]" onClick={(event) => event.stopPropagation()}>
+              <h2 className="px-5 text-[20px] font-semibold text-[#29252d]">兑换确认</h2>
 
-              <div className="mt-4 divide-y divide-[#eeeaf1] border-y border-[#eeeaf1]">
+              <div className="mt-4 px-5">
                 {unownedOutfitItems.map((item) => {
                   const selected = Boolean(item.productId && checkoutSelectedProductIds.includes(item.productId));
                   return (
@@ -875,52 +909,50 @@ const EyeChange: React.FC = () => {
                         ? current.filter((id) => id !== item.productId)
                         : [...current, item.productId as string]);
                     }}
-                    className={`flex h-[70px] w-full items-center gap-2 text-left transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#8d66ef] ${selected ? 'opacity-100' : 'opacity-45'}`}
+                    className={`flex h-[112px] w-full items-center text-left transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#8d66ef] ${selected ? 'opacity-100' : 'opacity-45'}`}
                   >
-                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border-2 transition-colors ${selected ? 'border-[#7c5ae0] bg-[#7c5ae0] text-white' : 'border-[#cfc9d4] bg-white text-transparent'}`}>
-                      <Check size={13} strokeWidth={3.2} />
+                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${selected ? 'border-[#8059e8] bg-[#8059e8] text-white' : 'border-[#cfc9d4] bg-white text-transparent'}`}>
+                      <Check size={15} strokeWidth={3.2} />
                     </span>
-                    <span className="h-12 w-12 shrink-0 overflow-hidden rounded-[10px] bg-[#f4f1f6]">
-                      {item.previewType === 'eyeshadow' ? (
-                        <img src={item.previewImg} alt="" className="h-full w-full object-cover" />
+                    <span className="ml-3 h-[92px] w-[92px] shrink-0 overflow-hidden rounded-[14px] bg-[#f4f3f5]">
+                      {item.previewType === 'eyeshadow' || !item.spritePosition ? (
+                        <img src={item.previewImg} alt="" className="h-full w-full object-contain" />
                       ) : (
                         <span className="block h-full w-full bg-white bg-no-repeat" style={{ backgroundImage: `url('${item.previewImg}')`, backgroundPosition: item.spritePosition, backgroundSize: '300% 300%' }} />
                       )}
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <strong className="block truncate text-[14px] text-[#312c35]">{item.name}</strong>
+                    <span className="ml-3 min-w-0 flex-1">
+                      <strong className="block truncate text-[16px] font-semibold text-[#312c35]">{item.name}</strong>
+                      <span className="mt-2 flex items-center text-[14px] text-[#242129]">
+                        <Coins size={15} className="mr-1 text-[#f6b91d]" fill="#fff2b1" />
+                        {getEyePointPrice(item).toLocaleString()}
+                      </span>
                     </span>
-                    <strong className="flex items-center text-[14px] text-[#6d50c7]"><span className="mr-1 text-[#ffc52e]">★</span>{getEyePointPrice(item).toLocaleString()}</strong>
                   </button>
                   );
                 })}
               </div>
 
-              <div className="mt-4 flex items-end justify-end">
-                <span className="text-right">
-                  <span className="block text-[10px] text-[#9a929f]">合计</span>
-                  <strong className="text-[22px] font-black text-[#6d50c7]">★ {checkoutPointTotal.toLocaleString()}</strong>
-                </span>
-              </div>
+              <div className="mt-auto border-t border-[#ece9ee] px-5 pb-[52px] pt-5">
+                <div className="flex items-center justify-between text-[13px] text-[#7f7983]">
+                  <span>总计</span>
+                  <strong className="flex items-center text-[18px] font-semibold text-[#302c34]">
+                    <Coins size={18} className="mr-1 text-[#f6b91d]" fill="#fff2b1" />
+                    {checkoutPointTotal.toLocaleString()}
+                  </strong>
+                </div>
 
-              <div className="mt-4 flex items-center justify-between rounded-[12px] bg-[#f2eff5] px-3 py-2">
-                <span className="text-[10px] font-bold text-[#98919d]">原型结果</span>
-                <div className="flex rounded-full bg-[#e7e2eb] p-0.5">
-                  <button type="button" onClick={() => setDemoFulfillmentOutcome('success')} className={`h-7 rounded-full px-3 text-[10px] font-bold ${demoFulfillmentOutcome === 'success' ? 'bg-white text-[#6650b5] shadow-sm' : 'text-[#9a939f]'}`}>成功</button>
-                  <button type="button" onClick={() => setDemoFulfillmentOutcome('failure')} className={`h-7 rounded-full px-3 text-[10px] font-bold ${demoFulfillmentOutcome === 'failure' ? 'bg-white text-[#d85c72] shadow-sm' : 'text-[#9a939f]'}`}>失败退款</button>
+                <div className={`mt-4 grid gap-3 ${unownedOutfitItems.some((item) => item.source !== 'shop') ? 'grid-cols-[122px_1fr]' : 'grid-cols-1'}`}>
+                  {unownedOutfitItems.some((item) => item.source !== 'shop') && (
+                    <button type="button" onClick={() => navigate('/lucky-draw-2')} className="flex h-[52px] items-center justify-center rounded-[14px] border-2 border-[#ece9ee] bg-white text-[15px] font-semibold text-[#302c34]">
+                      抽奖获得
+                    </button>
+                  )}
+                  <button type="button" onClick={confirmOutfitRedemption} disabled={isPurchasing || checkoutSelectedItems.length === 0} className="flex h-[52px] items-center justify-center rounded-[14px] bg-[#7c55e7] text-[15px] font-semibold text-white disabled:bg-[#bbb5c4] disabled:opacity-70">
+                    积分兑换
+                  </button>
                 </div>
               </div>
-
-              {unownedOutfitItems.some((item) => item.source === 'lottery') && (
-                <button type="button" onClick={() => navigate('/lucky-draw-2')} className="mt-3 flex h-11 w-full items-center justify-center rounded-[14px] border border-[#dcd3f3] bg-white text-[14px] font-bold text-[#7656ce]">
-                  <Sparkles size={17} className="mr-2" />
-                  抽奖碰运气
-                </button>
-              )}
-              <button type="button" onClick={confirmOutfitRedemption} disabled={isPurchasing || checkoutSelectedItems.length === 0} className="mt-5 flex h-12 w-full items-center justify-center rounded-[15px] bg-[#7c5ae0] text-[15px] font-bold text-white disabled:bg-[#bbb5c4] disabled:opacity-70">
-                <Coins size={18} className="mr-2" />
-                积分兑换
-              </button>
             </section>
           </div>
         )}
@@ -1063,6 +1095,107 @@ const EyeChange: React.FC = () => {
               <button type="button" onClick={() => setUnlockTarget(null)} disabled={isPurchasing} className="mt-3 h-11 w-full rounded-[14px] border border-[#e6e1ed] bg-white text-[14px] font-bold text-[#4f4a55]">取消</button>
             </section>
           </div>
+        ) : unlockTarget?.kind === 'voice' ? (
+          <div
+            className="absolute inset-0 z-[80] flex items-end bg-[rgba(0,0,0,0.48)]"
+            onClick={() => {
+              setPreviewingVoiceId(null);
+              setUnlockTarget(null);
+            }}
+          >
+            <section
+              aria-label={`${unlockTarget.item.name}声音详情`}
+              className="relative h-[676px] w-full overflow-hidden rounded-t-[28px] bg-white shadow-[0_-18px_42px_rgba(31,25,38,0.18)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2">
+                <PointsBalancePill
+                  points={points}
+                  onAdd={() => {
+                    const returnTo = `/eye-change?mode=voice&unlock=${unlockTarget.item.productId ?? ''}`;
+                    navigate(`/points-store?returnTo=${encodeURIComponent(returnTo)}`);
+                  }}
+                  className="max-w-[176px]"
+                />
+              </div>
+              <div
+                role="img"
+                aria-label={`${unlockTarget.item.name}场景预览`}
+                className="h-[384px] w-full bg-no-repeat"
+                style={{
+                  backgroundImage: "url('/images/voice-grid-reference.png')",
+                  backgroundPosition: unlockTarget.item.detailImagePosition,
+                  backgroundSize: '942px 2056px',
+                }}
+              />
+
+              <div className="flex h-[292px] flex-col px-5 pb-5 pt-4">
+                <div className="flex items-center gap-2">
+                  <h2 className="min-w-0 flex-1 truncate text-[19px] font-bold text-[#28242c]">{unlockTarget.item.name}</h2>
+                  <button
+                    type="button"
+                    aria-label={previewingVoiceId === unlockTarget.item.id ? `暂停${unlockTarget.item.name}` : `试听${unlockTarget.item.name}`}
+                    onClick={() => setPreviewingVoiceId((current) => current === unlockTarget.item.id ? null : unlockTarget.item.id)}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#8b61ea] text-white"
+                  >
+                    <AudioWaveform
+                      size={19}
+                      strokeWidth={2.4}
+                      className={previewingVoiceId === unlockTarget.item.id ? 'animate-pulse' : ''}
+                    />
+                  </button>
+                </div>
+
+                <p className="mt-3 text-[12px] leading-[20px] text-[#8d8791]">
+                  {unlockTarget.item.source === 'growth'
+                    ? `${growthVoiceUnlocked ? '第四阶段已解锁。' : '第四阶段解锁。'}${unlockTarget.item.description}`
+                    : unlockTarget.item.description}
+                </p>
+
+                <div className="mt-auto flex w-full gap-3">
+                  {!voiceDetailOwned && (unlockTarget.item.source === 'lottery' || unlockTarget.item.source === 'shop') && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/lucky-draw-2')}
+                      className="flex h-[52px] flex-1 items-center justify-center rounded-[14px] border border-[#8259e5] bg-white text-[15px] font-semibold text-[#8259e5]"
+                    >
+                      去抽奖
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (unlockTarget.item.source === 'growth' && !growthVoiceUnlocked) {
+                        setPreviewingVoiceId(null);
+                        setUnlockTarget(null);
+                        navigate('/growth');
+                        return;
+                      }
+                      if (!voiceDetailOwned) {
+                        confirmDirectRedemption();
+                        return;
+                      }
+                      setSelectedVoiceId(unlockTarget.item.id);
+                      setAppliedVoiceId(unlockTarget.item.id);
+                      setPreviewingVoiceId(null);
+                      setUnlockTarget(null);
+                      setToast(`已使用「${unlockTarget.item.name}」`);
+                    }}
+                    disabled={isPurchasing}
+                    className="flex h-[52px] flex-1 items-center justify-center rounded-[14px] bg-[#8259e5] text-[15px] font-semibold text-white disabled:opacity-60"
+                  >
+                    {voiceDetailOwned
+                      ? '使用'
+                      : unlockTarget.item.source === 'growth'
+                        ? '去查看'
+                        : isPurchasing
+                          ? '购买中…'
+                          : '去购买'}
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
         ) : unlockTarget ? (
           <div className="absolute inset-0 z-[80] flex items-end bg-black/45" onClick={() => setUnlockTarget(null)}>
             <section className="w-full rounded-t-[28px] bg-white px-5 pb-8 pt-5" onClick={(event) => event.stopPropagation()}>
@@ -1095,43 +1228,45 @@ const EyeChange: React.FC = () => {
 
         {activeMode === 'voice' && (
           <>
-          <div className="absolute inset-x-0 bottom-0 top-[116px] z-30 overflow-y-auto bg-white px-4 pb-10 pt-1 scrollbar-hide">
-            <div className="space-y-[14px]">
+          <div className="absolute inset-x-0 bottom-0 top-[116px] z-30 overflow-y-auto bg-[#fafafa] px-6 pb-10 pt-[13px] scrollbar-hide">
+            <div className="grid grid-cols-2 gap-x-[17px] gap-y-[22px]">
               {displayedVoices.map((voice) => {
                 const selected = selectedVoiceId === voice.id;
-                const playing = playingVoiceId === voice.id;
                 return (
                   <button
                     key={voice.id}
                     type="button"
-                    onClick={() => voice.locked && voice.productId ? setUnlockTarget({ kind: 'voice', item: voice, price: voice.price }) : setSelectedVoiceId(voice.id)}
-                    className={`relative h-[151px] w-full overflow-hidden rounded-[24px] bg-[#f7f6f7] px-5 py-6 text-left transition-colors ${selected ? 'border-[3px] border-[#8d66ef]' : 'border border-[#e7e4e7]'}`}
+                    aria-pressed={selected}
+                    onClick={() => {
+                      setPreviewingVoiceId(null);
+                      setUnlockTarget({ kind: 'voice', item: voice, price: voice.price });
+                    }}
+                    className="w-[164px] text-left transition-transform active:scale-[0.98]"
                   >
-                    <h3 className="relative z-10 text-[20px] font-medium text-[#302c34]">{voice.name}</h3>
-                    <p className="relative z-10 mt-3 max-w-[230px] whitespace-pre-line text-[12px] leading-[20px] text-[#8b858f]">{voice.description}</p>
                     <span
-                      className="absolute bottom-1 right-0 h-[104px] w-[116px] bg-no-repeat"
+                      role="img"
+                      aria-label={voice.name}
+                      className={`block h-[202px] w-[164px] rounded-[10px] bg-no-repeat ${selected ? 'ring-2 ring-[#8d66ef] ring-offset-2 ring-offset-[#fafafa]' : ''}`}
                       style={{
-                        backgroundImage: "url('/images/voice-change-reference.png')",
-                        backgroundSize: '393px 852px',
-                        backgroundPosition: voice.imagePosition,
+                        backgroundImage: "url('/images/voice-grid-reference.png')",
+                        backgroundSize: '393px 858px',
+                        backgroundPosition: voice.gridImagePosition,
                       }}
                     />
-                    <span className="pointer-events-none absolute bottom-1 right-[66px] z-[1] h-[104px] w-[54px] bg-gradient-to-r from-[#f7f6f7] via-[#f7f6f7]/90 to-transparent" />
-                    <span
-                      role="button"
-                      aria-label={voice.locked ? `获取${voice.name}` : playing ? `暂停${voice.name}` : `试听${voice.name}`}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (voice.locked && voice.productId) {
-                          setUnlockTarget({ kind: 'voice', item: voice, price: voice.price });
-                          return;
-                        }
-                        setPlayingVoiceId(playing ? null : voice.id);
-                      }}
-                      className="absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-[18px] bg-white text-[#19181f] shadow-[0_7px_18px_rgba(50,43,62,0.08)]"
-                    >
-                      {voice.locked ? <LockKeyhole size={22} /> : playing ? <Pause size={23} fill="currentColor" /> : <Play size={23} fill="currentColor" />}
+                    <span className="mt-2 block truncate text-[15px] font-semibold leading-5 text-[#29252d]">
+                      {voice.name}
+                    </span>
+                    <span className="mt-1 flex h-5 items-center text-[12px] leading-5">
+                      {voice.source === 'growth' || !voice.locked ? (
+                        <span className={`font-medium ${voice.locked ? 'text-[#a19ca4]' : 'text-[#7656ef]'}`}>
+                          {voice.locked ? '未解锁' : '已解锁'}
+                        </span>
+                      ) : (
+                        <span className="flex items-center font-medium text-[#7656ef]">
+                          <Coins size={13} className="mr-1 text-[#f6b91d]" fill="#fff2b1" />
+                          {voice.price.toLocaleString()} 积分
+                        </span>
+                      )}
                     </span>
                   </button>
                 );

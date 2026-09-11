@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AudioWaveform,
   BatteryCharging,
   BookHeart,
+  Coins,
   Gift,
   LoaderCircle,
-  Pause,
-  Play,
   RotateCcw,
   ShoppingBag,
   Sparkles,
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import BottomNav from '@/components/BottomNav';
+import PointsBalancePill from '@/components/PointsBalancePill';
 import { useDialogueStore } from '@/store/useDialogueStore';
 
 type MallCategory = 'eyes' | 'eyelids' | 'voice' | 'frames' | 'themes' | 'diaries';
@@ -38,6 +39,7 @@ type MallProduct = {
   accent: string;
   eyeSpritePosition?: string;
   voiceImagePosition?: string;
+  voiceShelfPosition?: string;
   itemImage?: string;
   cardImage?: string;
   repeatable?: boolean;
@@ -75,19 +77,29 @@ const products: MallProduct[] = [
   { id: 'mint-eyes', category: 'eyes', kind: 'eye', name: '碧海像素', price: 3000, recommended: true, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#b8e9dd] via-[#eafff8] to-white', accent: '#28a7b8', eyeSpritePosition: '100% 100%', cardImage: '/images/mall-product-mint-eyes.jpg' },
   { id: 'vitality-eyelids', category: 'eyelids', kind: 'eye', name: '元气眼影', price: 48000, material: 'renameCard', materialName: '改名卡', materialCost: 10, tone: 'from-[#ffd1df] via-[#fff0f4] to-white', accent: '#ff7ca6', cardImage: '/images/mall-product-vitality-eyelids.png' },
   { id: 'sunset-eyelids', category: 'eyelids', kind: 'eye', name: '晚霞眼影', price: 48000, material: 'renameCard', materialName: '改名卡', materialCost: 10, tone: 'from-[#a94458] via-[#eab0a7] to-white', accent: '#a83d55', cardImage: '/images/mall-product-sunset-eyelids.png' },
-  { id: 'cavy-talk', category: 'voice', kind: 'voice', name: '豚豚语', price: 8000, recommended: true, discount: 0.75, discountLabel: '7.5折', material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#dff4ff] via-[#f6fbff] to-white', accent: '#8b66ef', voiceImagePosition: '-245px -314px' },
-  { id: 'little-lamb', category: 'voice', kind: 'voice', name: '咩咩语', price: 8000, recommended: true, discount: 0.75, discountLabel: '7.5折', material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#fff0c9] via-[#fff9e9] to-white', accent: '#8b66ef', voiceImagePosition: '-249px -474px' },
+  { id: 'little-lamb', category: 'voice', kind: 'voice', name: '咩咩语', price: 3200, recommended: true, discount: 0.625, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#fff0c9] via-[#fff9e9] to-white', accent: '#8b66ef', voiceImagePosition: '-249px -474px', voiceShelfPosition: '-24px -196px' },
+  { id: 'pony-talk', category: 'voice', kind: 'voice', name: '小马语', price: 3200, recommended: true, discount: 0.625, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#dff4ff] via-[#f6fbff] to-white', accent: '#8b66ef', voiceImagePosition: '-245px -314px', voiceShelfPosition: '-205px -196px' },
 ];
 
 const featuredProductIds = [
   'galaxy-eyes',
   'forest-eyes',
   'moon-pixel-eyes',
-  'cavy-talk',
   'little-lamb',
+  'pony-talk',
 ];
 
 const bannerSlides = [
+  {
+    id: 'lucky-carnival',
+    title: '幸运嘉年华',
+    subtitle: '去抽奖机碰碰今日好运气',
+    badge: 'LUCKY CARNIVAL',
+    image: '/images/mall-banner-lucky-carnival.gif',
+    imagePosition: 'center center',
+    hideCopy: true,
+    durationMs: 3700,
+  },
   {
     id: 'fur-dream',
     title: '柔光星河上新',
@@ -96,6 +108,7 @@ const bannerSlides = [
     image: '/images/mall-banner-fur-dream.png',
     imagePosition: 'center 58%',
     hideCopy: false,
+    durationMs: 3600,
   },
   {
     id: 'ropet-arrival',
@@ -105,6 +118,7 @@ const bannerSlides = [
     image: '/images/mall-banner-ropet-arrival.png',
     imagePosition: 'center 44%',
     hideCopy: true,
+    durationMs: 3600,
   },
 ] as const;
 
@@ -145,7 +159,16 @@ const ProductArt: React.FC<{ item: MallProduct }> = ({ item }) => {
 
   if (item.kind === 'voice') {
     return (
-      <span className="relative z-10 mb-1 h-[112px] w-[142px] bg-contain bg-center bg-no-repeat transition-transform duration-150 group-active:-translate-y-1" style={{ backgroundImage: "url('/images/moiedap1-khtkfqv.png')" }} />
+      <span
+        role="img"
+        aria-label={item.name}
+        className="absolute inset-0 z-10 bg-no-repeat transition-transform duration-150 group-active:scale-[1.03]"
+        style={{
+          backgroundImage: "url('/images/mall-voice-shelf-reference.png')",
+          backgroundPosition: item.id === 'little-lamb' ? '-25px -203px' : '-212px -203px',
+          backgroundSize: '407px 882px',
+        }}
+      />
     );
   }
 
@@ -213,6 +236,8 @@ const MallStore: React.FC = () => {
   const [activeView, setActiveView] = useState<MallView>(initialView);
   const [activeCategory, setActiveCategory] = useState<MallCategory>(initialCategory);
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
+  const [previousBannerIndex, setPreviousBannerIndex] = useState<number | null>(null);
+  const [bannerDirection, setBannerDirection] = useState<-1 | 1>(1);
   const [toast, setToast] = useState('');
   const [buyingProduct, setBuyingProduct] = useState<MallProduct | null>(null);
   const [purchasedProduct, setPurchasedProduct] = useState<MallProduct | null>(null);
@@ -222,7 +247,15 @@ const MallStore: React.FC = () => {
   const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [equippingProductId, setEquippingProductId] = useState<string | null>(null);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const mainRef = useRef<HTMLElement | null>(null);
+  const pullStartY = useRef<number | null>(null);
+  const pullDistanceRef = useRef(0);
+  const refreshTimerRef = useRef<number | null>(null);
   const bannerPointerStart = useRef<number | null>(null);
+  const bannerTransitionTimerRef = useRef<number | null>(null);
   const suppressBannerClick = useRef(false);
   const equipTimerRef = useRef<number | null>(null);
   const notifiedOrderIds = useRef(new Set<string>());
@@ -233,10 +266,14 @@ const MallStore: React.FC = () => {
   const activeOrderProduct = activeOrder ? products.find((item) => item.id === activeOrder.itemId) : undefined;
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
+    const timer = window.setTimeout(() => {
+      setBannerDirection(1);
+      setPreviousBannerIndex(activeBannerIndex);
       setActiveBannerIndex((index) => (index + 1) % bannerSlides.length);
-    }, 3600);
-    return () => window.clearInterval(timer);
+      if (bannerTransitionTimerRef.current !== null) window.clearTimeout(bannerTransitionTimerRef.current);
+      bannerTransitionTimerRef.current = window.setTimeout(() => setPreviousBannerIndex(null), 720);
+    }, bannerSlides[activeBannerIndex].durationMs);
+    return () => window.clearTimeout(timer);
   }, [activeBannerIndex]);
 
   useEffect(() => {
@@ -247,6 +284,8 @@ const MallStore: React.FC = () => {
 
   useEffect(() => () => {
     if (equipTimerRef.current !== null) window.clearTimeout(equipTimerRef.current);
+    if (refreshTimerRef.current !== null) window.clearTimeout(refreshTimerRef.current);
+    if (bannerTransitionTimerRef.current !== null) window.clearTimeout(bannerTransitionTimerRef.current);
   }, []);
 
   useEffect(() => {
@@ -351,8 +390,73 @@ const MallStore: React.FC = () => {
     setSearchParams({ shop: category });
   };
 
+  const updatePullDistance = (distance: number) => {
+    pullDistanceRef.current = distance;
+    setPullDistance(distance);
+  };
+
+  const finishRefresh = () => {
+    setIsRefreshing(false);
+    updatePullDistance(0);
+    setToast('刷新完成');
+    refreshTimerRef.current = null;
+  };
+
+  const startRefresh = () => {
+    setIsRefreshing(true);
+    updatePullDistance(54);
+    if (refreshTimerRef.current !== null) window.clearTimeout(refreshTimerRef.current);
+    refreshTimerRef.current = window.setTimeout(finishRefresh, 900);
+  };
+
+  const handlePullStart = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== 'mouse' || isRefreshing || !mainRef.current || mainRef.current.scrollTop > 0) return;
+    pullStartY.current = event.clientY;
+    setIsPulling(true);
+  };
+
+  const handlePullMove = (event: React.PointerEvent<HTMLElement>) => {
+    if (pullStartY.current === null || isRefreshing || !mainRef.current) return;
+    if (mainRef.current.scrollTop > 0) {
+      pullStartY.current = null;
+      setIsPulling(false);
+      updatePullDistance(0);
+      return;
+    }
+    const distance = Math.max(0, event.clientY - pullStartY.current);
+    updatePullDistance(Math.min(76, distance * 0.46));
+  };
+
+  const handlePullEnd = () => {
+    if (pullStartY.current === null) return;
+    pullStartY.current = null;
+    setIsPulling(false);
+    if (pullDistanceRef.current >= 52) {
+      startRefresh();
+      return;
+    }
+    updatePullDistance(0);
+  };
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+    if (isRefreshing || !mainRef.current || mainRef.current.scrollTop > 0) return;
+    pullStartY.current = event.touches[0]?.clientY ?? null;
+    setIsPulling(pullStartY.current !== null);
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLElement>) => {
+    if (pullStartY.current === null || isRefreshing || !mainRef.current) return;
+    const distance = Math.max(0, (event.touches[0]?.clientY ?? pullStartY.current) - pullStartY.current);
+    if (distance > 0 && event.cancelable) event.preventDefault();
+    updatePullDistance(Math.min(76, distance * 0.46));
+  };
+
   const rotateBanner = (direction: -1 | 1) => {
+    setBannerDirection(direction);
+    setPreviousBannerIndex(activeBannerIndex);
     setActiveBannerIndex((index) => (index + direction + bannerSlides.length) % bannerSlides.length);
+    if (bannerTransitionTimerRef.current !== null) window.clearTimeout(bannerTransitionTimerRef.current);
+    bannerTransitionTimerRef.current = window.setTimeout(() => setPreviousBannerIndex(null), 720);
   };
 
   const finishBannerSwipe = (clientX: number) => {
@@ -447,9 +551,8 @@ const MallStore: React.FC = () => {
 
   return (
     <div className="relative flex min-h-screen w-full justify-center overflow-hidden bg-[#d8deea] py-4">
-      <div className="relative h-[852px] w-[393px] overflow-hidden rounded-[28px] border border-white/70 bg-[#f8f2ec] shadow-[0_20px_50px_rgba(15,23,42,0.22)]">
-        <div className="pointer-events-none absolute -left-[58px] -top-[28px] h-[865px] w-[504px] bg-cover bg-center opacity-50" style={{ backgroundImage: 'url(/images/mo1d92xj-hha9qft.svg)' }} />
-
+      <div className={`relative h-[852px] w-[393px] overflow-hidden rounded-[28px] border border-white/70 shadow-[0_20px_50px_rgba(15,23,42,0.22)] ${activeView === 'shelves' && activeCategory === 'voice' ? 'bg-[#fafafa]' : 'bg-[#f8f2ec]'}`}>
+        <div className={`pointer-events-none absolute -left-[58px] -top-[28px] h-[865px] w-[504px] bg-cover bg-center transition-opacity ${activeView === 'shelves' && activeCategory === 'voice' ? 'opacity-0' : 'opacity-50'}`} style={{ backgroundImage: 'url(/images/mo1d92xj-hha9qft.svg)' }} />
         <button
           type="button"
           onClick={() => {
@@ -460,15 +563,40 @@ const MallStore: React.FC = () => {
             setActiveOrderId(null);
             setToast('商城演示数据已恢复');
           }}
-          className="absolute right-7 top-7 z-[105] flex h-8 items-center rounded-full border border-white/80 bg-white/88 px-3 text-[9px] font-black text-[#5f5664] shadow-[0_5px_14px_rgba(42,31,48,0.14)] backdrop-blur-sm"
+          className={`absolute right-7 top-[27px] z-[105] flex h-8 items-center rounded-full border border-white/80 bg-white/88 px-3 text-[9px] font-black text-[#5f5664] shadow-[0_5px_14px_rgba(42,31,48,0.14)] backdrop-blur-sm transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${activeView === 'shelves' ? 'pointer-events-none -translate-y-8 opacity-0' : 'translate-y-0 opacity-100'}`}
         >
           <RotateCcw size={12} className="mr-1" />恢复演示
         </button>
 
-        <main className="absolute bottom-[86px] left-0 right-0 top-0 overflow-y-auto px-5 pb-7 pt-4 scrollbar-hide">
+        <main
+          ref={mainRef}
+          onPointerDown={handlePullStart}
+          onPointerMove={handlePullMove}
+          onPointerUp={handlePullEnd}
+          onPointerCancel={handlePullEnd}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handlePullEnd}
+          onTouchCancel={handlePullEnd}
+          className="absolute bottom-[86px] left-0 right-0 top-0 overflow-y-auto overscroll-y-contain px-5 pb-7 pt-4 scrollbar-hide"
+        >
+          <div
+            aria-live="polite"
+            className={`flex items-center justify-center overflow-hidden text-[11px] font-bold text-[#81778a] ${isPulling ? '' : 'transition-[height] duration-300 ease-out'}`}
+            style={{ height: pullDistance }}
+          >
+            <RotateCcw
+              size={17}
+              className={`mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
+              style={{ transform: isRefreshing ? undefined : `rotate(${Math.min(180, pullDistance * 3)}deg)` }}
+            />
+            {isRefreshing ? '正在刷新' : pullDistance >= 52 ? '松开刷新' : '下拉刷新'}
+          </div>
+
+          <div aria-hidden={activeView === 'shelves'} className={`-mx-5 -mt-4 overflow-hidden transition-[height,opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${activeView === 'shelves' ? 'h-0 -translate-y-8 scale-y-75 opacity-0' : 'h-[232px] translate-y-0 scale-y-100 opacity-100'}`}>
           <div
             role="button"
-            tabIndex={0}
+            tabIndex={activeView === 'shelves' ? -1 : 0}
             aria-label="进入本期幸运抽奖机"
             onClick={() => {
               if (suppressBannerClick.current) {
@@ -483,37 +611,53 @@ const MallStore: React.FC = () => {
             onPointerDown={(event) => { bannerPointerStart.current = event.clientX; }}
             onPointerUp={(event) => finishBannerSwipe(event.clientX)}
             onPointerCancel={() => { bannerPointerStart.current = null; }}
-            className="group relative h-[206px] w-full touch-pan-y overflow-hidden rounded-[24px] bg-[#28212b] text-left shadow-[0_14px_30px_rgba(74,57,92,0.20)] transition-transform duration-150 active:scale-[0.99]"
+            className="group relative h-[232px] w-full touch-pan-y overflow-hidden bg-[#28212b] text-left"
           >
-            <img key={activeBanner.id} src={activeBanner.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500" style={{ objectPosition: activeBanner.imagePosition }} />
-            <span className={`absolute inset-0 ${activeBanner.hideCopy ? 'bg-[linear-gradient(0deg,rgba(30,22,38,0.20),transparent_42%)]' : 'bg-[linear-gradient(90deg,rgba(255,255,255,0.82),rgba(255,255,255,0.54)_40%,transparent_68%)]'}`} />
-            {!activeBanner.hideCopy && (
-              <>
-                <span className="absolute left-4 top-4 rounded-full border border-white/80 bg-white/76 px-3 py-1 text-[9px] font-black text-[#8a4f21] backdrop-blur-sm">{activeBanner.badge}</span>
-                <span className="absolute left-5 top-[50px] max-w-[190px] text-[23px] font-black leading-[1.08] text-[#26212b] [text-shadow:0_1px_0_white]">{activeBanner.title}</span>
-                <span className="absolute left-5 top-[108px] max-w-[190px] text-[11px] font-bold leading-5 text-[#74616d]">{activeBanner.subtitle}</span>
-              </>
+            {previousBannerIndex !== null && (
+              <img
+                key={`previous-${bannerSlides[previousBannerIndex].id}`}
+                src={bannerSlides[previousBannerIndex].image}
+                alt=""
+                className={`mall-banner-exit absolute inset-0 h-full w-full object-cover ${bannerDirection > 0 ? 'mall-banner-exit-left' : 'mall-banner-exit-right'}`}
+                style={{ objectPosition: bannerSlides[previousBannerIndex].imagePosition }}
+              />
             )}
-            <span className="absolute bottom-5 left-5 inline-flex h-9 items-center gap-1.5 rounded-full bg-[#17121a] px-4 text-[11px] font-black text-white shadow-[0_8px_14px_rgba(0,0,0,0.22)]">
+            <img
+              key={activeBanner.id}
+              src={activeBanner.image}
+              alt=""
+              className={`mall-banner-enter absolute inset-0 h-full w-full object-cover ${bannerDirection > 0 ? 'mall-banner-enter-right' : 'mall-banner-enter-left'}`}
+              style={{ objectPosition: activeBanner.imagePosition }}
+            />
+            <span className={`absolute inset-0 z-[2] ${activeBanner.hideCopy ? 'bg-[linear-gradient(0deg,rgba(30,22,38,0.20),transparent_42%)]' : 'bg-[linear-gradient(90deg,rgba(255,255,255,0.82),rgba(255,255,255,0.54)_40%,transparent_68%)]'}`} />
+            {!activeBanner.hideCopy && (
+              <span key={`copy-${activeBanner.id}`} className="mall-banner-copy-enter contents">
+                <span className="absolute left-4 top-4 z-[3] rounded-full border border-white/80 bg-white/76 px-3 py-1 text-[9px] font-black text-[#8a4f21] backdrop-blur-sm">{activeBanner.badge}</span>
+                <span className="absolute left-5 top-[50px] z-[3] max-w-[190px] text-[23px] font-black leading-[1.08] text-[#26212b] [text-shadow:0_1px_0_white]">{activeBanner.title}</span>
+                <span className="absolute left-5 top-[108px] z-[3] max-w-[190px] text-[11px] font-bold leading-5 text-[#74616d]">{activeBanner.subtitle}</span>
+              </span>
+            )}
+            <span className="absolute bottom-5 left-5 z-[3] inline-flex h-9 items-center gap-1.5 rounded-full bg-[#17121a] px-4 text-[11px] font-black text-white shadow-[0_8px_14px_rgba(0,0,0,0.22)]">
               <Gift size={15} />去抽奖机
             </span>
-            <span className="absolute bottom-5 left-[132px] rounded-full bg-white/78 px-3 py-2 text-[10px] font-black text-[#6b5966] backdrop-blur-sm">
+            <span className="absolute bottom-5 left-[132px] z-[3] rounded-full bg-white/78 px-3 py-2 text-[10px] font-black text-[#6b5966] backdrop-blur-sm">
               SR 待收集 {remainingSrRewards}
             </span>
-            <span className="absolute bottom-5 right-4 rounded-full bg-[#17121a]/72 px-3 py-2 text-[9px] font-black text-white backdrop-blur-sm">
+            <span className="absolute bottom-5 right-4 z-[3] rounded-full bg-[#17121a]/72 px-3 py-2 text-[9px] font-black text-white backdrop-blur-sm">
               {String(activeBannerIndex + 1).padStart(2, '0')} / {String(bannerSlides.length).padStart(2, '0')}
             </span>
           </div>
+          </div>
 
-          <nav aria-label="商城浏览方式" className="mt-4 grid h-[62px] grid-cols-2 gap-2 rounded-[18px] bg-white/58 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
+          <nav aria-label="商城浏览方式" className={`relative grid h-[64px] grid-cols-2 gap-1.5 rounded-[19px] border border-white/90 bg-white/88 p-1.5 shadow-[0_8px_20px_rgba(77,61,83,0.08)] backdrop-blur-sm transition-[margin] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${activeView === 'shelves' ? 'mt-0' : 'mt-4'}`}>
             {mallTabs.map(({ id, label, helper, icon: Icon }) => {
               const active = activeView === id;
               return (
-                <button key={id} type="button" onClick={() => updateView(id)} className={`relative flex min-w-0 items-center justify-center gap-2 overflow-hidden rounded-[14px] px-2 text-left transition-all active:translate-y-0.5 ${active ? 'bg-[#17121a] text-white shadow-[0_8px_14px_rgba(36,28,42,0.18)]' : 'bg-white/56 text-[#766d79]'}`}>
-                  <Icon size={17} className={active ? 'text-[#ffd65e]' : 'text-[#958998]'} />
+                <button key={id} type="button" onClick={() => updateView(id)} aria-current={active ? 'page' : undefined} className={`relative flex min-w-0 items-center justify-center gap-2 overflow-hidden rounded-[15px] px-2 text-left transition-all duration-200 active:scale-[0.98] ${active ? 'bg-gradient-to-b from-[#9d6bf2] to-[#7950df] text-white shadow-[0_7px_14px_rgba(105,70,190,0.24)]' : 'bg-white text-[#766d79]'}`}>
+                  <Icon size={18} className={active ? 'text-[#ffe38a]' : 'text-[#958998]'} />
                   <span className="min-w-0">
                     <strong className="block truncate text-[14px] font-black">{label}</strong>
-                    <span className={`block truncate text-[9px] font-bold ${active ? 'text-white/64' : 'text-[#a29aa5]'}`}>{helper}</span>
+                    <span className={`block truncate text-[9px] font-bold ${active ? 'text-white/70' : 'text-[#a29aa5]'}`}>{helper}</span>
                   </span>
                 </button>
               );
@@ -521,7 +665,7 @@ const MallStore: React.FC = () => {
           </nav>
 
           {activeView === 'shelves' && (
-            <nav aria-label="商品分类" className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <nav aria-label="商品分类" className="mt-3 flex h-10 gap-5 overflow-x-auto scrollbar-hide">
               {categoryTabs.map((category) => {
                 const active = activeCategory === category.id;
                 return (
@@ -529,32 +673,63 @@ const MallStore: React.FC = () => {
                     key={category.id}
                     type="button"
                     onClick={() => updateCategory(category.id)}
-                    className={`h-9 shrink-0 rounded-full border px-4 text-[11px] font-black transition-colors ${active ? 'border-[#17121a] bg-[#17121a] text-white' : 'border-white/80 bg-white/68 text-[#807683]'}`}
+                    className={`relative h-9 shrink-0 px-1 text-[14px] font-medium transition-colors ${active ? 'text-[#27232b]' : 'text-[#8d8790]'}`}
                   >
                     {category.label}
+                    {active && <span className="absolute bottom-0 left-1/2 h-[6px] w-[42px] -translate-x-1/2 -rotate-[7deg] rounded-full bg-[#ffc72c]" />}
                   </button>
                 );
               })}
             </nav>
           )}
 
-          <section className={`relative grid grid-cols-2 gap-x-3 gap-y-4 ${activeView === 'shelves' ? 'mt-3' : 'mt-5'}`} aria-label="商城商品列表">
+          <section className={`relative grid grid-cols-2 gap-y-4 ${activeView === 'shelves' && activeCategory === 'voice' ? 'mt-2 gap-x-[17px] px-1' : activeView === 'shelves' ? 'mt-3 gap-x-3' : 'mt-5 gap-x-3'}`} aria-label="商城商品列表">
             {visibleProducts.map((item) => {
               const processingOrder = redemptionOrders.find((order) => order.itemId === item.id && order.status === 'processing');
               const owned = !isConsumableProduct(item) && (redeemedMallItems?.[item.id] ?? 0) > 0;
               const playing = playingVoiceId === item.id;
-              const category = categoryMeta[item.category];
               const status = processingOrder ? '处理中' : owned ? '已拥有' : item.discountLabel ?? null;
 
+              if (activeView === 'shelves' && activeCategory === 'voice') {
+                return (
+                  <button key={item.id} type="button" onClick={() => openProduct(item)} className="relative w-[164px] text-left transition-transform active:scale-[0.98]">
+                    <span
+                      role="img"
+                      aria-label={item.name}
+                      className="block h-[204px] w-[164px] rounded-[10px] bg-no-repeat"
+                      style={{
+                        backgroundImage: "url('/images/mall-voice-shelf-reference.png')",
+                        backgroundPosition: item.voiceShelfPosition,
+                        backgroundSize: '393px 852px',
+                      }}
+                    />
+                    <span
+                      role="button"
+                      aria-label={playing ? `暂停${item.name}` : `试听${item.name}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setPlayingVoiceId(playing ? null : item.id);
+                      }}
+                      className="absolute right-3 top-[164px] h-8 w-[52px] rounded-full"
+                    />
+                    <strong className="mt-3 block text-[16px] font-semibold leading-5 text-[#28242c]">{item.name}</strong>
+                    <span className="mt-1 flex h-5 items-center text-[13px]">
+                      <Coins size={15} className="mr-1 text-[#f4bd28]" strokeWidth={2.1} />
+                      <span className="font-semibold text-[#7654e7]">{getPointPrice(item).toLocaleString()}</span>
+                    </span>
+                  </button>
+                );
+              }
+
               return (
-                <button key={item.id} type="button" onClick={() => openProduct(item)} className={`group relative min-w-0 rounded-[8px] bg-white/72 p-2 text-left shadow-[0_8px_18px_rgba(90,72,96,0.12),inset_0_1px_0_rgba(255,255,255,0.9)] transition-transform duration-150 active:-translate-y-1 active:scale-[1.02] ${item.kind === 'frame' ? 'col-span-2' : ''}`}>
+                <button key={item.id} type="button" onClick={() => openProduct(item)} className={`group relative min-w-0 text-left transition-transform duration-150 active:scale-[0.98] ${item.kind === 'frame' ? 'col-span-2' : ''}`}>
                   {status && (
-                    <span className="absolute left-3 top-3 z-20 inline-flex h-5 max-w-[70px] items-center gap-1 rounded-full px-1.5 text-[7px] font-black text-white shadow-sm" style={{ backgroundColor: processingOrder ? '#8a73d6' : owned ? '#6eaa83' : category.color }}>
-                      {processingOrder ? <LoaderCircle size={9} className="animate-spin" /> : owned ? <Star size={8} fill="currentColor" strokeWidth={0} /> : <Tag size={8} />}
-                      <span className="truncate">{status}</span>
+                    <span className={`absolute left-3 top-3 z-20 inline-flex h-7 max-w-[92px] items-center gap-1.5 rounded-[9px] px-2.5 text-[11px] font-bold shadow-sm ${processingOrder ? 'bg-[#8a73d6] text-white' : owned ? 'bg-[#72ae88] text-white' : 'bg-[#ffc83d] text-white'}`}>
+                      {processingOrder ? <LoaderCircle size={12} className="animate-spin" /> : owned ? <Star size={11} fill="currentColor" strokeWidth={0} /> : <Tag size={12} className="text-[#ff4e58]" fill="#ff4e58" />}
+                      <span className="truncate">{!processingOrder && !owned && item.discountLabel ? `${item.discountLabel}优惠` : status}</span>
                     </span>
                   )}
-                  <span className={`relative flex items-end justify-center overflow-hidden rounded-[8px] bg-[#f3f2f4] ${item.kind === 'frame' ? 'h-[190px]' : 'h-[122px]'}`}>
+                  <span className={`relative flex items-end justify-center overflow-hidden rounded-[14px] bg-[#f3f2f4] ${item.kind === 'frame' ? 'h-[220px]' : 'h-[204px]'}`}>
                     <span className="absolute left-1/2 top-3 h-[84px] w-[116px] -translate-x-1/2 rounded-[50%] bg-white/68 blur-[1px]" />
                     <span className="absolute bottom-2 h-[20px] w-[108px] rounded-[50%] bg-[#d9d0d0] shadow-[inset_0_5px_7px_rgba(255,255,255,0.8),0_7px_8px_rgba(66,51,77,0.15)]" />
                     <ProductArt item={item} />
@@ -566,31 +741,31 @@ const MallStore: React.FC = () => {
                           event.stopPropagation();
                           setPlayingVoiceId(playing ? null : item.id);
                         }}
-                        className="absolute bottom-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/80 bg-white/88 text-[#302b34] shadow-[0_4px_10px_rgba(50,43,62,0.12)] backdrop-blur-sm"
-                      >
-                        {playing ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
-                      </span>
+                        className={`absolute bottom-1 right-1 z-20 h-9 w-14 rounded-full ${playing ? 'animate-pulse' : ''}`}
+                      />
                     )}
                   </span>
-                  <span className="mt-2.5 block min-h-[38px] px-0.5">
-                    <strong className={`block truncate font-black leading-4 text-[#37313b] ${item.kind === 'frame' ? 'text-[16px]' : 'text-[13px]'}`}>{item.name}</strong>
-                    <span className="mt-1 block truncate text-[9px] font-bold text-[#756e78]">{category.label}</span>
+                  <span className="mt-3 block px-0.5">
+                    <strong className="block truncate text-[16px] font-bold leading-5 text-[#302b32]">{item.name}</strong>
                   </span>
-                  <span className={`mt-1.5 flex h-7 items-center rounded-[8px] px-2 text-[11px] font-black ${processingOrder ? 'bg-[#eee9ff] text-[#7056c8]' : owned ? 'bg-[#e8f3eb] text-[#4f8b65]' : 'bg-[#f3edf9] text-[#6f50c2]'}`}>
-                    {processingOrder ? <><LoaderCircle size={13} className="mr-1.5 animate-spin" />处理中</> : owned ? '已经在小窝里' : (
+                  <span className={`mt-1.5 flex h-6 items-center px-0.5 text-[14px] font-bold ${processingOrder ? 'text-[#7056c8]' : owned ? 'text-[#4f8b65]' : 'text-[#8159ea]'}`}>
+                    {processingOrder ? <><LoaderCircle size={14} className="mr-1.5 animate-spin" />处理中</> : owned ? '已经在小窝里' : (
                       item.discount ? (
                         <span className="flex min-w-0 items-center gap-x-1">
                           <span className="flex items-center">
-                            <Star size={14} className="mr-1 text-[#ffc52e]" fill="#ffc52e" />
+                            <Coins size={16} className="mr-1 text-[#ffc52e]" strokeWidth={2.1} />
                             {getPointPrice(item).toLocaleString()}
                           </span>
-                          <span className="text-[9px] font-semibold text-[#7e7682] line-through">{item.price.toLocaleString()}</span>
+                          <span className="text-[11px] font-medium text-[#918b94] line-through">{item.price.toLocaleString()}</span>
                         </span>
                       ) : (
-                        <><Star size={14} className="mr-1 text-[#ffc52e]" fill="#ffc52e" />{item.price.toLocaleString()}</>
+                        <><Coins size={16} className="mr-1 text-[#ffc52e]" strokeWidth={2.1} />{item.price.toLocaleString()}</>
                       )
                     )}
                   </span>
+                  {!processingOrder && !owned && item.discount && (
+                    <span className="mt-1.5 inline-flex h-7 items-center rounded-full bg-[#f0eaff] px-3 text-[12px] font-medium text-[#825bea]">还剩 24 天</span>
+                  )}
                 </button>
               );
             })}
@@ -605,7 +780,71 @@ const MallStore: React.FC = () => {
 
         <BottomNav />
 
-        {buyingProduct && (
+        {buyingProduct && buyingProduct.kind === 'voice' ? (
+          <div className="absolute inset-0 z-[115] flex items-end bg-black/50" onClick={closePurchaseModal}>
+            <section aria-label={`${buyingProduct.name}声音详情`} className="relative h-[676px] w-full overflow-hidden rounded-t-[28px] bg-white shadow-[0_-18px_42px_rgba(31,25,38,0.18)]" onClick={(event) => event.stopPropagation()}>
+              <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2">
+                <PointsBalancePill
+                  points={points}
+                  onAdd={() => {
+                    const returnTo = `/interaction-history?shop=${activeView === 'picks' ? 'featured' : buyingProduct.category}&buy=${buyingProduct.id}`;
+                    navigate(`/points-store?returnTo=${encodeURIComponent(returnTo)}`);
+                  }}
+                  className="max-w-[176px]"
+                />
+              </div>
+              <div
+                role="img"
+                aria-label={`${buyingProduct.name}场景预览`}
+                className="relative h-[384px] w-full bg-no-repeat"
+                style={{
+                  backgroundImage: "url('/images/mall-voice-shelf-reference.png')",
+                  backgroundPosition: buyingProduct.id === 'little-lamb' ? '-58px -470px' : '-492px -470px',
+                  backgroundSize: '943px 2045px',
+                }}
+              >
+                <button type="button" aria-label={playingVoiceId === buyingProduct.id ? `暂停${buyingProduct.name}` : `试听${buyingProduct.name}`} onClick={() => setPlayingVoiceId((current) => current === buyingProduct.id ? null : buyingProduct.id)} className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full bg-[#8259e5] text-white shadow-lg">
+                  <AudioWaveform
+                    size={23}
+                    strokeWidth={2.4}
+                    className={playingVoiceId === buyingProduct.id ? 'animate-pulse' : ''}
+                  />
+                </button>
+              </div>
+              <div className="flex h-[292px] flex-col px-5 pb-5 pt-4">
+                <div className="flex items-center gap-3">
+                  <h2 className="min-w-0 flex-1 truncate text-[19px] font-bold text-[#28242c]">{buyingProduct.name}</h2>
+                </div>
+                <p className="mt-3 text-[12px] leading-5 text-[#8d8791]">
+                  {buyingProduct.id === 'little-lamb' ? '咩～咩～，软绵绵的声音，像在草地上轻轻撒娇。' : '轻快又充满活力的小马声线，每次回应都像在快乐奔跑。'}
+                </p>
+                <p className="mt-2 text-[11px] text-[#aaa3ad]">兑换后将直接放入我的声音</p>
+                <div className="mt-auto w-full">
+                  <button
+                    type="button"
+                    disabled={isPurchasing}
+                    onClick={() => {
+                      if (points >= getPointPrice(buyingProduct)) {
+                        confirmPointPurchase();
+                        return;
+                      }
+                      const returnTo = `/interaction-history?shop=${activeView === 'picks' ? 'featured' : buyingProduct.category}&buy=${buyingProduct.id}`;
+                      navigate(`/points-store?returnTo=${encodeURIComponent(returnTo)}`);
+                    }}
+                    className="flex h-[52px] w-full items-center justify-center rounded-[14px] bg-[#8259e5] text-[15px] font-semibold text-white disabled:opacity-60"
+                  >
+                    {isPurchasing ? '兑换中…' : (
+                      <>
+                        <Coins size={18} className="mr-2 text-[#ffe074]" strokeWidth={2.2} />
+                        {getPointPrice(buyingProduct).toLocaleString()}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        ) : buyingProduct ? (
           <div className="absolute inset-0 z-[115] flex items-center justify-center bg-black/55 px-8" onClick={closePurchaseModal}>
             <section className="w-full rounded-[20px] bg-white px-6 py-6 text-center shadow-[0_18px_42px_rgba(0,0,0,0.18)]" onClick={(event) => event.stopPropagation()}>
               <h2 className="text-[18px] font-semibold text-[#222127]">兑换{buyingProduct.name}</h2>
@@ -670,7 +909,7 @@ const MallStore: React.FC = () => {
               <button type="button" disabled={isPurchasing} onClick={closePurchaseModal} className="mt-3 h-11 w-full rounded-[14px] border border-[#e6e1ed] bg-white text-[14px] font-semibold text-[#4f4a55] disabled:opacity-50">取消</button>
             </section>
           </div>
-        )}
+        ) : null}
 
         {processingModalOpen && activeOrder?.status === 'processing' && (
           <div className="absolute inset-0 z-[130] flex items-center justify-center bg-black/25">

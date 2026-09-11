@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import PageLayout from '../components/PageLayout';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
+import { useNavigate } from 'react-router-dom';
 
 const Settings: React.FC = () => {
+  const navigate = useNavigate();
   const { minorModeEnabled, setMinorModeEnabled } = useSubscriptionStore();
   const [pendingMinorMode, setPendingMinorMode] = useState<boolean | null>(null);
   const nextMinorMode = pendingMinorMode ?? false;
@@ -45,10 +47,10 @@ const Settings: React.FC = () => {
               <span className="text-[#222222] font-medium">语言设置</span>
               <span className="text-gray-400">❯</span>
             </div>
-            <div className="flex items-center justify-between bg-[#eeeeee] p-4 rounded-xl border border-[#2222220d] cursor-pointer hover:bg-[#e0e0e0] transition-colors">
+            <button type="button" onClick={() => navigate('/help-center')} className="flex w-full items-center justify-between bg-[#eeeeee] p-4 rounded-xl border border-[#2222220d] cursor-pointer hover:bg-[#e0e0e0] transition-colors">
               <span className="text-[#222222] font-medium">帮助中心</span>
               <span className="text-gray-400">❯</span>
-            </div>
+            </button>
             <div className="flex items-center justify-between bg-[#eeeeee] p-4 rounded-xl border border-[#2222220d] cursor-pointer hover:bg-[#e0e0e0] transition-colors">
               <span className="text-[#222222] font-medium">关于 ropet</span>
               <span className="text-gray-400">❯</span>

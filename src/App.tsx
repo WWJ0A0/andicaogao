@@ -34,6 +34,7 @@ import PointsOrders from "@/pages/PointsOrders";
 import PointSpendRecords from "@/pages/PointSpendRecords";
 import PlushDesignCampaign from "@/pages/PlushDesignCampaign";
 import BrainCoCreation from "@/pages/BrainCoCreation";
+import HelpCenter from "@/pages/HelpCenter";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -71,7 +72,7 @@ export default function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/pet-basic-settings" element={<PetBasicSettings />} />
         <Route path="/redeem-code" element={<RedeemCode />} />
-        <Route path="/help-center" element={<ProfileSubPage title="帮助中心" />} />
+        <Route path="/help-center" element={<HelpCenter />} />
         <Route path="/after-sales" element={<ProfileSubPage title="售后服务" />} />
         <Route path="/about-us" element={<ProfileSubPage title="关于我们" />} />
         <Route path="/version-update" element={<ProfileSubPage title="版本更新" />} />

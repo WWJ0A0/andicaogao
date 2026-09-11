@@ -1,93 +1,93 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+function HomeIcon({ size = 30 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path d="M3.8 14.2 14.4 4.7a2.4 2.4 0 0 1 3.2 0l10.6 9.5c1.5 1.3.6 3.8-1.4 3.8h-.7v8.1a2.8 2.8 0 0 1-2.8 2.8H8.7a2.8 2.8 0 0 1-2.8-2.8V18h-.7c-2 0-2.9-2.5-1.4-3.8Z" fill="currentColor" />
+      <path d="M12.6 28.9v-7.2a3.4 3.4 0 0 1 6.8 0v7.2" fill="white" opacity=".72" />
+    </svg>
+  );
+}
+
+function MallBagIcon({ size = 30 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path d="M6 11.3h20l1.3 15.1a2.5 2.5 0 0 1-2.5 2.7H7.2a2.5 2.5 0 0 1-2.5-2.7L6 11.3Z" fill="currentColor" />
+      <path d="M11.3 12V8.6a4.7 4.7 0 0 1 9.4 0V12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function NestIcon({ size = 30 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path d="M16 3.5v3.2" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" />
+      <path d="M13.2 4.2 16 2.5l2.8 1.7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5.1 21.5C6.2 14.1 10.3 8.7 16 8.7s9.8 5.4 10.9 12.8c.4 2.7-1.7 5-4.4 5h-13c-2.7 0-4.8-2.3-4.4-5Z" fill="currentColor" />
+      <path d="M10.1 21.9c3.8-1.4 8-1.4 11.8 0" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity=".9" />
+    </svg>
+  );
+}
+
+function RopetIcon({ size = 32 }: { size?: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="block shrink-0 bg-current"
+      style={{
+        width: size,
+        height: size,
+        WebkitMaskImage: 'url(/images/mo0uw8au-tlddmuo.png)',
+        maskImage: 'url(/images/mo0uw8au-tlddmuo.png)',
+        WebkitMaskPosition: 'center',
+        maskPosition: 'center',
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+        WebkitMaskSize: 'contain',
+        maskSize: 'contain',
+      }}
+    />
+  );
+}
 
 const BottomNav: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  // 根据当前路径判断哪个图标应该激活
   const isHome = location.pathname === '/';
-  const isHistory = location.pathname === '/interaction-history';
-  const isInteract = location.pathname === '/pet-interact' || location.pathname === '/nest';
-  const isProfile = location.pathname === '/pet-profile';
+  const items = [
+    { label: '首页', path: '/', active: isHome, icon: HomeIcon },
+    { label: '商城', path: '/interaction-history', active: location.pathname === '/interaction-history', icon: MallBagIcon },
+    { label: '小窝', path: '/nest', active: location.pathname === '/pet-interact' || location.pathname === '/nest', icon: NestIcon },
+    { label: 'Ropet', path: '/pet-profile', active: location.pathname === '/pet-profile', icon: RopetIcon },
+  ];
 
   return (
-    <div className={`absolute bottom-0 left-[50%] -translate-x-1/2 flex flex-col items-center w-[394px] bg-gradient-to-b from-transparent to-white z-50 ${compact ? 'h-[70px] backdrop-blur-[10px]' : 'h-[86px] backdrop-blur-[18px]'}`}>
-      <div className={`flex items-center justify-center gap-[52px] rounded-[40px] bg-[#ffffffed] px-[50px] pl-[45px] w-[364px] ${compact ? 'mt-0 h-[46px] py-[6px] shadow-[0_1px_3px_rgba(0,0,0,0.035)]' : 'mt-[-7px] h-[54px] py-[8px] shadow-[0px_2px_4px_0px_rgba(0,0,0,0.05)]'}`}>
-        
-        {/* 首页 */}
-        <div 
-          className="relative flex items-center justify-center cursor-pointer"
-          onClick={() => navigate('/')}
-        >
-          <img
-            src="/images/mo14hae4-eynnfqz.svg"
-            alt="首页"
-            className={`${compact ? 'h-[28px] w-[28px]' : 'h-[32px] w-[32px]'} shrink-0 transition-opacity duration-300 ${isHome ? 'opacity-100' : 'opacity-50'}`}
-          />
-          {/* 选中态下划线 */}
-          {isHome && (
-            <div className="absolute -bottom-[6px] w-[24px] h-[3px] bg-black rounded-full" />
-          )}
+    <div className={`pointer-events-none absolute bottom-0 left-1/2 z-50 flex w-[394px] -translate-x-1/2 flex-col items-center bg-gradient-to-b from-transparent via-white/75 to-white ${compact ? 'h-[76px]' : 'h-[91px]'}`}>
+      <nav aria-label="主导航" className={`pointer-events-auto relative w-[372px] shrink-0 ${compact ? 'h-[54px]' : 'h-[62px]'}`}>
+        <img src="/images/bottom-nav-reference.png" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full" />
+        <div className="absolute inset-0 grid grid-cols-4 px-[24px]">
+          {items.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.label}
+                type="button"
+                aria-label={item.label}
+                aria-current={item.active ? 'page' : undefined}
+                onClick={() => navigate(item.path)}
+                className={`relative flex h-full items-center justify-center transition-colors active:scale-95 ${item.active ? 'text-[#8b66ef]' : 'text-[#b9b8bc]'}`}
+              >
+                <span className="pointer-events-none flex h-11 w-[58px] items-center justify-center bg-white">
+                  <Icon size={item.label === 'Ropet' ? 36 : item.label === '首页' ? 27 : 26} />
+                </span>
+              </button>
+            );
+          })}
         </div>
+      </nav>
 
-        {/* 商城 */}
-        <div 
-          className="relative flex items-center justify-center cursor-pointer"
-          onClick={() => navigate('/interaction-history')}
-        >
-          <img
-            src="/images/mall-nav-icon.png"
-            alt="商城"
-            className={`${compact ? 'h-[28px] w-[28px]' : 'h-[32px] w-[32px]'} shrink-0 object-contain transition-opacity duration-300 ${isHistory ? 'opacity-100' : 'opacity-50'}`}
-          />
-          {isHistory && (
-            <div className="absolute -bottom-[6px] w-[24px] h-[3px] bg-black rounded-full" />
-          )}
-        </div>
-
-        {/* 宠物互动 (这里跳转到小窝) */}
-        <div 
-          className="relative flex items-center justify-center cursor-pointer"
-          onClick={() => navigate('/nest')}
-        >
-          <img
-            src="/images/mo14hae4-i9xy2ty.svg"
-            alt="宠物互动"
-            className={`${compact ? 'h-[28px] w-[28px]' : 'h-[32px] w-[32px]'} shrink-0 transition-opacity duration-300 ${isInteract ? 'opacity-100' : 'opacity-50'}`}
-          />
-          {isInteract && (
-            <div className="absolute -bottom-[6px] w-[24px] h-[3px] bg-black rounded-full" />
-          )}
-        </div>
-
-        {/* 个人中心 */}
-        <div 
-          className={`relative flex items-start pt-[3px] pr-[1px] overflow-hidden shrink-0 cursor-pointer ${compact ? 'h-[28px]' : 'h-[32px]'}`}
-          onClick={() => navigate('/pet-profile')}
-        >
-          <div 
-            className="flex flex-grow items-start pl-[20px] pb-[21px] bg-cover bg-center bg-no-repeat transition-opacity duration-300"
-            style={{ 
-              backgroundImage: 'url(/images/mo14hae4-7jew9wc.svg)',
-              opacity: isProfile ? 1 : 0.5,
-              width: compact ? '28px' : '32px',
-              height: compact ? '28px' : '32px'
-            }}
-          >
-            {/* 红点 */}
-            <div className="flex flex-col items-center justify-center rounded bg-[#ff5c64] px-[2px] w-[8px] h-[8px] gap-[6px]"></div>
-          </div>
-          {isProfile && (
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[24px] h-[3px] bg-black rounded-full" />
-          )}
-        </div>
-      </div>
-      
-      {/* Home Indicator */}
-      <div className={`flex items-start self-stretch px-[131px] pl-[129px] ${compact ? 'mt-[3px] py-[12px]' : 'mt-[5px] py-[21px]'}`}>
-        <div className="rounded-[100px] bg-black w-[134px] h-[5px]"></div>
-      </div>
+      <div className={`mt-auto w-[134px] rounded-full bg-black ${compact ? 'mb-[6px] h-[4px]' : 'mb-[8px] h-[5px]'}`} />
     </div>
   );
 };
