@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AudioWaveform,
   BatteryCharging,
@@ -20,7 +20,7 @@ import PointsBalancePill from '@/components/PointsBalancePill';
 import { useDialogueStore } from '@/store/useDialogueStore';
 
 type MallCategory = 'eyes' | 'eyelids' | 'voice' | 'frames' | 'themes' | 'diaries';
-type MallKind = 'eye' | 'voice' | 'frame' | 'theme' | 'diary' | 'item';
+type MallKind = 'eye' | 'voice' | 'frame' | 'theme' | 'diary' | 'item' | 'bundle';
 type MallView = 'picks' | 'shelves';
 
 type MallProduct = {
@@ -44,6 +44,7 @@ type MallProduct = {
   cardImage?: string;
   repeatable?: boolean;
   inventoryEffect?: 'battery' | 'renameCard' | 'aiPaper';
+  bundleItemIds?: [string, string];
 };
 
 const mallTabs = [
@@ -66,25 +67,26 @@ const categoryTabs = (['eyes', 'eyelids', 'voice'] as MallCategory[]).map((id) =
 }));
 
 const products: MallProduct[] = [
-  { id: 'galaxy-eyes', category: 'eyes', kind: 'eye', name: '紫曜星河', price: 5000, recommended: true, discount: 0.8, discountLabel: '8折', material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#d9c8ff] via-[#f5efff] to-white', accent: '#6d41d8', eyeSpritePosition: '0% 0%', cardImage: '/images/mall-product-galaxy-eyes.jpg' },
+  { id: 'galaxy-eyes', category: 'eyes', kind: 'eye', name: '紫曜星河', price: 5000, recommended: true, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#d9c8ff] via-[#f5efff] to-white', accent: '#6d41d8', eyeSpritePosition: '0% 0%', cardImage: '/images/mall-product-galaxy-eyes.jpg' },
   { id: 'caramel-eyes', category: 'eyes', kind: 'eye', name: '熔岩落日', price: 4000, recommended: true, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#ffd0ad] via-[#fff0d8] to-white', accent: '#d4512f', eyeSpritePosition: '50% 0%' },
   { id: 'obsidian-eyes', category: 'eyes', kind: 'eye', name: '黑曜夜幕', price: 3000, recommended: true, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#c6c1c9] via-[#eeebf0] to-white', accent: '#383238', eyeSpritePosition: '100% 0%', cardImage: '/images/mall-product-obsidian-eyes.jpg' },
-  { id: 'forest-eyes', category: 'eyes', kind: 'eye', name: '圣诞森语', price: 5000, recommended: true, discount: 0.8, discountLabel: '8折', material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#bcd7a8] via-[#edf5d8] to-white', accent: '#3f8248', eyeSpritePosition: '0% 50%', cardImage: '/images/mall-product-forest-eyes.jpg' },
+  { id: 'forest-eyes', category: 'eyes', kind: 'eye', name: '圣诞森语', price: 5000, recommended: true, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#bcd7a8] via-[#edf5d8] to-white', accent: '#3f8248', eyeSpritePosition: '0% 50%', cardImage: '/images/mall-product-forest-eyes.jpg' },
   { id: 'rainbow-pixel-eyes', category: 'eyes', kind: 'eye', name: '像素彩虹', price: 5000, recommended: true, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#ffe1b9] via-[#f1e2ff] to-white', accent: '#8c62e8', eyeSpritePosition: '50% 50%', cardImage: '/images/mall-product-rainbow-pixel-eyes.jpg' },
   { id: 'reindeer-eyes', category: 'eyes', kind: 'eye', name: '金夜驯鹿', price: 4000, recommended: true, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#d6b98c] via-[#fff0d6] to-white', accent: '#80633b', eyeSpritePosition: '100% 50%' },
-  { id: 'moon-pixel-eyes', category: 'eyes', kind: 'eye', name: '月光像素', price: 4000, recommended: true, discount: 0.75, discountLabel: '7.5折', material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#cdd7ff] via-[#efeaff] to-white', accent: '#827be6', eyeSpritePosition: '0% 100%', cardImage: '/images/mall-product-moon-pixel-eyes.jpg' },
+  { id: 'moon-pixel-eyes', category: 'eyes', kind: 'eye', name: '月光像素', price: 4000, recommended: true, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#cdd7ff] via-[#efeaff] to-white', accent: '#827be6', eyeSpritePosition: '0% 100%', cardImage: '/images/mall-product-moon-pixel-eyes.jpg' },
   { id: 'sunset-pixel-eyes', category: 'eyes', kind: 'eye', name: '霓虹像素', price: 2400, recommended: true, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#e2b8ff] via-[#ffe2da] to-white', accent: '#ad3eca', eyeSpritePosition: '50% 100%' },
   { id: 'mint-eyes', category: 'eyes', kind: 'eye', name: '碧海像素', price: 3000, recommended: true, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#b8e9dd] via-[#eafff8] to-white', accent: '#28a7b8', eyeSpritePosition: '100% 100%', cardImage: '/images/mall-product-mint-eyes.jpg' },
-  { id: 'vitality-eyelids', category: 'eyelids', kind: 'eye', name: '元气眼影', price: 48000, material: 'renameCard', materialName: '改名卡', materialCost: 10, tone: 'from-[#ffd1df] via-[#fff0f4] to-white', accent: '#ff7ca6', cardImage: '/images/mall-product-vitality-eyelids.png' },
-  { id: 'sunset-eyelids', category: 'eyelids', kind: 'eye', name: '晚霞眼影', price: 48000, material: 'renameCard', materialName: '改名卡', materialCost: 10, tone: 'from-[#a94458] via-[#eab0a7] to-white', accent: '#a83d55', cardImage: '/images/mall-product-sunset-eyelids.png' },
+  { id: 'vitality-eyelids', category: 'eyelids', kind: 'eye', name: '元气眼影', price: 4000, material: 'renameCard', materialName: '改名卡', materialCost: 10, tone: 'from-[#ffd1df] via-[#fff0f4] to-white', accent: '#ff7ca6', cardImage: '/images/mall-product-vitality-eyelids.png' },
+  { id: 'sunset-eyelids', category: 'eyelids', kind: 'eye', name: '晚霞眼影', price: 4000, material: 'renameCard', materialName: '改名卡', materialCost: 10, tone: 'from-[#a94458] via-[#eab0a7] to-white', accent: '#a83d55', cardImage: '/images/mall-product-sunset-eyelids.png' },
+  { id: 'galaxy-vitality-bundle', category: 'eyes', kind: 'bundle', name: '星河元气眼妆', price: 9000, recommended: true, discount: 0.8, discountLabel: '8折', material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#dac9ff] via-[#ffe0eb] to-white', accent: '#8759dc', bundleItemIds: ['galaxy-eyes', 'vitality-eyelids'] },
+  { id: 'forest-sunset-bundle', category: 'eyes', kind: 'bundle', name: '森语晚霞眼妆', price: 9000, recommended: true, discount: 0.8, discountLabel: '8折', material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#c8dfb7] via-[#f4cfca] to-white', accent: '#527b54', bundleItemIds: ['forest-eyes', 'sunset-eyelids'] },
   { id: 'little-lamb', category: 'voice', kind: 'voice', name: '咩咩语', price: 3200, recommended: true, discount: 0.625, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#fff0c9] via-[#fff9e9] to-white', accent: '#8b66ef', voiceImagePosition: '-249px -474px', voiceShelfPosition: '-24px -196px' },
   { id: 'pony-talk', category: 'voice', kind: 'voice', name: '小马语', price: 3200, recommended: true, discount: 0.625, material: 'aiPaper', materialName: 'AI 画纸', materialCost: 20, tone: 'from-[#dff4ff] via-[#f6fbff] to-white', accent: '#8b66ef', voiceImagePosition: '-245px -314px', voiceShelfPosition: '-205px -196px' },
 ];
 
 const featuredProductIds = [
-  'galaxy-eyes',
-  'forest-eyes',
-  'moon-pixel-eyes',
+  'galaxy-vitality-bundle',
+  'forest-sunset-bundle',
   'little-lamb',
   'pony-talk',
 ];
@@ -124,7 +126,28 @@ const bannerSlides = [
 
 const isConsumableProduct = (item: MallProduct) => item.repeatable === true;
 
+const getBundleProducts = (item: MallProduct) => (
+  (item.bundleItemIds ?? [])
+    .map((itemId) => products.find((product) => product.id === itemId))
+    .filter((product): product is MallProduct => Boolean(product))
+);
+
 const ProductArt: React.FC<{ item: MallProduct }> = ({ item }) => {
+  if (item.kind === 'bundle') {
+    const [eye, eyelid] = getBundleProducts(item);
+    return (
+      <span className="relative z-10 mb-5 flex h-[118px] w-[150px] items-center justify-center">
+        <span className="absolute left-1 top-3 h-[94px] w-[94px] -rotate-6 overflow-hidden rounded-[18px] border-[4px] border-white bg-white shadow-[0_10px_22px_rgba(64,47,78,0.18)]">
+          {eye?.cardImage && <img src={eye.cardImage} alt={eye.name} className="h-full w-full object-cover" />}
+        </span>
+        <span className="absolute right-0 top-5 h-[94px] w-[94px] rotate-6 overflow-hidden rounded-[18px] border-[4px] border-white bg-white shadow-[0_10px_22px_rgba(64,47,78,0.18)]">
+          {eyelid?.cardImage && <img src={eyelid.cardImage} alt={eyelid.name} className="h-full w-full object-cover" />}
+        </span>
+        <span className="absolute bottom-0 left-1/2 z-20 flex h-8 -translate-x-1/2 items-center rounded-full bg-[#2f2933] px-3 text-[10px] font-black text-white shadow-lg">美瞳 + 眼影</span>
+      </span>
+    );
+  }
+
   if (item.cardImage) {
     return <img src={item.cardImage} alt={item.name} className="absolute inset-0 z-10 h-full w-full object-cover transition-transform duration-200 group-active:scale-[1.03]" />;
   }
@@ -264,6 +287,18 @@ const MallStore: React.FC = () => {
   const redemptionOrders = useMemo(() => mallRedemptionOrders ?? [], [mallRedemptionOrders]);
   const activeOrder = activeOrderId ? redemptionOrders.find((order) => order.id === activeOrderId) : undefined;
   const activeOrderProduct = activeOrder ? products.find((item) => item.id === activeOrder.itemId) : undefined;
+  const getRemainingBundleProducts = useCallback((item: MallProduct) => getBundleProducts(item)
+    .filter((product) => (redeemedMallItems?.[product.id] ?? 0) <= 0), [redeemedMallItems]);
+  const isProductOwned = useCallback((item: MallProduct) => item.kind === 'bundle'
+    ? getRemainingBundleProducts(item).length === 0
+    : !isConsumableProduct(item) && (redeemedMallItems?.[item.id] ?? 0) > 0, [getRemainingBundleProducts, redeemedMallItems]);
+  const getOriginalPrice = useCallback((item: MallProduct) => item.kind === 'bundle'
+    ? getRemainingBundleProducts(item).reduce((total, product) => total + product.price, 0)
+    : item.price, [getRemainingBundleProducts]);
+  const getPointPrice = useCallback((item: MallProduct) => {
+    const originalPrice = getOriginalPrice(item);
+    return item.discount ? Math.round(originalPrice * item.discount) : originalPrice;
+  }, [getOriginalPrice]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -304,7 +339,7 @@ const MallStore: React.FC = () => {
       navigate(`/eye-change?source=mall&product=${product.id}&returnTo=${encodeURIComponent(returnTo)}`, { replace: true });
       return;
     }
-    if (!product.repeatable && (redeemedMallItems?.[product.id] ?? 0) > 0) {
+    if (isProductOwned(product)) {
       const nextParams = new URLSearchParams(searchParams);
       nextParams.delete('buy');
       setSearchParams(nextParams, { replace: true });
@@ -312,7 +347,7 @@ const MallStore: React.FC = () => {
       return;
     }
     setBuyingProduct(product);
-  }, [navigate, redeemedMallItems, searchParams, setSearchParams]);
+  }, [isProductOwned, navigate, redeemedMallItems, searchParams, setSearchParams]);
 
   useEffect(() => {
     const productId = searchParams.get('purchased');
@@ -368,17 +403,13 @@ const MallStore: React.FC = () => {
     return baseProducts
       .map((item, index) => ({ item, index }))
       .sort((left, right) => {
-        const leftOwned = !isConsumableProduct(left.item) && (redeemedMallItems?.[left.item.id] ?? 0) > 0;
-        const rightOwned = !isConsumableProduct(right.item) && (redeemedMallItems?.[right.item.id] ?? 0) > 0;
+        const leftOwned = isProductOwned(left.item);
+        const rightOwned = isProductOwned(right.item);
         if (leftOwned === rightOwned) return left.index - right.index;
         return leftOwned ? 1 : -1;
       })
       .map(({ item }) => item);
-  }, [activeCategory, activeView, redeemedMallItems]);
-
-  const getPointPrice = (item: MallProduct) => (
-    item.discount ? Math.round(item.price * item.discount) : item.price
-  );
+  }, [activeCategory, activeView, isProductOwned]);
 
   const updateView = (view: MallView) => {
     setActiveView(view);
@@ -481,7 +512,15 @@ const MallStore: React.FC = () => {
       navigate(`/eye-change?source=mall&product=${item.id}&returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
-    if (!item.repeatable && (redeemedMallItems?.[item.id] ?? 0) > 0) {
+    if (item.kind === 'bundle') {
+      const bundleProducts = getBundleProducts(item);
+      const eyeProduct = bundleProducts.find((product) => product.category === 'eyes');
+      const outfitIds = bundleProducts.map((product) => product.id).join(',');
+      const returnTo = '/interaction-history?shop=featured';
+      navigate(`/eye-change?source=mall&product=${eyeProduct?.id ?? ''}&outfit=${outfitIds}&bundle=${item.id}&returnTo=${encodeURIComponent(returnTo)}`);
+      return;
+    }
+    if (isProductOwned(item)) {
       setToast('该商品已拥有，无需重复兑换');
       return;
     }
@@ -501,10 +540,14 @@ const MallStore: React.FC = () => {
     if (!buyingProduct || isPurchasing) return;
     setIsPurchasing(true);
     const pointPrice = getPointPrice(buyingProduct);
+    const grantedItemIds = buyingProduct.kind === 'bundle'
+      ? getRemainingBundleProducts(buyingProduct).map((item) => item.id)
+      : undefined;
     const { result, orderId } = startMallRedemption(buyingProduct.id, buyingProduct.name, pointPrice, {
       repeatable: buyingProduct.repeatable,
       inventoryEffect: buyingProduct.inventoryEffect ?? 'none',
       demoOutcome: demoFulfillmentOutcome,
+      grantedItemIds,
     });
     if (result === 'insufficient-points') {
       setIsPurchasing(false);
@@ -686,7 +729,7 @@ const MallStore: React.FC = () => {
           <section className={`relative grid grid-cols-2 gap-y-4 ${activeView === 'shelves' && activeCategory === 'voice' ? 'mt-2 gap-x-[17px] px-1' : activeView === 'shelves' ? 'mt-3 gap-x-3' : 'mt-5 gap-x-3'}`} aria-label="商城商品列表">
             {visibleProducts.map((item) => {
               const processingOrder = redemptionOrders.find((order) => order.itemId === item.id && order.status === 'processing');
-              const owned = !isConsumableProduct(item) && (redeemedMallItems?.[item.id] ?? 0) > 0;
+              const owned = isProductOwned(item);
               const playing = playingVoiceId === item.id;
               const status = processingOrder ? '处理中' : owned ? '已拥有' : item.discountLabel ?? null;
 
@@ -726,7 +769,7 @@ const MallStore: React.FC = () => {
                   {status && (
                     <span className={`absolute left-3 top-3 z-20 inline-flex h-7 max-w-[92px] items-center gap-1.5 rounded-[9px] px-2.5 text-[11px] font-bold shadow-sm ${processingOrder ? 'bg-[#8a73d6] text-white' : owned ? 'bg-[#72ae88] text-white' : 'bg-[#ffc83d] text-white'}`}>
                       {processingOrder ? <LoaderCircle size={12} className="animate-spin" /> : owned ? <Star size={11} fill="currentColor" strokeWidth={0} /> : <Tag size={12} className="text-[#ff4e58]" fill="#ff4e58" />}
-                      <span className="truncate">{!processingOrder && !owned && item.discountLabel ? `${item.discountLabel}优惠` : status}</span>
+                      <span className="truncate">{!processingOrder && !owned && item.discountLabel ? (item.kind === 'bundle' ? item.discountLabel : `${item.discountLabel}优惠`) : status}</span>
                     </span>
                   )}
                   <span className={`relative flex items-end justify-center overflow-hidden rounded-[14px] bg-[#f3f2f4] ${item.kind === 'frame' ? 'h-[220px]' : 'h-[204px]'}`}>
@@ -745,24 +788,24 @@ const MallStore: React.FC = () => {
                       />
                     )}
                   </span>
-                  <span className="mt-3 block px-0.5">
+                  <span className="mt-3 block h-5 px-0.5">
                     <strong className="block truncate text-[16px] font-bold leading-5 text-[#302b32]">{item.name}</strong>
                   </span>
-                  <span className={`mt-1.5 flex h-6 items-center px-0.5 text-[14px] font-bold ${processingOrder ? 'text-[#7056c8]' : owned ? 'text-[#4f8b65]' : 'text-[#8159ea]'}`}>
-                    {processingOrder ? <><LoaderCircle size={14} className="mr-1.5 animate-spin" />处理中</> : owned ? '已经在小窝里' : (
-                      item.discount ? (
+                  {(processingOrder || !owned) && (
+                    <span className={`mt-1.5 flex h-6 items-center px-0.5 text-[14px] font-bold ${processingOrder ? 'text-[#7056c8]' : 'text-[#8159ea]'}`}>
+                      {processingOrder ? <><LoaderCircle size={14} className="mr-1.5 animate-spin" />处理中</> : item.discount ? (
                         <span className="flex min-w-0 items-center gap-x-1">
                           <span className="flex items-center">
                             <Coins size={16} className="mr-1 text-[#ffc52e]" strokeWidth={2.1} />
                             {getPointPrice(item).toLocaleString()}
                           </span>
-                          <span className="text-[11px] font-medium text-[#918b94] line-through">{item.price.toLocaleString()}</span>
+                          <span className="text-[11px] font-medium text-[#918b94] line-through">{getOriginalPrice(item).toLocaleString()}</span>
                         </span>
                       ) : (
                         <><Coins size={16} className="mr-1 text-[#ffc52e]" strokeWidth={2.1} />{item.price.toLocaleString()}</>
-                      )
-                    )}
-                  </span>
+                      )}
+                    </span>
+                  )}
                   {!processingOrder && !owned && item.discount && (
                     <span className="mt-1.5 inline-flex h-7 items-center rounded-full bg-[#f0eaff] px-3 text-[12px] font-medium text-[#825bea]">还剩 24 天</span>
                   )}
@@ -857,8 +900,18 @@ const MallStore: React.FC = () => {
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ffe49a] text-[13px]">★</span>
                 <span className="text-[16px] font-semibold">{getPointPrice(buyingProduct).toLocaleString()}</span>
                 <span className="text-[16px] font-semibold">=</span>
-                <span className="flex items-center gap-2 rounded-[8px] border border-[#e9e5ef] bg-[#f7f7f8] p-1.5 pr-3 text-[14px] font-semibold">
-                  {buyingProduct.kind === 'voice' ? (
+                <span className={`flex items-center rounded-[8px] border border-[#e9e5ef] bg-[#f7f7f8] p-1.5 text-[14px] font-semibold ${buyingProduct.kind === 'bundle' ? 'gap-1.5 pr-2' : 'gap-2 pr-3'}`}>
+                  {buyingProduct.kind === 'bundle' ? (
+                    <>
+                      {getRemainingBundleProducts(buyingProduct).map((product, index) => (
+                        <React.Fragment key={product.id}>
+                          {index > 0 && <span className="text-[#a39ca8]">+</span>}
+                          <img src={product.cardImage} alt={product.name} className="h-10 w-10 rounded-[8px] bg-white object-cover" />
+                        </React.Fragment>
+                      ))}
+                      <span className="ml-0.5 whitespace-nowrap text-[11px]">× 1 套</span>
+                    </>
+                  ) : buyingProduct.kind === 'voice' ? (
                     <span role="img" aria-label={buyingProduct.name} className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#eee8ff] text-[#7656d8]">
                       <Volume2 size={23} strokeWidth={2.3} />
                     </span>
@@ -875,14 +928,16 @@ const MallStore: React.FC = () => {
                   ) : (
                     <span role="img" aria-label={buyingProduct.name} className="h-10 w-10 rounded-[7px] bg-white bg-no-repeat" style={{ backgroundImage: "url('/images/mall-eye-collection.png')", backgroundPosition: buyingProduct.eyeSpritePosition, backgroundSize: '300% 300%' }} />
                   )}
-                  × 1
+                  {buyingProduct.kind !== 'bundle' && '× 1'}
                 </span>
               </div>
               <p className="mt-3 text-[12px] text-[#8b8792]">
-                兑换成功后将直接放入{buyingProduct.kind === 'voice' ? '我的声音' : buyingProduct.category === 'eyelids' ? '我的眼影' : buyingProduct.kind === 'eye' ? '我的美瞳' : buyingProduct.kind === 'item' ? '小窝' : '我的装扮'}
+                兑换成功后将直接放入{buyingProduct.kind === 'bundle' ? '我的美瞳与眼影' : buyingProduct.kind === 'voice' ? '我的声音' : buyingProduct.category === 'eyelids' ? '我的眼影' : buyingProduct.kind === 'eye' ? '我的美瞳' : buyingProduct.kind === 'item' ? '小窝' : '我的装扮'}
               </p>
               <p className="mt-1 text-[11px] text-[#a09aa8]">
-                {isConsumableProduct(buyingProduct) ? '消耗型道具，可重复兑换，数量会累加。' : '一次性商品，兑换后不可重复购买。'}
+                {buyingProduct.kind === 'bundle'
+                  ? '已拥有的单品不会重复购买，仅为未拥有的商品计价。'
+                  : isConsumableProduct(buyingProduct) ? '消耗型道具，可重复兑换，数量会累加。' : '一次性商品，兑换后不可重复购买。'}
               </p>
               <div className="mt-4 flex items-center justify-between rounded-[12px] bg-[#f5f3f7] px-3 py-2">
                 <span className="text-[10px] font-bold text-[#98919d]">原型结果</span>
@@ -954,7 +1009,13 @@ const MallStore: React.FC = () => {
               <section className="relative mt-12 h-[330px] w-[245px] rotate-3 rounded-[30px] bg-gradient-to-br from-[#ffc43f] via-[#ffac79] to-[#ff98d2] p-[10px] shadow-[0_24px_42px_rgba(135,82,11,0.30)]">
                 <div className="relative h-[262px] overflow-hidden rounded-[23px] bg-white">
                   <span className="absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#ffc947] to-[#ff8c75] px-3 py-1 text-[11px] font-black text-white shadow-sm">◆ SR</span>
-                  {purchasedProduct.kind === 'eye' ? (
+                  {purchasedProduct.kind === 'bundle' ? (
+                    <span className="absolute left-1/2 top-1/2 flex w-[210px] -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+                      {getBundleProducts(purchasedProduct).map((product, index) => (
+                        <img key={product.id} src={product.cardImage} alt={product.name} className={`h-[126px] w-[126px] rounded-[18px] border-[5px] border-white object-cover shadow-lg ${index === 0 ? '-mr-7 -rotate-6' : 'rotate-6'}`} />
+                      ))}
+                    </span>
+                  ) : purchasedProduct.kind === 'eye' ? (
                     purchasedProduct.category === 'eyelids' ? (
                       <img src={purchasedProduct.cardImage} alt={purchasedProduct.name} className="absolute left-1/2 top-1/2 h-[190px] w-[190px] -translate-x-1/2 -translate-y-1/2 rounded-[18px] object-cover" />
                     ) : (
@@ -978,6 +1039,12 @@ const MallStore: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
+                  if (purchasedProduct.kind === 'bundle') {
+                    const eyeProduct = getBundleProducts(purchasedProduct).find((product) => product.category === 'eyes');
+                    const productQuery = eyeProduct ? `&product=${eyeProduct.id}` : '';
+                    navigate(`/eye-change?source=mall${productQuery}&returnTo=${encodeURIComponent('/interaction-history?shop=featured')}`);
+                    return;
+                  }
                   if (purchasedProduct.category === 'eyelids') {
                     navigate(`/eye-change?source=mall&product=${purchasedProduct.id}&returnTo=${encodeURIComponent('/interaction-history?shop=eyelids')}`);
                     return;
@@ -998,7 +1065,9 @@ const MallStore: React.FC = () => {
                 disabled={(purchasedProduct.kind === 'eye' || purchasedProduct.kind === 'voice') && ((purchasedProduct.kind === 'eye' ? equippedMallEyeId : equippedMallVoiceId) === purchasedProduct.id || equippingProductId === purchasedProduct.id)}
                 className="mt-16 flex h-14 w-full max-w-[300px] items-center justify-center rounded-full bg-black text-[18px] font-bold text-white shadow-[0_10px_20px_rgba(100,60,0,0.22)] disabled:cursor-default disabled:bg-black/85"
               >
-                {purchasedProduct.category === 'eyelids'
+                {purchasedProduct.kind === 'bundle'
+                  ? '立即搭配'
+                  : purchasedProduct.category === 'eyelids'
                   ? '立即试用'
                   : purchasedProduct.kind === 'eye' || purchasedProduct.kind === 'voice'
                     ? equippingProductId === purchasedProduct.id

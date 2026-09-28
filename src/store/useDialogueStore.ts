@@ -34,6 +34,7 @@ export interface MallRedemptionOrder {
   retryCount: number;
   repeatable: boolean;
   inventoryEffect: 'battery' | 'renameCard' | 'aiPaper' | 'none';
+  grantedItemIds?: string[];
   demoOutcome: 'success' | 'failure';
   createdAt: string;
   createdAtMs: number;
@@ -97,6 +98,7 @@ interface DialogueStore {
       repeatable?: boolean;
       inventoryEffect?: 'battery' | 'renameCard' | 'aiPaper' | 'none';
       demoOutcome?: 'success' | 'failure';
+      grantedItemIds?: string[];
     },
   ) => { result: 'processing' | 'insufficient-points' | 'already-owned' | 'already-processing' | 'invalid'; orderId?: string };
   markMallRedemptionRetry: (orderId: string, attempt: number) => void;
@@ -344,7 +346,11 @@ export const useDialogueStore = create<DialogueStore>()(
         if (existingProcessingOrder) return { result: 'already-processing', orderId: existingProcessingOrder.id };
 
         const redeemedItems = state.redeemedMallItems ?? {};
-        if (!options.repeatable && (redeemedItems[itemId] ?? 0) > 0) return { result: 'already-owned' };
+        const requestedItemIds = options.grantedItemIds?.length ? options.grantedItemIds : [itemId];
+        const grantedItemIds = options.repeatable
+          ? requestedItemIds
+          : requestedItemIds.filter((grantedItemId) => (redeemedItems[grantedItemId] ?? 0) <= 0);
+        if (grantedItemIds.length === 0) return { result: 'already-owned' };
         if (state.points < cost) return { result: 'insufficient-points' };
 
         const now = new Date();
@@ -358,6 +364,7 @@ export const useDialogueStore = create<DialogueStore>()(
           retryCount: 0,
           repeatable: options.repeatable === true,
           inventoryEffect: options.inventoryEffect ?? 'none',
+          grantedItemIds,
           demoOutcome: options.demoOutcome ?? 'success',
           createdAt: formatPaymentTime(now),
           createdAtMs: now.getTime(),
@@ -396,11 +403,14 @@ export const useDialogueStore = create<DialogueStore>()(
 
         const inventory = state.consumableInventory ?? { aiPaper: 0, renameCard: 0 };
         const cardInventory = state.dialogueCardInventory ?? {};
+        const redeemedItems = state.redeemedMallItems ?? {};
+        const grantedItemIds = order.grantedItemIds?.length ? order.grantedItemIds : [order.itemId];
+        const nextRedeemedItems = grantedItemIds.reduce<Record<string, number>>((items, itemId) => ({
+          ...items,
+          [itemId]: (items[itemId] ?? 0) + 1,
+        }), { ...redeemedItems });
         const nextState: Partial<DialogueStore> = {
-          redeemedMallItems: {
-            ...(state.redeemedMallItems ?? {}),
-            [order.itemId]: ((state.redeemedMallItems ?? {})[order.itemId] ?? 0) + 1,
-          },
+          redeemedMallItems: nextRedeemedItems,
           mallRedemptionOrders: (state.mallRedemptionOrders ?? []).map((item) => (
             item.id === orderId ? { ...item, status: 'success', updatedAtMs: Date.now() } : item
           )),

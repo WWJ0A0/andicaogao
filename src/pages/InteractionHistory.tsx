@@ -15,6 +15,25 @@ const interactionClaims = [
   { id: 'like', label: '给TA点赞', amount: 160, left: 65, top: 1417 },
 ] as const;
 
+const megaStarParticles = Array.from({ length: 52 }, (_, index) => {
+  const startX = 12 + ((index * 83) % 369);
+  const startY = 22 + ((index * 137) % 790);
+  const curveX = Math.round((startX + 196) / 2 + (index % 2 === 0 ? -54 : 54));
+  const curveY = Math.round((startY + 170) / 2 + ((index % 3) - 1) * 34);
+  return {
+    id: index,
+    startX,
+    startY,
+    curveX,
+    curveY,
+    size: 11 + (index % 5) * 3,
+    delay: (index % 13) * 42 + Math.floor(index / 13) * 24,
+    duration: 920 + (index % 7) * 90,
+    rotation: 180 + (index % 6) * 58,
+    color: ['#ffd323', '#ffec7a', '#fff7c7', '#ffadcf'][index % 4],
+  };
+});
+
 const InteractionHistory: React.FC = () => {
   const navigate = useNavigate();
   const { points, addPoints } = useDialogueStore();
@@ -37,7 +56,7 @@ const InteractionHistory: React.FC = () => {
     effectTimerRef.current = window.setTimeout(() => {
       setClaimEffect(null);
       effectTimerRef.current = null;
-    }, burst ? 1700 : 1100);
+    }, burst ? 2600 : 1100);
   };
 
   const playRewardSound = (burst = false) => {
@@ -49,23 +68,41 @@ const InteractionHistory: React.FC = () => {
       master.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + (burst ? 0.9 : 0.42));
       master.connect(audio.destination);
 
-      const notes = burst ? [392, 523.25, 659.25, 1046.5] : [659.25, 987.77];
+      const notes = burst
+        ? [783.99, 1046.5, 1318.51, 987.77, 1567.98, 1174.66, 1760, 1318.51, 2093, 1567.98]
+        : [659.25, 987.77];
       notes.forEach((frequency, index) => {
         const oscillator = audio.createOscillator();
         const gain = audio.createGain();
-        const start = audio.currentTime + index * (burst ? 0.11 : 0.07);
-        oscillator.type = index === notes.length - 1 ? 'sine' : 'triangle';
+        const start = audio.currentTime + index * (burst ? 0.075 : 0.07);
+        oscillator.type = burst && index % 3 === 0 ? 'sine' : 'triangle';
         oscillator.frequency.setValueAtTime(frequency, start);
         oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.08, start + 0.18);
         gain.gain.setValueAtTime(0.0001, start);
         gain.gain.exponentialRampToValueAtTime(0.8, start + 0.018);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + (burst ? 0.5 : 0.25));
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + (burst ? 0.34 : 0.25));
         oscillator.connect(gain);
         gain.connect(master);
         oscillator.start(start);
-        oscillator.stop(start + (burst ? 0.55 : 0.3));
+        oscillator.stop(start + (burst ? 0.38 : 0.3));
       });
-      window.setTimeout(() => void audio.close(), burst ? 1200 : 650);
+      if (burst) {
+        [0.86, 1.02, 1.18].forEach((offset, index) => {
+          const oscillator = audio.createOscillator();
+          const gain = audio.createGain();
+          const start = audio.currentTime + offset;
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime([1046.5, 1318.51, 2093][index], start);
+          gain.gain.setValueAtTime(0.0001, start);
+          gain.gain.exponentialRampToValueAtTime(0.72, start + 0.012);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.46);
+          oscillator.connect(gain);
+          gain.connect(master);
+          oscillator.start(start);
+          oscillator.stop(start + 0.5);
+        });
+      }
+      window.setTimeout(() => void audio.close(), burst ? 1900 : 650);
     } catch {
       // Browsers without Web Audio still retain the visual feedback.
     }
@@ -102,10 +139,14 @@ const InteractionHistory: React.FC = () => {
               alt="积分中心"
             />
 
-            <div className={`pointer-events-none absolute left-1/2 top-[126px] z-10 h-[150px] w-[184px] -translate-x-1/2 ${claimEffect ? 'interaction-jar-react' : ''}`} aria-hidden="true">
+            <div className={`pointer-events-none absolute left-1/2 top-[126px] z-10 h-[150px] w-[184px] -translate-x-1/2 ${claimEffect?.burst ? 'interaction-jar-feast' : claimEffect ? 'interaction-jar-react' : ''}`} aria-hidden="true">
               <div className="interaction-jar-aura absolute inset-0 rounded-full" />
+              <div className="interaction-jar-sprite absolute inset-0" />
               <div className="interaction-idle-glint absolute left-[27px] top-[18px] text-[20px] text-[#ffe16b]">✦</div>
               <div className="interaction-idle-glint interaction-idle-glint-delay absolute right-[24px] top-[58px] text-[15px] text-[#fff2a7]">✦</div>
+              {claimEffect?.burst && Array.from({ length: 8 }, (_, index) => (
+                <span key={index} className="interaction-jar-fill-star absolute text-[#ffd328]" style={{ left: 42 + (index % 4) * 27, top: 72 + Math.floor(index / 4) * 27, animationDelay: `${920 + index * 75}ms` }}>★</span>
+              ))}
             </div>
 
             <div
@@ -148,7 +189,7 @@ const InteractionHistory: React.FC = () => {
               );
             })}
 
-            {claimEffect && (
+            {claimEffect && !claimEffect.burst && (
               <React.Fragment key={claimEffect.key}>
                 <div
                   className="interaction-energy-orb pointer-events-none absolute z-40"
@@ -162,30 +203,6 @@ const InteractionHistory: React.FC = () => {
                   <span className="interaction-energy-tail" />
                   <Star size={38} strokeWidth={1.5} className="relative text-[#ffd42a]" fill="currentColor" />
                 </div>
-                {claimEffect.burst && (
-                  <div className="pointer-events-none absolute inset-x-0 top-0 z-[45] h-[430px] overflow-hidden" aria-hidden="true">
-                    <div className="interaction-energy-beam absolute left-1/2 top-0 h-[276px] w-[92px] -translate-x-1/2" />
-                    <div className="interaction-shockwave absolute left-1/2 top-[205px] h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-[5px] border-[#ffe16b]" />
-                    <div className="interaction-flash absolute inset-0" />
-                    <div className="score-claim-mega absolute left-1/2 top-[266px] z-[46] flex items-center gap-1 whitespace-nowrap text-[17px] font-extrabold text-[#8056e5]">
-                      <Star size={19} className="text-[#ffc928]" fill="currentColor" />+{claimEffect.amount}
-                    </div>
-                    {Array.from({ length: 18 }, (_, index) => (
-                      <Star
-                        key={index}
-                        size={index % 3 === 0 ? 22 : 14}
-                        fill="currentColor"
-                        className="interaction-star-rain absolute text-[#ffd429]"
-                        style={{
-                          left: `${6 + ((index * 29) % 88)}%`,
-                          top: `${-8 - ((index * 17) % 42)}px`,
-                          animationDelay: `${(index % 7) * 55}ms`,
-                          animationDuration: `${780 + (index % 5) * 110}ms`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
               </React.Fragment>
             )}
 
@@ -209,6 +226,39 @@ const InteractionHistory: React.FC = () => {
             />
           </div>
         </div>
+
+        {claimEffect?.burst && (
+          <div key={claimEffect.key} className="pointer-events-none absolute inset-0 z-[45] overflow-hidden" aria-hidden="true">
+            <div className="interaction-mega-vignette absolute inset-0" />
+            {megaStarParticles.map((particle) => (
+              <span
+                key={particle.id}
+                className="interaction-star-swarm absolute left-0 top-0 flex items-center justify-center font-black"
+                style={{
+                  width: particle.size,
+                  height: particle.size,
+                  color: particle.color,
+                  fontSize: particle.size,
+                  animationDelay: `${particle.delay}ms`,
+                  animationDuration: `${particle.duration}ms`,
+                  '--interaction-star-start-x': `${particle.startX}px`,
+                  '--interaction-star-start-y': `${particle.startY}px`,
+                  '--interaction-star-curve-x': `${particle.curveX}px`,
+                  '--interaction-star-curve-y': `${particle.curveY}px`,
+                  '--interaction-star-rotation': `${particle.rotation}deg`,
+                } as React.CSSProperties}
+              >
+                {particle.id % 3 === 0 ? '★' : '✦'}
+              </span>
+            ))}
+            <div className="interaction-jar-mouth-glow absolute left-1/2 top-[150px] h-12 w-24 -translate-x-1/2 rounded-full" />
+            <div className="interaction-shockwave absolute left-1/2 top-[205px] h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-[5px] border-[#ffe16b]" />
+            <div className="interaction-flash absolute inset-0" />
+            <div className="score-claim-mega absolute left-1/2 top-[286px] z-[46] flex items-center gap-1 whitespace-nowrap rounded-full border border-white/90 bg-white/92 px-4 py-2 text-[20px] font-extrabold text-[#8056e5] shadow-[0_8px_24px_rgba(100,68,170,0.2)] backdrop-blur-sm">
+              <Star size={22} className="text-[#ffc928]" fill="currentColor" />+{claimEffect.amount}
+            </div>
+          </div>
+        )}
 
         {showRules && (
           <div className="absolute inset-0 z-50 flex items-end bg-black/55" onClick={() => setShowRules(false)}>

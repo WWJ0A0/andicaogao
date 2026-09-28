@@ -134,13 +134,13 @@ const defaultEyeshadowOptions: EyeItem[] = [
 ];
 
 const mallPointPrices: Record<string, number> = {
-  'galaxy-eyes': 4000,
+  'galaxy-eyes': 5000,
   'caramel-eyes': 4000,
   'obsidian-eyes': 3000,
-  'forest-eyes': 4000,
+  'forest-eyes': 5000,
   'rainbow-pixel-eyes': 5000,
   'reindeer-eyes': 4000,
-  'moon-pixel-eyes': 3000,
+  'moon-pixel-eyes': 4000,
   'sunset-pixel-eyes': 2400,
   'mint-eyes': 3000,
   'vitality-eyelids': 4000,
@@ -150,6 +150,23 @@ const mallPointPrices: Record<string, number> = {
   'morning-eyelids': 4000,
   'starlight-eyelids': 4000,
   'clear-sky-eyelids': 4000,
+};
+
+const mallBundleOffers = [
+  { id: 'galaxy-vitality-bundle', name: '眼妆搭配 01', itemIds: ['galaxy-eyes', 'vitality-eyelids'], discount: 0.8 },
+  { id: 'forest-sunset-bundle', name: '眼妆搭配 02', itemIds: ['forest-eyes', 'sunset-eyelids'], discount: 0.8 },
+] as const;
+
+const faceEyeSpritePositions: Record<string, string> = {
+  'galaxy-eyes': '-16px -12px',
+  'caramel-eyes': '-99px -12px',
+  'obsidian-eyes': '-182px -12px',
+  'forest-eyes': '-16px -90px',
+  'rainbow-pixel-eyes': '-99px -90px',
+  'reindeer-eyes': '-182px -90px',
+  'moon-pixel-eyes': '-16px -168px',
+  'sunset-pixel-eyes': '-99px -168px',
+  'mint-eyes': '-182px -168px',
 };
 
 const eyePointPrices = {
@@ -217,6 +234,8 @@ const EyeChange: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const mallProductId = searchParams.get('product');
+  const mallBundleId = searchParams.get('bundle');
+  const activeBundleOffer = mallBundleOffers.find((bundle) => bundle.id === mallBundleId);
   const pageReturnTo = searchParams.get('returnTo');
   const mallReturnTo = pageReturnTo || '/interaction-history';
   const isMallPreview = searchParams.get('source') === 'mall' && Boolean(mallProductId);
@@ -300,13 +319,37 @@ const EyeChange: React.FC = () => {
   const selectedOutfitEyeshadow = currentOutfitEyeshadow?.productId ? currentOutfitEyeshadow : undefined;
   const selectedOutfitItems = [selectedOutfitEye, selectedOutfitEyeshadow]
     .filter((item): item is EyeItem => Boolean(item?.productId));
+  const faceEyeStyle = currentOutfitEye?.productId && faceEyeSpritePositions[currentOutfitEye.productId]
+    ? {
+        backgroundImage: `url('${currentOutfitEye.previewImg}')`,
+        backgroundPosition: faceEyeSpritePositions[currentOutfitEye.productId],
+        backgroundSize: '251px 239px',
+      }
+    : currentOutfitEye
+      ? {
+          backgroundImage: `url('${currentOutfitEye.previewImg}')`,
+          backgroundPosition: 'center',
+          backgroundSize: 'cover',
+        }
+      : undefined;
+  const eyeshadowPreviewTone = currentOutfitEyeshadow?.productId === 'sunset-eyelids'
+    ? 'sunset'
+    : currentOutfitEyeshadow?.productId === 'vitality-eyelids'
+      ? 'vitality'
+      : currentOutfitEyeshadow?.eyelidTone === 'violet' ? 'violet' : 'neutral';
   const unownedOutfitItems = selectedOutfitItems.filter((item) => (
     item.productId && (redeemedMallItems?.[item.productId] ?? 0) <= 0
   ));
   const checkoutSelectedItems = unownedOutfitItems.filter((item) => (
     item.productId && checkoutSelectedProductIds.includes(item.productId)
   ));
-  const checkoutPointTotal = checkoutSelectedItems.reduce((total, item) => total + getEyePointPrice(item), 0);
+  const checkoutOriginalPointTotal = checkoutSelectedItems.reduce((total, item) => total + getEyePointPrice(item), 0);
+  const checkoutHasBundleDiscount = Boolean(activeBundleOffer
+    && checkoutSelectedItems.length === activeBundleOffer.itemIds.length
+    && activeBundleOffer.itemIds.every((itemId) => checkoutSelectedProductIds.includes(itemId)));
+  const checkoutPointTotal = checkoutHasBundleDiscount && activeBundleOffer
+    ? Math.round(checkoutOriginalPointTotal * activeBundleOffer.discount)
+    : checkoutOriginalPointTotal;
   const selectedOutfitApplied = Boolean(currentOutfitEye && currentOutfitEyeshadow)
     && (currentOutfitEye?.productId ? equippedMallEyeId === currentOutfitEye.productId : appliedEyeId === currentOutfitEye?.id)
     && (currentOutfitEyeshadow?.productId ? equippedMallEyeshadowId === currentOutfitEyeshadow.productId : appliedEyeshadowId === currentOutfitEyeshadow?.id);
@@ -548,17 +591,26 @@ const EyeChange: React.FC = () => {
     }
 
     setIsPurchasing(true);
-    const startedOrders: { orderId: string; item: EyeItem }[] = [];
-    for (const item of checkoutSelectedItems) {
-      if (!item.productId) continue;
-      const { result, orderId } = startMallRedemption(item.productId, item.name, getEyePointPrice(item), {
+    const startedOrderIds: string[] = [];
+    if (checkoutHasBundleDiscount && activeBundleOffer) {
+      const { result, orderId } = startMallRedemption(activeBundleOffer.id, activeBundleOffer.name, checkoutPointTotal, {
         demoOutcome: demoFulfillmentOutcome,
+        grantedItemIds: checkoutSelectedItems.map((item) => item.productId).filter((id): id is string => Boolean(id)),
       });
-      if (result === 'processing' && orderId) startedOrders.push({ orderId, item });
+      if (result === 'processing' && orderId) startedOrderIds.push(orderId);
+    } else {
+      for (const item of checkoutSelectedItems) {
+        if (!item.productId) continue;
+        const { result, orderId } = startMallRedemption(item.productId, item.name, getEyePointPrice(item), {
+          demoOutcome: demoFulfillmentOutcome,
+        });
+        if (result === 'processing' && orderId) startedOrderIds.push(orderId);
+      }
     }
 
-    if (startedOrders.length !== checkoutSelectedItems.length) {
-      startedOrders.forEach(({ orderId }) => refundMallRedemption(orderId));
+    const expectedOrderCount = checkoutHasBundleDiscount ? 1 : checkoutSelectedItems.length;
+    if (startedOrderIds.length !== expectedOrderCount) {
+      startedOrderIds.forEach((orderId) => refundMallRedemption(orderId));
       setIsPurchasing(false);
       setOutfitCheckoutOpen(false);
       setToast('搭配状态已变化，请重新选择');
@@ -567,17 +619,17 @@ const EyeChange: React.FC = () => {
 
     window.setTimeout(() => {
       if (demoFulfillmentOutcome === 'failure') {
-        startedOrders.forEach(({ orderId }) => refundMallRedemption(orderId));
+        startedOrderIds.forEach((orderId) => refundMallRedemption(orderId));
         setIsPurchasing(false);
         setOutfitCheckoutOpen(false);
         setToast(`当前搭配兑换失败，${checkoutPointTotal.toLocaleString()} 积分已退回`);
         return;
       }
 
-      startedOrders.forEach(({ orderId }) => completeMallRedemption(orderId));
+      startedOrderIds.forEach((orderId) => completeMallRedemption(orderId));
       setIsPurchasing(false);
       setOutfitCheckoutOpen(false);
-      const redeemedItems = startedOrders.map(({ item }) => item);
+      const redeemedItems = checkoutSelectedItems;
       if (!redeemedItems.some((item) => item.source === 'shop')) {
         equipCurrentSelection();
         setToast(`${redeemedItems.length} 件装扮兑换成功，已应用当前搭配`);
@@ -668,18 +720,16 @@ const EyeChange: React.FC = () => {
           <>
         <div className="absolute bg-contain bg-center bg-no-repeat pointer-events-none" style={{ top: 122, left: -86, width: 560, height: 360, backgroundImage: "url('/images/moiedap1-khtkfqv.png')" }} />
 
-        {isEyeshadowPreview && (
-          <div className="pointer-events-none absolute inset-x-0 z-20" style={{ top: 284 }} aria-label={`Ropet 正在试戴${selectedEye.name}并眨眼`}>
-            <span className={`eyeshadow-blink absolute left-[122px] h-[46px] w-[48px] rounded-[50%] bg-cover bg-center ${selectedEye.eyelidStyle ? `eyeshadow-${selectedEye.eyelidStyle}` : ''}`} style={selectedEye.eyelidStyle ? undefined : { backgroundImage: `url('${selectedEye.previewImg}')` }} />
-            <span className={`eyeshadow-blink eyeshadow-blink-right absolute right-[122px] h-[46px] w-[48px] rounded-[50%] bg-cover bg-center ${selectedEye.eyelidStyle ? `eyeshadow-${selectedEye.eyelidStyle}` : ''}`} style={selectedEye.eyelidStyle ? undefined : { backgroundImage: `url('${selectedEye.previewImg}')` }} />
-          </div>
-        )}
-        {!isEyeshadowPreview && (
-          <div className="pointer-events-none absolute inset-x-0 z-20" style={{ top: 284 }} aria-label={`Ropet 正在试戴${selectedEye.name}并眨眼`}>
-            <span className="eye-preview-blink absolute -top-[7px] left-[116px] h-[60px] w-[60px] rounded-[50%]" />
-            <span className="eye-preview-blink eye-preview-blink-right absolute -top-[7px] right-[116px] h-[60px] w-[60px] rounded-[50%]" />
-          </div>
-        )}
+        <div className="pointer-events-none absolute inset-x-0 z-20" style={{ top: 284 }} aria-label={`Ropet 正在试戴${currentOutfitEye?.name ?? ''}${currentOutfitEyeshadow ? `和${currentOutfitEyeshadow.name}` : ''}并眨眼`}>
+          <span className="eye-preview-blink absolute -top-[7px] left-[116px] h-[60px] w-[60px] rounded-[50%] bg-no-repeat" style={faceEyeStyle} />
+          <span className="eye-preview-blink eye-preview-blink-right absolute -top-[7px] right-[116px] h-[60px] w-[60px] rounded-[50%] bg-no-repeat" style={faceEyeStyle} />
+          {currentOutfitEyeshadow && (
+            <>
+              <span className={`eyeshadow-preview eyeshadow-preview-${eyeshadowPreviewTone} absolute -top-[10px] left-[116px] h-[56px] w-[60px] rounded-[50%]`} />
+              <span className={`eyeshadow-preview eyeshadow-preview-right eyeshadow-preview-${eyeshadowPreviewTone} absolute -top-[10px] right-[116px] h-[56px] w-[60px] rounded-[50%]`} />
+            </>
+          )}
+        </div>
 
         <div className="absolute left-5 z-30 flex flex-col items-center gap-3" style={{ top: 294 }}>
           <button
@@ -937,6 +987,7 @@ const EyeChange: React.FC = () => {
                 <div className="flex items-center justify-between text-[13px] text-[#7f7983]">
                   <span>总计</span>
                   <strong className="flex items-center text-[18px] font-semibold text-[#302c34]">
+                    {checkoutHasBundleDiscount && <span className="mr-2 text-[12px] font-medium text-[#9a949e] line-through">{checkoutOriginalPointTotal.toLocaleString()}</span>}
                     <Coins size={18} className="mr-1 text-[#f6b91d]" fill="#fff2b1" />
                     {checkoutPointTotal.toLocaleString()}
                   </strong>
@@ -966,8 +1017,9 @@ const EyeChange: React.FC = () => {
                 type="button"
                 onClick={() => {
                   const productIds = selectedOutfitItems.map((item) => item.productId).filter(Boolean).join(',');
+                  const bundleQuery = activeBundleOffer ? `&bundle=${activeBundleOffer.id}` : '';
                   const returnPath = isMallPreview
-                    ? `/eye-change?source=mall&product=${mallProductId ?? ''}&outfit=${productIds}&returnTo=${encodeURIComponent(mallReturnTo)}`
+                    ? `/eye-change?source=mall&product=${mallProductId ?? ''}&outfit=${productIds}${bundleQuery}&returnTo=${encodeURIComponent(mallReturnTo)}`
                     : `/eye-change?outfit=${productIds}`;
                   navigate(`/points-store?returnTo=${encodeURIComponent(returnPath)}`);
                 }}
