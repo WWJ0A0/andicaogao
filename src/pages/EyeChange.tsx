@@ -17,7 +17,7 @@ interface EyeItem {
   productId?: string;
   previewType?: 'eye' | 'eyeshadow';
   eyelidStyle?: 'default' | 'gentle' | 'sleepy';
-  eyelidTone?: 'aqua' | 'violet';
+  eyelidTone?: 'aqua' | 'violet' | 'matcha' | 'berry' | 'orchid' | 'blue';
 }
 
 const eyeOptions: EyeItem[] = [
@@ -64,6 +64,50 @@ const mallEyeshadowOptions: EyeItem[] = [
     source: 'shop',
     productId: 'sunset-eyelids',
     previewType: 'eyeshadow',
+  },
+  {
+    id: 208,
+    previewImg: '/images/mall-product-matcha-heart-eyelids.png',
+    badge: 'gold',
+    name: '抹茶心语眼影',
+    locked: true,
+    source: 'shop',
+    productId: 'matcha-heart-eyelids',
+    previewType: 'eyeshadow',
+    eyelidTone: 'matcha',
+  },
+  {
+    id: 209,
+    previewImg: '/images/mall-product-berry-heart-eyelids.png',
+    badge: 'purple',
+    name: '莓心悸动眼影',
+    locked: true,
+    source: 'shop',
+    productId: 'berry-heart-eyelids',
+    previewType: 'eyeshadow',
+    eyelidTone: 'berry',
+  },
+  {
+    id: 210,
+    previewImg: '/images/mall-product-orchid-bubble-eyelids.png',
+    badge: 'purple',
+    name: '紫晶泡泡眼影',
+    locked: true,
+    source: 'shop',
+    productId: 'orchid-bubble-eyelids',
+    previewType: 'eyeshadow',
+    eyelidTone: 'orchid',
+  },
+  {
+    id: 211,
+    previewImg: '/images/mall-product-blue-night-eyelids.png',
+    badge: 'blue',
+    name: '冰蓝夜幕眼影',
+    locked: true,
+    source: 'shop',
+    productId: 'blue-night-eyelids',
+    previewType: 'eyeshadow',
+    eyelidTone: 'blue',
   },
 ];
 
@@ -145,6 +189,10 @@ const mallPointPrices: Record<string, number> = {
   'mint-eyes': 3000,
   'vitality-eyelids': 4000,
   'sunset-eyelids': 4000,
+  'matcha-heart-eyelids': 4000,
+  'berry-heart-eyelids': 4000,
+  'orchid-bubble-eyelids': 4000,
+  'blue-night-eyelids': 4000,
   'gentle-eyelids': 4000,
   'sleepy-eyelids': 4000,
   'morning-eyelids': 4000,
@@ -153,8 +201,8 @@ const mallPointPrices: Record<string, number> = {
 };
 
 const mallBundleOffers = [
-  { id: 'galaxy-vitality-bundle', name: '眼妆搭配 01', itemIds: ['galaxy-eyes', 'vitality-eyelids'], discount: 0.8 },
-  { id: 'forest-sunset-bundle', name: '眼妆搭配 02', itemIds: ['forest-eyes', 'sunset-eyelids'], discount: 0.8 },
+  { id: 'galaxy-vitality-bundle', name: '星河元气眼妆', itemIds: ['galaxy-eyes', 'vitality-eyelids'], discount: 0.8 },
+  { id: 'forest-sunset-bundle', name: '森语晚霞眼妆', itemIds: ['forest-eyes', 'sunset-eyelids'], discount: 0.8 },
 ] as const;
 
 const faceEyeSpritePositions: Record<string, string> = {
@@ -336,7 +384,9 @@ const EyeChange: React.FC = () => {
     ? 'sunset'
     : currentOutfitEyeshadow?.productId === 'vitality-eyelids'
       ? 'vitality'
-      : currentOutfitEyeshadow?.eyelidTone === 'violet' ? 'violet' : 'neutral';
+      : currentOutfitEyeshadow?.eyelidTone && ['matcha', 'berry', 'orchid', 'blue'].includes(currentOutfitEyeshadow.eyelidTone)
+        ? currentOutfitEyeshadow.eyelidTone
+        : currentOutfitEyeshadow?.eyelidTone === 'violet' ? 'violet' : 'neutral';
   const unownedOutfitItems = selectedOutfitItems.filter((item) => (
     item.productId && (redeemedMallItems?.[item.productId] ?? 0) <= 0
   ));

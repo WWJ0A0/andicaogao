@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ChevronRight, Megaphone, Sparkles, Star, X } from 'lucide-react';
+import { ArrowLeft, AudioLines, ChevronRight, Sparkles, Star, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PrototypePhone, PrototypeStatusBar } from '@/components/subscription/PrototypeUI';
 import { useDialogueStore } from '@/store/useDialogueStore';
 import { usePetStore } from '@/store/usePetStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
-import { isTranslationCollarUnlocked } from '@/utils/translationCollar';
+import { isVoiceSelectionUnlocked } from '@/utils/translationCollar';
 
 const dialogueModeStyles = `
 .dm-bg {
@@ -405,6 +405,15 @@ const dialogueModeStyles = `
 }
 `;
 
+const voiceLanguageLabels: Record<string, string> = {
+  '普通话': '普通话',
+  '台湾腔': '台湾腔',
+  '日文': '日本語',
+  '英文': 'English',
+  '西班牙语': 'Español',
+  '韩语': '한국어',
+};
+
 const DialogueMode: React.FC = () => {
   const navigate = useNavigate();
   const [showTutorialFlow, setShowTutorialFlow] = useState(false);
@@ -412,13 +421,15 @@ const DialogueMode: React.FC = () => {
   const [batteryToast, setBatteryToast] = useState('');
   const { pet } = usePetStore();
   const deviceName = pet?.name || '肉派派';
-  const translationCollarUnlocked = isTranslationCollarUnlocked(pet?.growth_stage);
+  const voiceSettingsUnlocked = isVoiceSelectionUnlocked(pet?.growth_stage);
   const { dialogueEnabled, minorModeEnabled, setDialogueEnabled } = useSubscriptionStore();
   const {
     dialogueCards: itemBatteryCount,
     dialogueCardInventory,
     placedVoiceBatteries,
     addVoiceBatteryToSlot,
+    voiceLanguage,
+    voiceTone,
   } = useDialogueStore();
   const availableBatteryCount = Math.max(dialogueCardInventory?.[1] ?? 0, itemBatteryCount);
   const hasLoadedBattery = placedVoiceBatteries > 0;
@@ -429,10 +440,7 @@ const DialogueMode: React.FC = () => {
       navigate('/');
       return;
     }
-    if (!translationCollarUnlocked) {
-      navigate('/growth');
-    }
-  }, [minorModeEnabled, navigate, translationCollarUnlocked]);
+  }, [minorModeEnabled, navigate]);
 
   const showBatteryToast = (message: string) => {
     setBatteryToast(message);
@@ -474,28 +482,28 @@ const DialogueMode: React.FC = () => {
         <button type="button" aria-label="返回" onClick={() => navigate('/')} className="dm-back">
           <ArrowLeft size={29} strokeWidth={2.6} />
         </button>
-        <h1 className="dm-title">{deviceName}变声</h1>
+        <h1 className="dm-title">翻译模式</h1>
       </header>
 
       <main className="dm-main">
         <section className="dm-exchange">
           <div className="dm-megaphone">
             <div className="dm-megaphone-bg" />
-            <Megaphone size={42} className="relative rotate-[-20deg]" fill="#ff9abb" strokeWidth={1.8} />
+            <AudioLines size={37} className="relative" strokeWidth={2.2} />
             <span className="absolute right-0 top-1 h-2 w-2 rounded-full bg-[#ffbb5f]" />
             <span className="absolute right-[-5px] top-5 h-1.5 w-1.5 rounded-full bg-[#ffbb5f]" />
           </div>
           <div>
-            <h2>购买「项环电池」</h2>
-            <p>可以通过积分购买</p>
+            <h2>设置声音</h2>
+            <p>{voiceLanguageLabels[voiceLanguage] ?? voiceLanguage} · {voiceTone === 'momo' && voiceSettingsUnlocked ? 'momo音色' : '默认音色'}</p>
           </div>
           <button
             type="button"
             disabled={minorModeEnabled}
-            onClick={() => navigate('/nest?item=dialogue-card&card=1')}
+            onClick={() => navigate('/dialogue-mode/voice')}
             className="dm-exchange-link"
           >
-            {minorModeEnabled ? '暂不可用' : '去购买>'}
+            {minorModeEnabled ? '暂不可用' : '去设置>'}
           </button>
         </section>
 

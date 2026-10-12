@@ -24,6 +24,7 @@ import DrinkWaterReminderPage from "@/pages/DrinkWaterReminderPage";
 import EyeChange from "@/pages/EyeChange";
 import SubscriptionPrototype from "@/pages/SubscriptionPrototype";
 import DialogueMode from "@/pages/DialogueMode";
+import DialogueVoiceSettings from "@/pages/DialogueVoiceSettings";
 import SubscriptionFlow from "@/pages/SubscriptionFlow";
 import TrialExperience from "@/pages/TrialExperience";
 import VoiceConsent from "@/pages/VoiceConsent";
@@ -82,6 +83,7 @@ export default function App() {
         <Route path="/drink-water-reminder" element={<DrinkWaterReminderPage />} />
         <Route path="/eye-change" element={<EyeChange />} />
         <Route path="/dialogue-mode" element={<DialogueMode />} />
+        <Route path="/dialogue-mode/voice" element={<DialogueVoiceSettings />} />
         <Route path="/points-store" element={<PointsStore />} />
         <Route path="/points-orders" element={<PointSpendRecords />} />
         <Route path="/points-purchase-orders" element={<PointsOrders />} />

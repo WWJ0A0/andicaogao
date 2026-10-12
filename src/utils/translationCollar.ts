@@ -1,7 +1,7 @@
 export const GROWTH_STAGES = [
   '认知形成期',
-  '探索成长阶段',
-  '成熟期',
+  '个性展现期',
+  '亲亲密密期',
   '萌言萌语期',
 ] as const;
 
@@ -13,6 +13,10 @@ export const getGrowthStageIndex = (stage?: string | null) => {
   return index < 0 ? 0 : index;
 };
 
-export const isTranslationCollarUnlocked = (stage?: string | null) => (
+export const isTranslationCollarUnlocked = (_stage?: string | null) => (
+  true
+);
+
+export const isVoiceSelectionUnlocked = (stage?: string | null) => (
   getGrowthStageIndex(stage) >= GROWTH_STAGES.indexOf(TRANSLATION_COLLAR_STAGE)
 );

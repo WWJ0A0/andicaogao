@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { LockKeyhole, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePetStore } from '@/store/usePetStore';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 import {
   TRANSLATION_COLLAR_STAGE,
   getGrowthStageIndex,
-  isTranslationCollarUnlocked,
 } from '@/utils/translationCollar';
 
 const stages = [
@@ -18,7 +18,7 @@ const stages = [
 const Growth: React.FC = () => {
   const navigate = useNavigate();
   const pet = usePetStore((state) => state.pet);
-  const { minorModeEnabled, voiceConsentGranted } = useSubscriptionStore();
+  const { minorModeEnabled } = useSubscriptionStore();
   const currentStageIndex = getGrowthStageIndex(pet?.growth_stage);
   const [selectedStageIndex, setSelectedStageIndex] = useState(currentStageIndex);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -47,16 +47,12 @@ const Growth: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const experienceTranslationCollar = () => {
-    if (!isTranslationCollarUnlocked(pet?.growth_stage)) {
-      setToast('成长到第 4 阶段后解锁');
-      return;
-    }
+  const openVoiceSettings = () => {
     if (minorModeEnabled) {
       setToast('青少年模式下暂不可用');
       return;
     }
-    navigate(voiceConsentGranted ? '/dialogue-mode' : '/?dialogueConsent=1');
+    navigate('/dialogue-mode/voice');
   };
 
   const togglePreview = () => {
@@ -144,12 +140,43 @@ const Growth: React.FC = () => {
                   onClick={togglePreview}
                   className="absolute left-[250px] top-[342px] z-20 h-[54px] w-[106px] rounded-full bg-transparent active:bg-black/5"
                 />
-                <button
-                  type="button"
-                  aria-label="去体验翻译项圈"
-                  onClick={experienceTranslationCollar}
-                  className="absolute left-[54px] top-[572px] z-20 h-[64px] w-[285px] rounded-full bg-transparent active:scale-[0.98]"
-                />
+                <section className={`absolute left-[35px] top-[410px] z-20 h-[260px] w-[323px] overflow-hidden rounded-[16px] border bg-[#f8f9fd] px-4 pt-[42px] shadow-[0_10px_24px_rgba(71,66,93,0.06)] ${
+                  selectedStageUnlocked ? 'border-[#e0ddea]' : 'border-[#e5e3e9] grayscale-[0.35]'
+                }`}>
+                  <span className={`absolute left-0 top-0 flex h-[27px] min-w-[62px] items-center justify-center rounded-br-[10px] px-3 text-[13px] font-black text-white ${
+                    selectedStageUnlocked ? 'bg-[#9c7af2]' : 'bg-[#bbb7c3]'
+                  }`}>
+                    {selectedStageUnlocked ? 'NEW' : '待解锁'}
+                  </span>
+
+                  <div className="flex items-start justify-between">
+                    <div className="max-w-[188px]">
+                      <h2 className="text-[20px] font-extrabold text-[#37323d]">momo音色</h2>
+                      <p className="mt-2 text-[13px] font-medium leading-[20px] text-[#85808c]">
+                        成长到萌言萌语期，解锁软萌、灵动的专属音色。
+                      </p>
+                    </div>
+                    <div className={`relative mt-[-3px] flex h-[82px] w-[92px] items-center justify-center rounded-[28px] ${
+                      selectedStageUnlocked ? 'bg-[#eee8ff] text-[#815de5]' : 'bg-[#ecebf0] text-[#aaa6b0]'
+                    }`}>
+                      <Volume2 size={45} strokeWidth={1.8} />
+                      {!selectedStageUnlocked && (
+                        <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#aaa6b0] shadow">
+                          <LockKeyhole size={17} />
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    aria-label="去设置语言和音色"
+                    onClick={openVoiceSettings}
+                    className="absolute bottom-[34px] left-[31px] flex h-[53px] w-[261px] items-center justify-center rounded-[17px] border border-[#8b66ef] bg-white text-[16px] font-bold text-[#7653dc] shadow-[0_8px_18px_rgba(139,102,239,0.1)] active:scale-[0.98]"
+                  >
+                    去设置
+                  </button>
+                </section>
               </>
             )}
           </div>

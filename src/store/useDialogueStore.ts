@@ -4,6 +4,8 @@ import { persist } from 'zustand/middleware';
 export type MallRedemptionStatus = 'processing' | 'success' | 'refunded' | 'refund-exception';
 export type PointSpendCategory = '抽奖' | '小窝物品兑换' | '商城物品兑换' | '零食兑换' | '药品兑换' | '生成日记';
 export type PointIncomeCategory = '充值' | '更新奖励' | '运营活动' | '每日互动' | '抽奖获得' | '新零食解锁' | '成就徽章' | '养派秘籍' | '礼品兑换';
+export type VoiceLanguage = '普通话' | '台湾腔' | '日文' | '英文' | '西班牙语' | '韩语';
+export type VoiceTone = 'default' | 'momo';
 
 export interface PointSpendRecord {
   id: string;
@@ -60,6 +62,8 @@ interface DialogueStore {
   equippedMallEyeId: string | null;
   equippedMallEyeshadowId: string | null;
   equippedMallVoiceId: string | null;
+  voiceLanguage: VoiceLanguage;
+  voiceTone: VoiceTone;
   mallRedemptionOrders: MallRedemptionOrder[];
   pointSpendRecords: PointSpendRecord[];
   pointIncomeRecords: PointIncomeRecord[];
@@ -106,6 +110,7 @@ interface DialogueStore {
   refundMallRedemption: (orderId: string) => void;
   markMallRedemptionRefundException: (orderId: string) => void;
   equipMallItem: (itemId: string, kind: 'eye' | 'eyeshadow' | 'voice') => void;
+  setDialogueVoice: (language: VoiceLanguage, tone: VoiceTone) => void;
   spendPoints: (title: string, type: 'lottery' | 'exchange', points: number, options?: { category?: PointSpendCategory; quantity?: number }) => boolean;
   clearActiveDialogueCard: () => void;
   resetMallState: () => void;
@@ -150,6 +155,8 @@ export const useDialogueStore = create<DialogueStore>()(
       equippedMallEyeId: null,
       equippedMallEyeshadowId: null,
       equippedMallVoiceId: null,
+      voiceLanguage: '普通话',
+      voiceTone: 'default',
       mallRedemptionOrders: [],
       pointSpendRecords: [
         { id: 'demo-lottery', title: '幸运抽奖机', type: 'lottery', category: '抽奖', quantity: 1, points: 160, createdAt: '2026.08.13 15:42' },
@@ -474,6 +481,7 @@ export const useDialogueStore = create<DialogueStore>()(
         return true;
       },
       clearActiveDialogueCard: () => set({ activeDialogueCard: null }),
+      setDialogueVoice: (voiceLanguage, voiceTone) => set({ voiceLanguage, voiceTone }),
       resetMallState: () => set((state) => ({
         points: 1000,
         dialogueCards: 0,
